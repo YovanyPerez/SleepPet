@@ -18,6 +18,8 @@ import {
   saveUnlockedAchievements,
 } from "../storage/AchievementStorage";
 
+import { DeviceEventEmitter } from "react-native";
+
 export const AppContext = createContext();
 
 export function AppProvider({ children }) {
@@ -270,6 +272,41 @@ export function AppProvider({ children }) {
     unlockedAchievements,
 
   ]);
+
+  // ===========================
+  // Escuchar desbloqueo
+  // ===========================
+
+  useEffect(() => {
+
+    const subscription = DeviceEventEmitter.addListener(
+
+      "PHONE_UNLOCKED",
+
+      () => {
+
+        if (!sleepSessionStarted) return;
+
+        setUnlockCount((current) => current + 1);
+
+        setUnlockTimes((current) => [
+
+          ...current,
+
+          new Date().toLocaleTimeString(),
+
+        ]);
+
+      }
+
+    );
+
+    return () => subscription.remove();
+
+  }, [sleepSessionStarted]);
+
+
+
     // ===========================
   // Context
   // ===========================

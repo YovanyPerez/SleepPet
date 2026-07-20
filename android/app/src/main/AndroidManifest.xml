@@ -27,5 +27,15 @@
         <data android:scheme="exp+sleeppet"/>
       </intent-filter>
     </activity>
+    <receiver
+        android:name=".UnlockReceiver"
+        android:exported="true">
+
+      <intent-filter>
+        <action android:name="android.intent.action.USER_PRESENT"/>
+      </intent-filter>
+
+    </receiver>
+
   </application>
 </manifest>
