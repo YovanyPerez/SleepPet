@@ -1,0 +1,247 @@
+export default {
+
+  // ==========================
+  // General
+  // ==========================
+
+  home: "Inicio",
+  menu: "Menú",
+  continue: "Continuar",
+  cancel: "Cancelar",
+
+  // ==========================
+  // Saludos
+  // ==========================
+
+  greetingMorning: "Buenos días ☀️",
+  greetingAfternoon: "Buenas tardes 🌤️",
+  greetingEvening: "Buenas noches 🌙",
+
+  player: "Jugador",
+
+  // ==========================
+  // Estado de la mascota
+  // ==========================
+
+  happy: "Feliz",
+  normal: "Normal",
+  sleepy: "Con sueño",
+  sad: "Triste",
+
+  // ==========================
+  // Home
+  // ==========================
+
+  streak: "Racha",
+  days: "Días",
+  coins: "Monedas",
+  level: "Nivel",
+  xp: "XP",
+  mood: "Estado",
+
+  startSleep: "Dormir",
+
+  // ==========================
+  // Menú
+  // ==========================
+
+  chooseDestination: "Elige a dónde quieres ir",
+
+  myProfile: "Mi Perfil",
+  viewProfile: "Ver la información del jugador",
+
+  sleepHistory: "Historial de Sueño",
+  viewSleepHistory: "Ver todas tus sesiones de sueño",
+
+  statistics: "Estadísticas",
+  checkProgress: "Revisa tu progreso",
+
+  achievements: "Logros",
+  viewAchievements: "Ver tus logros desbloqueados",
+
+  settings: "Configuración",
+  customizeApp: "Personaliza la aplicación",
+
+  backHome: "Volver al Inicio",
+
+  // ==========================
+  // Sleep Mode
+  // ==========================
+
+  sleepMode: "Modo Sueño",
+
+  beginSleep: "Comenzar Sueño",
+
+  finishSleep: "Finalizar Sueño",
+
+  cancelSession: "Cancelar Sesión",
+
+  sleepTooShort: "Las sesiones de sueño deben durar al menos 30 minutos.",
+
+  achievementUnlocked: "¡Logro desbloqueado!",
+
+  achievementReward: "¡Has ganado {{coins}} monedas extra!",
+
+  // ==========================
+  // Results
+  // ==========================
+
+  noSleepSession: "No se encontró ninguna sesión de sueño.",
+
+  excellentSleep: "🎉 ¡Excelente descanso!",
+  goodSleep: "😊 ¡Buen descanso!",
+  needMoreRest: "😴 Necesitas descansar más",
+  trySleepingLonger: "💤 Intenta dormir más tiempo",
+
+  sleepTime: "Tiempo de sueño",
+  sleepQuality: "Calidad del sueño",
+  sleepScore: "Puntuación del sueño",
+
+  hours: "Horas",
+
+  levelUp: "🎉 ¡SUBISTE DE NIVEL!",
+  congratulations: "¡Felicidades!",
+  youReachedLevel: "Has alcanzado el nivel",
+
+  // ==========================
+  // History
+  // ==========================
+
+  noSleepSessions: "Aún no hay sesiones de sueño.",
+
+  sleep: "Sueño",
+
+  // ==========================
+  // Statistics
+  // ==========================
+
+  average: "Promedio",
+  best: "Mejor",
+  nights: "Noches",
+
+  averageScore: "Puntuación promedio",
+  bestScore: "Mejor puntuación",
+
+  totalXP: "XP total",
+
+  perfect: "Perfectas",
+
+  // ==========================
+  // Profile
+  // ==========================
+
+  name: "Nombre",
+
+  age: "Edad",
+
+  sleepGoal: "Meta de sueño",
+
+  sleepGoalHours: "Meta de sueño (Horas)",
+
+  currentStreak: "Racha actual",
+
+  totalSleepSessions: "Sesiones de sueño",
+
+  editProfile: "Editar perfil",
+
+  yourName: "Tu nombre",
+
+  saveChanges: "Guardar cambios",
+
+  // ==========================
+  // Settings
+  // ==========================
+
+  language: "Idioma",
+
+  resetProgress: "Reiniciar progreso",
+
+  resetConfirmation: "¿Estás seguro? Esta acción no se puede deshacer.",
+
+  resetError: "Ocurrió un error al reiniciar tu progreso. Inténtalo de nuevo.",
+
+  error: "Error",
+
+  about: "Acerca de",
+
+  // ==========================
+  // Achievements
+  // ==========================
+
+  completed: "Completado",
+
+  locked: "Bloqueado",
+
+  achievement_first_sleep_title: "Primera noche",
+  achievement_first_sleep_description: "Completa tu primera sesión de sueño.",
+
+  achievement_sleep_7_title: "Amante del sueño",
+  achievement_sleep_7_description: "Completa 7 sesiones de sueño.",
+
+  achievement_sleep_30_title: "Maestro del sueño",
+  achievement_sleep_30_description: "Completa 30 sesiones de sueño.",
+
+  achievement_sleep_100_title: "Leyenda del sueño",
+  achievement_sleep_100_description: "Completa 100 sesiones de sueño.",
+
+  achievement_streak_3_title: "Racha de 3 días",
+  achievement_streak_3_description: "Alcanza una racha de 3 días.",
+
+  achievement_streak_7_title: "Guerrero semanal",
+  achievement_streak_7_description: "Alcanza una racha de 7 días.",
+
+  achievement_streak_30_title: "Maestro mensual",
+  achievement_streak_30_description: "Alcanza una racha de 30 días.",
+
+  achievement_coins_500_title: "Ahorrador",
+  achievement_coins_500_description: "Consigue 500 monedas.",
+
+  achievement_coins_1000_title: "Mascota rica",
+  achievement_coins_1000_description: "Consigue 1000 monedas.",
+
+  achievement_level_5_title: "Creciendo",
+  achievement_level_5_description: "Alcanza el nivel 5.",
+
+  achievement_level_10_title: "Experto del sueño",
+  achievement_level_10_description: "Alcanza el nivel 10.",
+
+  achievement_first_pet_title: "Nuevo amigo",
+  achievement_first_pet_description: "Compra tu primera mascota.",
+
+  achievement_all_pets_title: "Coleccionista",
+  achievement_all_pets_description: "Consigue todas las mascotas.",
+
+
+  petShop: "Tienda de Mascotas",
+
+  buy: "Comprar",
+  select: "Seleccionar",
+  selected: "Seleccionado",
+  comingSoon: "Próximamente",
+  free: "Gratis",
+  petPurchased: "¡Mascota comprada!",
+  petPurchasedMessage: "¡{{pet}} ahora es tuyo!",
+  notEnoughCoins: "No tienes suficientes monedas",
+  notEnoughCoinsMessage: "No tienes suficientes monedas para comprar esta mascota.",
+
+  welcomeTitle: "Bienvenido a SleepPet",
+  welcomeSubtitle: "Crea hábitos de sueño saludables mientras cuidas de tu mascota virtual.",
+  getStarted: "Comenzar",
+
+  success: "Éxito",
+
+  progressReset: "Tu progreso ha sido reiniciado correctamente.",
+
+  resetConfirmation: "¿Seguro que deseas reiniciar todo el progreso? Esta acción no se puede deshacer.",
+
+  madeBy: "Creado por",
+  version: "Versión",
+  back: "Volver",
+
+  phoneUnlocks: "Desbloqueos",
+
+  penalty: "Penalización",
+
+  none: "Ninguna",
+
+};
