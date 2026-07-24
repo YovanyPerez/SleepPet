@@ -35,6 +35,12 @@ import { AppContext } from "../context/AppContext";
 import { COLORS, FONT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import useSleepSession from "../hooks/useSleepSession";
+import { useEffect } from "react";
+import {
+  startAccessibilityListener,
+  stopAccessibilityListener,
+} from "../services/AccessibilityListener";
+
 
 const MIN_SLEEP_HOURS = 0.5;
 
@@ -82,6 +88,27 @@ export default function SleepModeScreen({ navigation }) {
   } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  useEffect(() => {
+
+    startAccessibilityListener(() => {
+
+      if (!sleepSessionStarted) return;
+
+      setUnlockCount(current => current + 1);
+
+      setUnlockTimes(current => [
+        ...current,
+        new Date().toLocaleTimeString(),
+      ]);
+
+    });
+
+    return () => {
+      stopAccessibilityListener();
+    };
+
+  }, [sleepSessionStarted]);
 
   const {
 
