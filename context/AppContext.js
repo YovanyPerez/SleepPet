@@ -18,6 +18,11 @@ import {
   saveUnlockedAchievements,
 } from "../storage/AchievementStorage";
 
+import {
+  startAccessibilityListener,
+  stopAccessibilityListener,
+} from "../services/AccessibilityListener";
+
 
 export const AppContext = createContext();
 
@@ -275,6 +280,44 @@ export function AppProvider({ children }) {
   // ===========================
   // Escuchar desbloqueo
   // ===========================
+
+
+  useEffect(() => {
+
+    startAccessibilityListener(() => {
+
+      setUnlockCount(current => {
+
+        if (!sleepSessionStarted) {
+          return current;
+        }
+
+        return current + 1;
+
+      });
+
+      setUnlockTimes(current => {
+
+        if (!sleepSessionStarted) {
+          return current;
+        }
+
+        return [
+          ...current,
+          new Date().toLocaleTimeString(),
+        ];
+
+      });
+
+    });
+
+    return () => {
+
+      stopAccessibilityListener();
+
+    };
+
+  }, [sleepSessionStarted]);
 
 
 
