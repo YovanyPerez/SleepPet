@@ -8,6 +8,7 @@ import {
 
 import {
   finishSleepSession,
+  getCurrentSleepSession,
 } from "../services/SleepService";
 
 import {
@@ -36,6 +37,12 @@ import { COLORS, FONT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import useSleepSession from "../hooks/useSleepSession";
 import { useEffect } from "react";
+
+import {
+  startNotification,
+  updateUnlocks,
+  stopNotification,
+} from "../services/NotificationService";
 
 
 const MIN_SLEEP_HOURS = 0.5;
@@ -100,6 +107,15 @@ export default function SleepModeScreen({ navigation }) {
 
   } = useSleepSession();
 
+
+  useEffect(() => {
+
+    if (!running) return;
+
+    updateUnlocks(unlockCount);
+
+  }, [unlockCount, running]);
+
   async function handleStartSleep() {
 
     setSleepSessionStarted(true);
@@ -108,7 +124,15 @@ export default function SleepModeScreen({ navigation }) {
 
     setUnlockTimes([]);
 
-    startSleep();
+    await startSleep();
+
+    const current = await getCurrentSleepSession();
+
+    if (current) {
+
+      startNotification(current.startTime);
+
+    }
 
   }
 
@@ -119,6 +143,8 @@ export default function SleepModeScreen({ navigation }) {
     if (!result) return;
 
     stopTimer();
+
+    stopNotification();
 
     setSleepSessionStarted(false);
 
@@ -348,7 +374,7 @@ export default function SleepModeScreen({ navigation }) {
               styles.button,
               styles.cancelButton,
             ]}
-            onPress={() => {
+            onPress={async () => {
 
               setSleepSessionStarted(false);
 
@@ -356,7 +382,9 @@ export default function SleepModeScreen({ navigation }) {
 
               setUnlockTimes([]);
 
-              cancelSleep();
+              stopNotification();
+
+              await cancelSleep();
 
             }}
           >

@@ -28,6 +28,8 @@ class MainApplication : Application(), ReactApplication {
 
             add(AccessibilityPackage())
 
+            add(NotificationPackage())
+
             // Registro del módulo nativo
 
 
