@@ -88,7 +88,7 @@ export default function CreateProfileScreen({ navigation }) {
           <>
 
             <Text style={styles.title}>
-              {t.whatIsYourName}
+              {t.whatsYourName}
             </Text>
 
             <TextInput
@@ -130,7 +130,7 @@ export default function CreateProfileScreen({ navigation }) {
               value={age}
               onChangeText={setAge}
               keyboardType="numeric"
-              placeholder={t.yourAge}
+              placeholder={t.agePlaceholder}
               style={styles.input}
             />
 
@@ -159,7 +159,7 @@ export default function CreateProfileScreen({ navigation }) {
           <>
 
             <Text style={styles.title}>
-              {t.whatIsYourGoal}
+              {t.whatsYourGoal}
             </Text>
 
             <TouchableOpacity

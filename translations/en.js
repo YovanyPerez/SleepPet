@@ -255,7 +255,7 @@ export default {
   howOldAreYou: "How old are you?",
   whatsYourGoal: "What's your goal?",
 
-  yourNamePlaceholder: "Your name",
+  yourName: "Your name",
   agePlaceholder: "Age",
 
   finish: "Finish",

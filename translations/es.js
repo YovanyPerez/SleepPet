@@ -256,14 +256,14 @@ export default {
   howOldAreYou: "¿Cuántos años tienes?",
   whatsYourGoal: "¿Cuál es tu objetivo?",
 
-  yourNamePlaceholder: "Tu nombre",
+  yourName: "Tu nombre",
   agePlaceholder: "Edad",
 
   finish: "Finalizar",
 
   goalImproveSleep: "Mejorar mi sueño",
   goalHealthyHabits: "Crear hábitos saludables",
-  goalMoreEnergy: "Tener más energía",
+  goalMoreEnergy: "Sentirme con más energía",
 
   notificationChannel: "Sesión de Sueño",
   notificationChannelDescription: "Monitoreo del sueño",
