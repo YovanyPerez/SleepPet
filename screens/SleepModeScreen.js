@@ -130,7 +130,15 @@ export default function SleepModeScreen({ navigation }) {
 
     if (current) {
 
-      startNotification(current.startTime);
+      startNotification(
+        current.startTime,
+        t.notificationChannel,
+        t.notificationChannelDescription,
+        t.notificationTitle,
+        t.notificationRunning,
+        t.notificationTime,
+        t.notificationUnlocks
+      );
 
     }
 

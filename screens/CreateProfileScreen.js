@@ -9,6 +9,7 @@ import {
 
 import { AppContext } from "../context/AppContext";
 import { COLORS, FONT } from "../constants/theme";
+import { getTranslations } from "../services/TranslationService";
 
 export default function CreateProfileScreen({ navigation }) {
 
@@ -17,7 +18,10 @@ export default function CreateProfileScreen({ navigation }) {
     setUserAge,
     setGoalHours,
     setGoalType,
+    language,
   } = useContext(AppContext);
+
+  const t = getTranslations(language);
 
   const [step, setStep] = useState(1);
 
@@ -74,7 +78,7 @@ export default function CreateProfileScreen({ navigation }) {
     <View style={styles.container}>
 
       <Text style={styles.progress}>
-        Step {step} of 3
+        {t.step} {step} {t.of} 3
       </Text>
 
       {
@@ -84,13 +88,13 @@ export default function CreateProfileScreen({ navigation }) {
           <>
 
             <Text style={styles.title}>
-              What's your name?
+              {t.whatIsYourName}
             </Text>
 
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Your name"
+              placeholder={t.yourName}
               style={styles.input}
             />
 
@@ -101,7 +105,7 @@ export default function CreateProfileScreen({ navigation }) {
             >
 
               <Text style={styles.buttonText}>
-                Continue
+                {t.continue}
               </Text>
 
             </TouchableOpacity>
@@ -119,14 +123,14 @@ export default function CreateProfileScreen({ navigation }) {
           <>
 
             <Text style={styles.title}>
-              How old are you?
+              {t.howOldAreYou}
             </Text>
 
             <TextInput
               value={age}
               onChangeText={setAge}
               keyboardType="numeric"
-              placeholder="Age"
+              placeholder={t.yourAge}
               style={styles.input}
             />
 
@@ -137,7 +141,7 @@ export default function CreateProfileScreen({ navigation }) {
             >
 
               <Text style={styles.buttonText}>
-                Continue
+                {t.continue}
               </Text>
 
             </TouchableOpacity>
@@ -155,33 +159,39 @@ export default function CreateProfileScreen({ navigation }) {
           <>
 
             <Text style={styles.title}>
-              What's your goal?
+              {t.whatIsYourGoal}
             </Text>
 
             <TouchableOpacity
               style={styles.option}
-              onPress={() => setGoal("Improve my sleep")}
+              onPress={() => setGoal(t.goalImproveSleep)}
             >
 
-              <Text>😴 Improve my sleep</Text>
+              <Text>
+                😴 {t.goalImproveSleep}
+              </Text>
 
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.option}
-              onPress={() => setGoal("Build healthy habits")}
+              onPress={() => setGoal(t.goalHealthyHabits)}
             >
 
-              <Text>🌱 Build healthy habits</Text>
+              <Text>
+                🌱 {t.goalHealthyHabits}
+              </Text>
 
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.option}
-              onPress={() => setGoal("Feel more energetic")}
+              onPress={() => setGoal(t.goalMoreEnergy)}
             >
 
-              <Text>⚡ Feel more energetic</Text>
+              <Text>
+                ⚡ {t.goalMoreEnergy}
+              </Text>
 
             </TouchableOpacity>
 
@@ -195,7 +205,7 @@ export default function CreateProfileScreen({ navigation }) {
                 >
 
                   <Text style={styles.buttonText}>
-                    Finish
+                    {t.finish}
                   </Text>
 
                 </TouchableOpacity>

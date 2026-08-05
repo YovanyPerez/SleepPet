@@ -244,4 +244,33 @@ export default {
 
   none: "None",
 
+  // ==========================
+  // Create Profile
+  // ==========================
+
+  step: "Step",
+  of: "of",
+
+  whatsYourName: "What's your name?",
+  howOldAreYou: "How old are you?",
+  whatsYourGoal: "What's your goal?",
+
+  yourNamePlaceholder: "Your name",
+  agePlaceholder: "Age",
+
+  finish: "Finish",
+
+  goalImproveSleep: "Improve my sleep",
+  goalHealthyHabits: "Build healthy habits",
+  goalMoreEnergy: "Feel more energetic",
+
+  notificationChannel: "Sleep Session",
+  notificationChannelDescription: "Sleep monitoring",
+
+  notificationTitle: "🌙 SleepPet",
+  notificationRunning: "Sleep session running",
+
+  notificationTime: "⏱ Time",
+  notificationUnlocks: "📱 Unlocks",
+
 };

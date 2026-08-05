@@ -244,4 +244,34 @@ export default {
 
   none: "Ninguna",
 
+
+  // ==========================
+  // Crear Perfil
+  // ==========================
+
+  step: "Paso",
+  of: "de",
+
+  whatsYourName: "¿Cómo te llamas?",
+  howOldAreYou: "¿Cuántos años tienes?",
+  whatsYourGoal: "¿Cuál es tu objetivo?",
+
+  yourNamePlaceholder: "Tu nombre",
+  agePlaceholder: "Edad",
+
+  finish: "Finalizar",
+
+  goalImproveSleep: "Mejorar mi sueño",
+  goalHealthyHabits: "Crear hábitos saludables",
+  goalMoreEnergy: "Tener más energía",
+
+  notificationChannel: "Sesión de Sueño",
+  notificationChannelDescription: "Monitoreo del sueño",
+
+  notificationTitle: "🌙 SleepPet",
+  notificationRunning: "Sesión de sueño en progreso",
+
+  notificationTime: "⏱ Tiempo",
+  notificationUnlocks: "📱 Desbloqueos",
+
 };
