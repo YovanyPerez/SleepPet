@@ -36,14 +36,14 @@ class NotificationModule(
 
     private var channelName = ""
     private var channelDescription = ""
+
     private var notificationTitle = ""
     private var notificationContent = ""
+
     private var timeLabel = ""
     private var unlockLabel = ""
 
-    override fun getName(): String {
-        return "NotificationModule"
-    }
+    override fun getName(): String = "NotificationModule"
 
     @ReactMethod
     fun startNotification(
@@ -88,6 +88,10 @@ class NotificationModule(
     private fun createChannel() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            if (notificationManager.getNotificationChannel(CHANNEL_ID) != null) {
+                return
+            }
 
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -149,9 +153,7 @@ class NotificationModule(
 
         handler.removeCallbacksAndMessages(null)
 
-        notificationManager.cancel(
-            NOTIFICATION_ID
-        )
+        notificationManager.cancel(NOTIFICATION_ID)
     }
 
     private fun buildNotification(
@@ -167,11 +169,11 @@ class NotificationModule(
             .setContentTitle(notificationTitle)
             .setContentText(notificationContent)
             .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(
-                        "$timeLabel: $elapsed\n$unlockLabel: $unlocks"
-                    )
+                NotificationCompat.BigTextStyle().bigText(
+                    "$timeLabel: $elapsed\n$unlockLabel: $unlocks"
+                )
             )
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
