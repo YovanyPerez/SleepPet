@@ -12,8 +12,8 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class NotificationModule(
     reactContext: ReactApplicationContext
@@ -31,17 +31,58 @@ class NotificationModule(
     private val handler = Handler(Looper.getMainLooper())
 
     private var startTime: Long = 0L
-
     private var unlocks = 0
-
     private var running = false
+
+    private var channelName = ""
+    private var channelDescription = ""
+    private var notificationTitle = ""
+    private var notificationContent = ""
+    private var timeLabel = ""
+    private var unlockLabel = ""
 
     override fun getName(): String {
         return "NotificationModule"
     }
 
-    init {
+    @ReactMethod
+    fun startNotification(
+        startTimeString: String,
+        channelName: String,
+        channelDescription: String,
+        notificationTitle: String,
+        notificationContent: String,
+        timeLabel: String,
+        unlockLabel: String
+    ) {
+
+        this.channelName = channelName
+        this.channelDescription = channelDescription
+        this.notificationTitle = notificationTitle
+        this.notificationContent = notificationContent
+        this.timeLabel = timeLabel
+        this.unlockLabel = unlockLabel
+
         createChannel()
+
+        val format = SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            Locale.US
+        )
+
+        format.timeZone = TimeZone.getTimeZone("UTC")
+
+        startTime = try {
+            format.parse(startTimeString)?.time
+                ?: System.currentTimeMillis()
+        } catch (e: Exception) {
+            System.currentTimeMillis()
+        }
+
+        unlocks = 0
+        running = true
+
+        updateLoop()
     }
 
     private fun createChannel() {
@@ -50,43 +91,14 @@ class NotificationModule(
 
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Sleep Session",
+                channelName,
                 NotificationManager.IMPORTANCE_LOW
             )
 
-            channel.description = "Sleep monitoring"
+            channel.description = channelDescription
 
             notificationManager.createNotificationChannel(channel)
         }
-    }
-
-    @ReactMethod
-    fun startNotification(startTimeString: String) {
-
-        val format = SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            Locale.US
-        )
-
-        format.timeZone = java.util.TimeZone.getTimeZone("UTC")
-
-        startTime = try {
-
-            format.parse(startTimeString)?.time
-                ?: System.currentTimeMillis()
-
-        } catch (e: Exception) {
-
-            System.currentTimeMillis()
-
-        }
-
-        unlocks = 0
-
-        running = true
-
-        updateLoop()
-
     }
 
     private fun updateLoop() {
@@ -99,9 +111,7 @@ class NotificationModule(
         val totalSeconds = elapsedMillis / 1000
 
         val hours = totalSeconds / 3600
-
         val minutes = (totalSeconds % 3600) / 60
-
         val seconds = totalSeconds % 60
 
         val elapsed = String.format(
@@ -125,14 +135,11 @@ class NotificationModule(
             },
             1000
         )
-
     }
 
     @ReactMethod
     fun updateUnlocks(count: Int) {
-
         unlocks = count
-
     }
 
     @ReactMethod
@@ -145,7 +152,6 @@ class NotificationModule(
         notificationManager.cancel(
             NOTIFICATION_ID
         )
-
     }
 
     private fun buildNotification(
@@ -158,12 +164,12 @@ class NotificationModule(
             CHANNEL_ID
         )
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("🌙 SleepPet")
-            .setContentText("Sleep session running")
+            .setContentTitle(notificationTitle)
+            .setContentText(notificationContent)
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText(
-                        "⏱ Time: $elapsed\n📱 Unlocks: $unlocks"
+                        "$timeLabel: $elapsed\n$unlockLabel: $unlocks"
                     )
             )
             .setOngoing(true)
