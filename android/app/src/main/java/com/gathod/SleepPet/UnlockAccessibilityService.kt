@@ -1,6 +1,8 @@
 package com.gathod.SleepPet
 
 import android.accessibilityservice.AccessibilityService
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 
 class UnlockAccessibilityService : AccessibilityService() {
@@ -10,7 +12,12 @@ class UnlockAccessibilityService : AccessibilityService() {
     }
 
     private var lastPackage = ""
-    private var wasInSleepPet = false
+
+    private var waitingForRealApp = false
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private var canCount = true
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
 
@@ -28,19 +35,54 @@ class UnlockAccessibilityService : AccessibilityService() {
 
         // El usuario abrió SleepPet
         if (packageName == SLEEPPET_PACKAGE) {
-            wasInSleepPet = true
+
+            waitingForRealApp = true
+
             return
+
         }
 
-        // Solo contar cuando estaba en SleepPet y abrió otra app
-        if (wasInSleepPet) {
+        // Todavía no ha salido de SleepPet
+        if (!waitingForRealApp)
+            return
 
-            wasInSleepPet = false
+        // Ignorar launcher, pantalla de bloqueo, SystemUI, etc.
+        if (!isRealApp(packageName))
+            return
 
-            AccessibilityModule.checkForegroundApp(packageName)
+        // Evitar múltiples eventos consecutivos
+        if (!canCount)
+            return
+
+        canCount = false
+
+        waitingForRealApp = false
+
+        AccessibilityModule.checkForegroundApp(packageName)
+
+        handler.postDelayed({
+
+            canCount = true
+
+        }, 3000)
+
+    }
+
+    private fun isRealApp(packageName: String): Boolean {
+
+        return try {
+
+            packageManager.getLaunchIntentForPackage(packageName) != null
+
+        } catch (e: Exception) {
+
+            false
+
         }
+
     }
 
     override fun onInterrupt() {
     }
+
 }
