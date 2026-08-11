@@ -295,6 +295,11 @@ export default {
   notificationTime: "⏱ Tiempo",
   notificationUnlocks: "📱 Desbloqueos",
 
+  notificationsBlockedTitle: "Notificaciones bloqueadas",
+  notificationsBlockedMessage:
+    "Para ver la sesión de sueño en segundo plano, permite las notificaciones de SleepPet en los ajustes del teléfono.",
+  openSettings: "Abrir ajustes",
+
   // ==========================
   // Recomendación por edad
   // ==========================

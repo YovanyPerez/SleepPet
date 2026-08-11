@@ -29,3 +29,7 @@ export function updateUnlocks(count) {
 export function stopNotification() {
   NotificationModule?.stopNotification();
 }
+
+export function openNotificationSettings() {
+  NotificationModule?.openNotificationSettings();
+}

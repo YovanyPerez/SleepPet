@@ -1,7 +1,9 @@
 package com.gathod.SleepPet
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
@@ -14,6 +16,33 @@ class NotificationModule(
 ) : ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "NotificationModule"
+
+    @ReactMethod
+    fun openNotificationSettings() {
+        val context = reactApplicationContext
+        val intent = Intent(
+            Settings.ACTION_APP_NOTIFICATION_SETTINGS
+        ).apply {
+            putExtra(
+                Settings.EXTRA_APP_PACKAGE,
+                context.packageName
+            )
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            val fallback = Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            ).apply {
+                data = Uri.parse(
+                    "package:${context.packageName}"
+                )
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(fallback)
+        }
+    }
 
     @ReactMethod
     fun startNotification(

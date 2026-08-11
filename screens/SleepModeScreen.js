@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  PermissionsAndroid,
+  Platform,
 } from "react-native";
 
 import {
@@ -42,6 +44,7 @@ import { toDateKey } from "../utils/dateUtils";
 import {
   startNotification,
   stopNotification,
+  openNotificationSettings,
 } from "../services/NotificationService";
 
 
@@ -109,6 +112,48 @@ export default function SleepModeScreen({ navigation }) {
 
 
   async function handleStartSleep() {
+
+    if (
+      Platform.OS === "android" &&
+      Platform.Version >= 33
+    ) {
+      try {
+
+        const result =
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+
+        if (
+          result !== "granted" &&
+          result !== PermissionsAndroid.RESULTS.GRANTED
+        ) {
+
+          Alert.alert(
+            t.notificationsBlockedTitle,
+            t.notificationsBlockedMessage,
+            [
+              {
+                text: t.cancel,
+                style: "cancel",
+              },
+              {
+                text: t.openSettings,
+                onPress: () => {
+                  openNotificationSettings();
+                },
+              },
+            ]
+          );
+
+        }
+
+      } catch (e) {
+
+        // Si no concede, la sesión continúa sin notificación.
+
+      }
+    }
 
     setSleepSessionStarted(true);
 

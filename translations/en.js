@@ -294,6 +294,11 @@ export default {
   notificationTime: "⏱ Time",
   notificationUnlocks: "📱 Unlocks",
 
+  notificationsBlockedTitle: "Notifications blocked",
+  notificationsBlockedMessage:
+    "To see the sleep session in the background, allow SleepPet notifications in the phone settings.",
+  openSettings: "Open settings",
+
   // ==========================
   // Age recommendation
   // ==========================
