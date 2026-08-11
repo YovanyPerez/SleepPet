@@ -2,7 +2,7 @@ export const PETS = [
 
   {
     id: "cat",
-    name: "Cat",
+    nameKey: "pet_cat",
     emoji: "🐱",
     price: 0,
     folder: "cat",
@@ -11,7 +11,7 @@ export const PETS = [
 
   {
     id: "dog",
-    name: "Dog",
+    nameKey: "pet_dog",
     emoji: "🐶",
     price: 100,
     folder: "dog",
@@ -20,7 +20,7 @@ export const PETS = [
 
   {
     id: "panda",
-    name: "Panda",
+    nameKey: "pet_panda",
     emoji: "🐼",
     price: 250,
     folder: "panda",
@@ -29,7 +29,7 @@ export const PETS = [
 
   {
     id: "fox",
-    name: "Fox",
+    nameKey: "pet_fox",
     emoji: "🦊",
     price: 450,
     folder: "fox",
@@ -38,7 +38,7 @@ export const PETS = [
 
   {
     id: "penguin",
-    name: "Penguin",
+    nameKey: "pet_penguin",
     emoji: "🐧",
     price: 700,
     folder: "penguin",
@@ -47,7 +47,7 @@ export const PETS = [
 
   {
     id: "frog",
-    name: "Frog",
+    nameKey: "pet_frog",
     emoji: "🐸",
     price: 1000,
     folder: "frog",
@@ -56,7 +56,7 @@ export const PETS = [
 
   {
     id: "bear",
-    name: "Bear",
+    nameKey: "pet_bear",
     emoji: "🐻",
     price: 1500,
     folder: "bear",
@@ -65,7 +65,7 @@ export const PETS = [
 
   {
     id: "dragon",
-    name: "Dragon",
+    nameKey: "pet_dragon",
     emoji: "🐉",
     price: 3000,
     folder: "dragon",

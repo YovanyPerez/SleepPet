@@ -126,6 +126,18 @@ export default {
 
   perfect: "Perfect",
 
+  weeklySleep: "This Week's Sleep",
+
+  goal: "Goal",
+
+  day_mon: "Mon",
+  day_tue: "Tue",
+  day_wed: "Wed",
+  day_thu: "Thu",
+  day_fri: "Fri",
+  day_sat: "Sat",
+  day_sun: "Sun",
+
   // ==========================
   // Profile
   // ==========================
@@ -213,6 +225,15 @@ export default {
 
 
   petShop: "Pet Shop",
+
+  pet_cat: "Cat",
+  pet_dog: "Dog",
+  pet_panda: "Panda",
+  pet_fox: "Fox",
+  pet_penguin: "Penguin",
+  pet_frog: "Frog",
+  pet_bear: "Bear",
+  pet_dragon: "Dragon",
 
   buy: "Buy",
   select: "Select",

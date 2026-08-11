@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 
 import {
@@ -36,11 +37,10 @@ import { AppContext } from "../context/AppContext";
 import { COLORS, FONT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import useSleepSession from "../hooks/useSleepSession";
-import { useEffect } from "react";
+import { toDateKey } from "../utils/dateUtils";
 
 import {
   startNotification,
-  updateUnlocks,
   stopNotification,
 } from "../services/NotificationService";
 
@@ -108,14 +108,6 @@ export default function SleepModeScreen({ navigation }) {
   } = useSleepSession();
 
 
-  useEffect(() => {
-
-    if (!running) return;
-
-    updateUnlocks(unlockCount);
-
-  }, [unlockCount, running]);
-
   async function handleStartSleep() {
 
     setSleepSessionStarted(true);
@@ -158,7 +150,7 @@ export default function SleepModeScreen({ navigation }) {
 
     if (result.hours < MIN_SLEEP_HOURS) {
 
-      alert(t.sleepTooShort);
+      Alert.alert(t.sleepTooShort);
 
       return;
 
@@ -191,6 +183,8 @@ export default function SleepModeScreen({ navigation }) {
     const session = {
 
       date: new Date().toLocaleDateString(),
+
+      dateKey: toDateKey(new Date()),
 
       start: result.start.toLocaleTimeString(),
 
@@ -305,15 +299,17 @@ export default function SleepModeScreen({ navigation }) {
 
       finalCoins += achievementResult.rewardCoins;
 
-      alert(
+      Alert.alert(
 
-        `🏆 ${t.achievementUnlocked}\n\n${t.achievementReward.replace(
+        `🏆 ${t.achievementUnlocked}`,
+
+        t.achievementReward.replace(
 
           "{{coins}}",
 
           achievementResult.rewardCoins
 
-        )}`
+        )
 
       );
 

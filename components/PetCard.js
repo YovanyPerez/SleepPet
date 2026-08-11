@@ -123,7 +123,7 @@ export default function PetCard({
       )}
 
       <Text style={styles.name}>
-        {pet.name}
+        {t[pet.nameKey]}
       </Text>
 
       <Text style={styles.price}>

@@ -14,6 +14,28 @@ export async function startSleepSession() {
 
     active: true,
 
+    unlockCount: 0,
+
+    unlockTimes: [],
+
+  });
+
+}
+
+export async function updateUnlockState(unlockCount, unlockTimes) {
+
+  const current = await getCurrentSleep();
+
+  if (!current || !current.active) return;
+
+  await saveCurrentSleep({
+
+    ...current,
+
+    unlockCount,
+
+    unlockTimes,
+
   });
 
 }

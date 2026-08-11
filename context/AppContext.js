@@ -23,6 +23,20 @@ import {
   stopAccessibilityListener,
 } from "../services/AccessibilityListener";
 
+import {
+  getCurrentSleepSession,
+  updateUnlockState,
+} from "../services/SleepService";
+
+import {
+  startNotification,
+  updateUnlocks,
+} from "../services/NotificationService";
+
+import {
+  getTranslations,
+} from "../services/TranslationService";
+
 
 export const AppContext = createContext();
 
@@ -193,6 +207,42 @@ export function AppProvider({ children }) {
 
       setSleepHistory(history);
 
+      const currentSleep =
+        await getCurrentSleepSession();
+
+      if (
+        currentSleep &&
+        currentSleep.active &&
+        currentSleep.startTime
+      ) {
+
+        const lang =
+          data?.language ?? "en";
+
+        const t = getTranslations(lang);
+
+        setSleepSessionStarted(true);
+
+        setUnlockCount(
+          currentSleep.unlockCount ?? 0
+        );
+
+        setUnlockTimes(
+          currentSleep.unlockTimes ?? []
+        );
+
+        startNotification(
+          currentSleep.startTime,
+          t.notificationChannel,
+          t.notificationChannelDescription,
+          t.notificationTitle,
+          t.notificationRunning,
+          t.notificationTime,
+          t.notificationUnlocks
+        );
+
+      }
+
       setLoading(false);
 
     }
@@ -318,6 +368,40 @@ export function AppProvider({ children }) {
     };
 
   }, [sleepSessionStarted]);
+
+  // ===========================
+  // Persistir estado de la sesión
+  // ===========================
+
+  useEffect(() => {
+
+    if (loading) return;
+
+    if (!sleepSessionStarted) return;
+
+    updateUnlockState(unlockCount, unlockTimes);
+
+  }, [
+    loading,
+    sleepSessionStarted,
+    unlockCount,
+    unlockTimes,
+  ]);
+
+  // ===========================
+  // Sincronizar conteo en la notificación
+  // ===========================
+
+  useEffect(() => {
+
+    if (!sleepSessionStarted) return;
+
+    updateUnlocks(unlockCount);
+
+  }, [
+    sleepSessionStarted,
+    unlockCount,
+  ]);
 
 
 

@@ -43,7 +43,7 @@ export default function PetShopScreen() {
 
       Alert.alert(
         t.notEnoughCoins,
-        t.notEnoughCoinsDescription
+        t.notEnoughCoinsMessage
       );
 
       return;
@@ -59,7 +59,10 @@ export default function PetShopScreen() {
 
     Alert.alert(
       t.petPurchased,
-      `${pet.name} ${t.petPurchasedDescription}`
+      t.petPurchasedMessage.replace(
+        "{{pet}}",
+        t[pet.nameKey]
+      )
     );
 
   }
