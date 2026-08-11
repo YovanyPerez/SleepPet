@@ -33,3 +33,7 @@ export function stopNotification() {
 export function openNotificationSettings() {
   NotificationModule?.openNotificationSettings();
 }
+
+export function getNotificationStatus() {
+  return NotificationModule?.getNotificationStatus();
+}

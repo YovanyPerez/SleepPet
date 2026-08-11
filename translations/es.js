@@ -300,6 +300,11 @@ export default {
     "Para ver la sesión de sueño en segundo plano, permite las notificaciones de SleepPet en los ajustes del teléfono.",
   openSettings: "Abrir ajustes",
 
+  notifOn: "Notif. activadas",
+  notifOff: "Notif. bloqueadas",
+  serviceOn: "Servicio activo",
+  serviceOff: "Servicio detenido",
+
   // ==========================
   // Recomendación por edad
   // ==========================

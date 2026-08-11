@@ -299,6 +299,11 @@ export default {
     "To see the sleep session in the background, allow SleepPet notifications in the phone settings.",
   openSettings: "Open settings",
 
+  notifOn: "Notifs on",
+  notifOff: "Notifs blocked",
+  serviceOn: "Service running",
+  serviceOff: "Service stopped",
+
   // ==========================
   // Age recommendation
   // ==========================

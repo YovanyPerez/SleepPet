@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -45,6 +45,7 @@ import {
   startNotification,
   stopNotification,
   openNotificationSettings,
+  getNotificationStatus,
 } from "../services/NotificationService";
 
 
@@ -95,6 +96,8 @@ export default function SleepModeScreen({ navigation }) {
 
   const t = getTranslations(language);
 
+  const [notificationStatus, setNotificationStatus] =
+    useState(null);
 
   const {
 
@@ -178,6 +181,14 @@ export default function SleepModeScreen({ navigation }) {
       );
 
     }
+
+    getNotificationStatus()
+      .then((status) => {
+        setNotificationStatus(status);
+      })
+      .catch(() => {
+        setNotificationStatus(null);
+      });
 
   }
 
@@ -389,6 +400,25 @@ export default function SleepModeScreen({ navigation }) {
         {formatTime()}
       </Text>
 
+      {
+        running &&
+        notificationStatus && (
+          <Text style={styles.diag}>
+            🔔 {
+              notificationStatus.notificationsEnabled
+                ? t.notifOn
+                : t.notifOff
+            }
+            {"  "}
+            ⚙️ {
+              notificationStatus.serviceRunning
+                ? t.serviceOn
+                : t.serviceOff
+            }
+          </Text>
+        )
+      }
+
       {!running ? (
 
         <TouchableOpacity
@@ -484,6 +514,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 40,
     color: COLORS.primary,
+  },
+
+  diag: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 30,
+    textAlign: "center",
   },
 
   button: {

@@ -1,12 +1,17 @@
 package com.gathod.SleepPet
 
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.NotificationManagerCompat
+import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.WritableNativeMap
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -16,6 +21,40 @@ class NotificationModule(
 ) : ReactContextBaseJavaModule(reactContext) {
 
     override fun getName(): String = "NotificationModule"
+
+    @ReactMethod
+    fun getNotificationStatus(promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val notificationsEnabled =
+                NotificationManagerCompat.from(context)
+                    .areNotificationsEnabled()
+            val activityManager = context.getSystemService(
+                Context.ACTIVITY_SERVICE
+            ) as ActivityManager
+            val serviceRunning = try {
+                activityManager
+                    .getRunningServices(Int.MAX_VALUE)
+                    .any {
+                        it.service.className ==
+                            SleepForegroundService::class.java.name &&
+                            it.foreground
+                    }
+            } catch (e: Exception) {
+                false
+            }
+            val map = WritableNativeMap().apply {
+                putBoolean(
+                    "notificationsEnabled",
+                    notificationsEnabled
+                )
+                putBoolean("serviceRunning", serviceRunning)
+            }
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("status_error", e.message)
+        }
+    }
 
     @ReactMethod
     fun openNotificationSettings() {
