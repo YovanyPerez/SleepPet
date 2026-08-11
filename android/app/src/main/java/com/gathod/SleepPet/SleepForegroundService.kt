@@ -103,10 +103,18 @@ class SleepForegroundService : Service() {
 
         createChannel()
 
-        startForeground(
-            NOTIFICATION_ID,
-            buildNotification()
-        )
+        try {
+            startForeground(
+                NOTIFICATION_ID,
+                buildNotification()
+            )
+        } catch (e: SecurityException) {
+            // Si el APK instalado perdió el permiso
+            // FOREGROUND_SERVICE_HEALTH, no tumbamos la app:
+            // simplemente la sesión sigue sin notificación.
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         running = true
 
