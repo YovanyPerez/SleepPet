@@ -10,6 +10,7 @@ import {
 import { AppContext } from "../context/AppContext";
 import { COLORS, FONT } from "../constants/theme";
 import { getTranslations } from "../services/TranslationService";
+import { calculateGoalHours } from "../utils/sleepUtils";
 
 export default function CreateProfileScreen({ navigation }) {
 
@@ -30,18 +31,6 @@ export default function CreateProfileScreen({ navigation }) {
   const [age, setAge] = useState("");
 
   const [goal, setGoal] = useState("");
-
-  function calculateGoalHours(age) {
-
-    if (age <= 12) return 10;
-
-    if (age <= 18) return 9;
-
-    if (age <= 64) return 8;
-
-    return 7;
-
-  }
 
   async function finishSetup() {
 

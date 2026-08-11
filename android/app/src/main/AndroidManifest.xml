@@ -6,6 +6,8 @@
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
 
   <queries>
     <intent>
@@ -74,6 +76,16 @@
           android:resource="@xml/accessibility_config"/>
 
     </service>
+
+    <service
+        android:name=".SleepForegroundService"
+        android:exported="false"
+        android:stopWithTask="false"
+        android:foregroundServiceType="health"/>
+
+    <receiver
+        android:name=".ReminderReceiver"
+        android:exported="false"/>
 
   </application>
 

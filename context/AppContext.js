@@ -34,6 +34,14 @@ import {
 } from "../services/NotificationService";
 
 import {
+  scheduleReminder,
+} from "../services/ReminderService";
+
+import {
+  getReminderSettings,
+} from "../storage/ReminderStorage";
+
+import {
   getTranslations,
 } from "../services/TranslationService";
 
@@ -328,6 +336,44 @@ export function AppProvider({ children }) {
   ]);
 
   // ===========================
+  // Recordatorio para dormir
+  // ===========================
+
+  useEffect(() => {
+
+    if (loading) return;
+
+    (async () => {
+
+      const settings = await getReminderSettings();
+
+      if (settings && settings.enabled) {
+
+        const t = getTranslations(language);
+
+        scheduleReminder(
+
+          settings.hour,
+
+          settings.minute,
+
+          t.reminderChannel,
+
+          t.reminderChannelDescription,
+
+          t.reminderTitle,
+
+          t.reminderContent
+
+        );
+
+      }
+
+    })();
+
+  }, [loading, language]);
+
+  // ===========================
   // Escuchar desbloqueo
   // ===========================
 
@@ -354,7 +400,7 @@ export function AppProvider({ children }) {
 
         return [
           ...current,
-          new Date().toLocaleTimeString(),
+          new Date().getTime(),
         ];
 
       });

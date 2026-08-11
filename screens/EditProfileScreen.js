@@ -15,6 +15,10 @@ import {
   getTranslations,
 } from "../services/TranslationService";
 
+import {
+  calculateGoalHours,
+} from "../utils/sleepUtils";
+
 export default function EditProfileScreen({ navigation }) {
 
   const {
@@ -43,6 +47,11 @@ export default function EditProfileScreen({ navigation }) {
   const [goal, setGoal] = useState(
     String(goalHours)
   );
+
+  const ageNumber = age ? Number(age) : null;
+
+  const recommendedHours =
+    ageNumber ? calculateGoalHours(ageNumber) : null;
 
   function saveProfile() {
 
@@ -114,6 +123,27 @@ export default function EditProfileScreen({ navigation }) {
           style={styles.input}
         />
 
+        {
+          recommendedHours &&
+          recommendedHours !== Number(goal) && (
+            <TouchableOpacity
+              style={styles.recommended}
+              onPress={() =>
+                setGoal(String(recommendedHours))
+              }
+            >
+              <Text style={styles.recommendedText}>
+                💡 {
+                  t.recommendedHours.replace(
+                    "{{hours}}",
+                    recommendedHours
+                  )
+                }
+              </Text>
+            </TouchableOpacity>
+          )
+        }
+
       </View>
 
       <TouchableOpacity
@@ -181,6 +211,21 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 18,
     color: COLORS.text,
+  },
+
+  recommended: {
+    marginTop: 12,
+    backgroundColor: "#E8E9FA",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    alignItems: "center",
+  },
+
+  recommendedText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: "bold",
   },
     saveButton: {
     backgroundColor: COLORS.primary,

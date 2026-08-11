@@ -295,4 +295,32 @@ export default {
   notificationTime: "⏱ Tiempo",
   notificationUnlocks: "📱 Desbloqueos",
 
+  // ==========================
+  // Recomendación por edad
+  // ==========================
+
+  recommendedHours: "Recomendado para tu edad: {{hours}} h",
+
+  // ==========================
+  // Recordatorio para dormir
+  // ==========================
+
+  sleepReminder: "Recordatorio para dormir",
+  sleepReminderDesc: "Te recordamos cuándo ir a dormir",
+  reminderOn: "Activo",
+  reminderOff: "Apagado",
+  reminderHour: "Hora",
+  reminderMinute: "Minuto",
+  reminderChannel: "Recordatorio de sueño",
+  reminderChannelDescription: "Recordatorio diario para ir a dormir",
+  reminderTitle: "🌙 Hora de dormir",
+  reminderContent: "Es hora de ir a dormir. ¡Tu mascota te espera!",
+
+  // ==========================
+  // Despertares nocturnos
+  // ==========================
+
+  nightWakeups: "Despertares de la última noche",
+  noWakeups: "Sin desbloqueos",
+
 };

@@ -294,4 +294,32 @@ export default {
   notificationTime: "⏱ Time",
   notificationUnlocks: "📱 Unlocks",
 
+  // ==========================
+  // Age recommendation
+  // ==========================
+
+  recommendedHours: "Recommended for your age: {{hours}} h",
+
+  // ==========================
+  // Bedtime reminder
+  // ==========================
+
+  sleepReminder: "Bedtime reminder",
+  sleepReminderDesc: "We'll remind you when it's time to sleep",
+  reminderOn: "On",
+  reminderOff: "Off",
+  reminderHour: "Hour",
+  reminderMinute: "Minute",
+  reminderChannel: "Sleep reminder",
+  reminderChannelDescription: "Daily bedtime reminder",
+  reminderTitle: "🌙 Time to sleep",
+  reminderContent: "It's time to go to bed. Your pet is waiting!",
+
+  // ==========================
+  // Night wake-ups
+  // ==========================
+
+  nightWakeups: "Last night wake-ups",
+  noWakeups: "No wake-ups",
+
 };

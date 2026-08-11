@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,50 @@ import {
 import {
   clearUnlockedAchievements,
 } from "../storage/AchievementStorage";
+
+import {
+  getReminderSettings,
+  saveReminderSettings,
+} from "../storage/ReminderStorage";
+
+import {
+  scheduleReminder,
+  cancelReminder,
+} from "../services/ReminderService";
+
+function TimeStepper({ label, value, min, max, onChange }) {
+
+  function stepUp() {
+    onChange(value >= max ? min : value + 1);
+  }
+
+  function stepDown() {
+    onChange(value <= min ? max : value - 1);
+  }
+
+  return (
+    <View style={styles.stepperCol}>
+      <Text style={styles.stepperLabel}>{label}</Text>
+      <View style={styles.stepperRow}>
+        <TouchableOpacity
+          style={styles.stepperBtn}
+          onPress={stepDown}
+        >
+          <Text style={styles.stepperBtnText}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.stepperValue}>
+          {String(value).padStart(2, "0")}
+        </Text>
+        <TouchableOpacity
+          style={styles.stepperBtn}
+          onPress={stepUp}
+        >
+          <Text style={styles.stepperBtnText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
 
 export default function SettingsScreen({ navigation }) {
 
@@ -59,6 +103,36 @@ export default function SettingsScreen({ navigation }) {
 
   const t = getTranslations(language);
 
+  const [reminder, setReminder] = useState({
+    enabled: false,
+    hour: 22,
+    minute: 30,
+  });
+
+  useEffect(() => {
+    (async () => {
+      const settings = await getReminderSettings();
+      setReminder(settings);
+    })();
+  }, []);
+
+  function applyReminder(next) {
+    setReminder(next);
+    saveReminderSettings(next);
+    if (next.enabled) {
+      scheduleReminder(
+        next.hour,
+        next.minute,
+        t.reminderChannel,
+        t.reminderChannelDescription,
+        t.reminderTitle,
+        t.reminderContent
+      );
+    } else {
+      cancelReminder();
+    }
+  }
+
   function resetProgress() {
 
     Alert.alert(
@@ -87,6 +161,12 @@ export default function SettingsScreen({ navigation }) {
             await clearAppData();
             await clearSleepHistory();
             await clearUnlockedAchievements();
+            cancelReminder();
+            setReminder({
+              enabled: false,
+              hour: 22,
+              minute: 30,
+            });
 
             // Reinicia el contexto
             setCoins(0);
@@ -211,6 +291,75 @@ export default function SettingsScreen({ navigation }) {
 
       </View>
 
+      {/* Bedtime reminder */}
+
+      <View style={styles.card}>
+
+        <Text style={styles.cardTitle}>
+          ⏰ {t.sleepReminder}
+        </Text>
+
+        <Text style={styles.cardDesc}>
+          {t.sleepReminderDesc}
+        </Text>
+
+        <TouchableOpacity
+          style={[
+            styles.toggle,
+            reminder.enabled && styles.toggleOn,
+          ]}
+          onPress={() =>
+            applyReminder({
+              ...reminder,
+              enabled: !reminder.enabled,
+            })
+          }
+        >
+          <Text style={styles.toggleText}>
+            {reminder.enabled
+              ? `✅ ${t.reminderOn}`
+              : `⏸ ${t.reminderOff}`}
+          </Text>
+        </TouchableOpacity>
+
+        {
+          reminder.enabled && (
+            <View style={styles.timeRow}>
+
+              <TimeStepper
+                label={t.reminderHour}
+                value={reminder.hour}
+                min={0}
+                max={23}
+                onChange={(hour) =>
+                  applyReminder({
+                    ...reminder,
+                    hour,
+                  })
+                }
+              />
+
+              <Text style={styles.colon}>:</Text>
+
+              <TimeStepper
+                label={t.reminderMinute}
+                value={reminder.minute}
+                min={0}
+                max={59}
+                onChange={(minute) =>
+                  applyReminder({
+                    ...reminder,
+                    minute,
+                  })
+                }
+              />
+
+            </View>
+          )
+        }
+
+      </View>
+
       {/* Reset */}
 
       <TouchableOpacity
@@ -275,6 +424,82 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.text,
     marginBottom: 15,
+  },
+
+  cardDesc: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    marginBottom: 15,
+  },
+
+  toggle: {
+    backgroundColor: "#EAEAEA",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+
+  toggleOn: {
+    backgroundColor: COLORS.success,
+  },
+
+  toggleText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  timeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+
+  colon: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: COLORS.text,
+    marginHorizontal: 4,
+  },
+
+  stepperCol: {
+    alignItems: "center",
+    marginHorizontal: 10,
+  },
+
+  stepperLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    marginBottom: 8,
+  },
+
+  stepperRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  stepperBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  stepperBtnText: {
+    color: "white",
+    fontSize: 26,
+    fontWeight: "bold",
+  },
+
+  stepperValue: {
+    minWidth: 56,
+    textAlign: "center",
+    fontSize: 30,
+    fontWeight: "bold",
+    color: COLORS.text,
   },
 
   buttons: {

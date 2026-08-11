@@ -190,6 +190,10 @@ export default function SleepModeScreen({ navigation }) {
 
       end: result.end.toLocaleTimeString(),
 
+      startMs: result.start.getTime(),
+
+      endMs: result.end.getTime(),
+
       hours: Number(result.hours.toFixed(2)),
 
       coins: reward.coins,

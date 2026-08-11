@@ -30,6 +30,8 @@ class MainApplication : Application(), ReactApplication {
 
             add(NotificationPackage())
 
+            add(ReminderPackage())
+
             // Registro del módulo nativo
 
 

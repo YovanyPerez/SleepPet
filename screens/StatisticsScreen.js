@@ -15,6 +15,7 @@ import {
 import { COLORS, FONT } from "../constants/theme";
 import StatCard from "../components/StatCard";
 import WeeklyBarChart from "../components/WeeklyBarChart";
+import NightChart from "../components/NightChart";
 import {
   toDateKey,
   getWeekDates,
@@ -83,6 +84,13 @@ export default function StatisticsScreen() {
       ? Math.round(score / nights)
       : 0;
 
+  const latestSession = history[0];
+
+  const latestSessionHasChart =
+    latestSession &&
+    typeof latestSession.startMs === "number" &&
+    typeof latestSession.endMs === "number";
+
   const todayKey = toDateKey(new Date());
 
   const weeklyData = getWeekDates().map((date) => {
@@ -129,6 +137,26 @@ export default function StatisticsScreen() {
         goalHours={goalHours}
         goalLabel={t.goal}
       />
+
+      {
+        latestSessionHasChart && (
+          <View>
+
+            <Text style={styles.chartTitle}>
+              🌙 {t.nightWakeups}
+            </Text>
+
+            <NightChart
+              startMs={latestSession.startMs}
+              endMs={latestSession.endMs}
+              unlockTimes={latestSession.unlockTimes || []}
+              countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
+              emptyLabel={t.noWakeups}
+            />
+
+          </View>
+        )
+      }
 
       <View style={styles.grid}>
 
