@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 import {
-  View,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -8,7 +7,11 @@ import {
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
+
+import ScreenContainer from "../components/ScreenContainer";
+import Card from "../components/Card";
+import AppText from "../components/AppText";
 
 export default function AboutScreen({ navigation }) {
 
@@ -18,52 +21,64 @@ export default function AboutScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
       <Text style={styles.logo}>
         🐱
       </Text>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+        style={styles.title}
+      >
         SleepPet
-      </Text>
+      </AppText>
 
-      <View style={styles.card}>
+      <Card style={styles.card}>
 
-        <Text style={styles.label}>
+        <AppText
+          variant="body"
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
           {t.madeBy}
-        </Text>
+        </AppText>
 
-        <Text style={styles.value}>
+        <AppText variant="subtitle">
           Yovany Perez
-        </Text>
+        </AppText>
 
-      </View>
+      </Card>
 
-      <View style={styles.card}>
+      <Card style={styles.card}>
 
-        <Text style={styles.label}>
+        <AppText
+          variant="body"
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
           {t.version}
-        </Text>
+        </AppText>
 
-        <Text style={styles.value}>
+        <AppText variant="subtitle">
           v1.0
-        </Text>
+        </AppText>
 
-      </View>
+      </Card>
 
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.goBack()}
       >
 
-        <Text style={styles.buttonText}>
+        <AppText style={styles.buttonText}>
           ← {t.back}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -72,8 +87,6 @@ export default function AboutScreen({ navigation }) {
 const styles = StyleSheet.create({
 
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
     justifyContent: "center",
     alignItems: "center",
     padding: 25,
@@ -85,32 +98,16 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
-    color: COLORS.text,
     marginBottom: 35,
   },
 
   card: {
     width: "100%",
-    backgroundColor: "white",
-    borderRadius: 18,
-    padding: 20,
     alignItems: "center",
-    marginBottom: 20,
-    elevation: 4,
   },
 
   label: {
-    fontSize: 18,
-    color: COLORS.textSecondary,
     marginBottom: 8,
-  },
-
-  value: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: COLORS.text,
   },
 
   button: {
@@ -124,7 +121,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 18,
   },
 
 });

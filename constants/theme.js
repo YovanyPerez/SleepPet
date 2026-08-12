@@ -35,3 +35,32 @@ export const BORDER_RADIUS = {
   medium: 18,
   large: 25,
 };
+
+export const TEXT = {
+  title: {
+    fontSize: FONT.title,
+    fontWeight: "bold",
+  },
+  subtitle: {
+    fontSize: FONT.subtitle,
+    fontWeight: "600",
+  },
+  body: {
+    fontSize: FONT.body,
+    fontWeight: "400",
+  },
+  small: {
+    fontSize: FONT.small,
+    fontWeight: "400",
+  },
+};
+
+export const SHADOW = {
+  card: {
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+};
