@@ -300,6 +300,10 @@ export default {
     "Para ver la sesión de sueño en segundo plano, permite las notificaciones de SleepPet en los ajustes del teléfono.",
   openSettings: "Abrir ajustes",
 
+  activityPermissionTitle: "Actividad física requerida",
+  activityPermissionMessage:
+    "SleepPet necesita el permiso de actividad física para mostrar el tiempo y los desbloqueos de tu sesión en la notificación.",
+
   notifOn: "Notif. activadas",
   notifOff: "Notif. bloqueadas",
   serviceOn: "Servicio activo",

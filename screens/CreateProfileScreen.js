@@ -156,7 +156,7 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setGoal(t.goalImproveSleep)}
             >
 
-              <Text>
+              <Text style={styles.optionText}>
                 😴 {t.goalImproveSleep}
               </Text>
 
@@ -167,7 +167,7 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setGoal(t.goalHealthyHabits)}
             >
 
-              <Text>
+              <Text style={styles.optionText}>
                 🌱 {t.goalHealthyHabits}
               </Text>
 
@@ -178,7 +178,7 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setGoal(t.goalMoreEnergy)}
             >
 
-              <Text>
+              <Text style={styles.optionText}>
                 ⚡ {t.goalMoreEnergy}
               </Text>
 
@@ -245,6 +245,7 @@ const styles = StyleSheet.create({
     padding:15,
     fontSize:18,
     marginBottom:25,
+    color:COLORS.text,
   },
 
   option:{
@@ -252,6 +253,11 @@ const styles = StyleSheet.create({
     padding:18,
     borderRadius:15,
     marginBottom:15,
+  },
+
+  optionText:{
+    color:COLORS.text,
+    fontSize:18,
   },
 
   button:{

@@ -299,6 +299,10 @@ export default {
     "To see the sleep session in the background, allow SleepPet notifications in the phone settings.",
   openSettings: "Open settings",
 
+  activityPermissionTitle: "Physical activity required",
+  activityPermissionMessage:
+    "SleepPet needs the physical activity permission to show your session time and unlocks in the notification.",
+
   notifOn: "Notifs on",
   notifOff: "Notifs blocked",
   serviceOn: "Service running",

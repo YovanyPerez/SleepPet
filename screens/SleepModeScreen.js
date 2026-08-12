@@ -136,27 +136,59 @@ export default function SleepModeScreen({ navigation }) {
 
   async function handleStartSleep() {
 
-    if (
-      Platform.OS === "android" &&
-      Platform.Version >= 33
-    ) {
+    if (Platform.OS === "android") {
       try {
 
-        const result =
+        if (Platform.Version >= 33) {
+
+          const result =
+            await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+            );
+
+          addLog(`Permiso notificaciones: ${result}`);
+
+          if (
+            result !== "granted" &&
+            result !== PermissionsAndroid.RESULTS.GRANTED
+          ) {
+
+            Alert.alert(
+              t.notificationsBlockedTitle,
+              t.notificationsBlockedMessage,
+              [
+                {
+                  text: t.cancel,
+                  style: "cancel",
+                },
+                {
+                  text: t.openSettings,
+                  onPress: () => {
+                    openNotificationSettings();
+                  },
+                },
+              ]
+            );
+
+          }
+
+        }
+
+        const activityResult =
           await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+            PermissionsAndroid.PERMISSIONS.ACTIVITY_RECOGNITION
           );
 
-        addLog(`Permiso notificaciones: ${result}`);
+        addLog(`Permiso actividad: ${activityResult}`);
 
         if (
-          result !== "granted" &&
-          result !== PermissionsAndroid.RESULTS.GRANTED
+          activityResult !== "granted" &&
+          activityResult !== PermissionsAndroid.RESULTS.GRANTED
         ) {
 
           Alert.alert(
-            t.notificationsBlockedTitle,
-            t.notificationsBlockedMessage,
+            t.activityPermissionTitle,
+            t.activityPermissionMessage,
             [
               {
                 text: t.cancel,
@@ -456,7 +488,7 @@ export default function SleepModeScreen({ navigation }) {
 
       {
         running &&
-        notificationStatus?.errors?.length && (
+        notificationStatus?.errors?.length > 0 && (
           <Text style={styles.diagError}>
             {notificationStatus.errors[
               notificationStatus.errors.length - 1

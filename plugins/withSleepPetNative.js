@@ -10,6 +10,7 @@ const PERMISSIONS = [
   "android.permission.POST_NOTIFICATIONS",
   "android.permission.FOREGROUND_SERVICE",
   "android.permission.FOREGROUND_SERVICE_HEALTH",
+  "android.permission.ACTIVITY_RECOGNITION",
 ];
 
 const PACKAGE_ADDS = [
