@@ -26,6 +26,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      "./plugins/withSleepPetNative"
+    ],
     "extra": {
       "eas": {
         "projectId": "1c5cc861-6b9a-40d1-959d-d324ddb09b13"

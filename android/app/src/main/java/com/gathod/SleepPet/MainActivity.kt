@@ -10,11 +10,6 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
@@ -22,20 +17,6 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          if (
-              ContextCompat.checkSelfPermission(
-                  this,
-                  Manifest.permission.POST_NOTIFICATIONS
-              ) != PackageManager.PERMISSION_GRANTED
-          ) {
-              ActivityCompat.requestPermissions(
-                  this,
-                  arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                  100
-              )
-          }
-      }
   }
 
   /**
