@@ -9,8 +9,9 @@ const {
 const PERMISSIONS = [
   "android.permission.POST_NOTIFICATIONS",
   "android.permission.FOREGROUND_SERVICE",
-  "android.permission.FOREGROUND_SERVICE_HEALTH",
+  "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
   "android.permission.ACTIVITY_RECOGNITION",
+  "android.permission.QUERY_ALL_PACKAGES",
 ];
 
 const PACKAGE_ADDS = [
@@ -83,8 +84,18 @@ module.exports = function withSleepPetNative(config) {
           "android:name": ".SleepForegroundService",
           "android:exported": "false",
           "android:stopWithTask": "false",
-          "android:foregroundServiceType": "health",
+          "android:foregroundServiceType": "specialUse",
         },
+        property: [
+          {
+            $: {
+              "android:name":
+                "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE",
+              "android:value":
+                "Tracks the sleep session while the phone screen is off",
+            },
+          },
+        ],
       });
     }
 
