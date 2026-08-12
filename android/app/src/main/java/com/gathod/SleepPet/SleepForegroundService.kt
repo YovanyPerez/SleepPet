@@ -10,7 +10,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import java.util.Collections
 
 /**
  * Mantiene viva la sesión de sueño en segundo plano.
@@ -33,6 +35,19 @@ class SleepForegroundService : Service() {
         const val EXTRA_UNLOCK_LABEL = "unlockLabel"
 
         private var instance: SleepForegroundService? = null
+
+        private val errorLog = Collections.synchronizedList(
+            mutableListOf<String>()
+        )
+
+        fun recordError(source: String, message: String?) {
+            val line = "$source: ${message ?: "sin mensaje"}"
+            errorLog.add(line)
+            if (errorLog.size > 30) errorLog.removeAt(0)
+            Log.e("SleepPet", line)
+        }
+
+        fun getErrorLog(): List<String> = errorLog.toList()
 
         fun updateUnlocks(count: Int) {
             instance?.unlocks = count
@@ -57,10 +72,14 @@ class SleepForegroundService : Service() {
     private val updateRunnable = object : Runnable {
         override fun run() {
             if (!running) return
-            val manager = getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-            manager.notify(NOTIFICATION_ID, buildNotification())
+            try {
+                val manager = getSystemService(
+                    Context.NOTIFICATION_SERVICE
+                ) as NotificationManager
+                manager.notify(NOTIFICATION_ID, buildNotification())
+            } catch (e: Exception) {
+                recordError("updateNotif", e.toString())
+            }
             handler.postDelayed(this, 1000)
         }
     }
@@ -108,10 +127,8 @@ class SleepForegroundService : Service() {
                 NOTIFICATION_ID,
                 buildNotification()
             )
-        } catch (e: SecurityException) {
-            // Si el APK instalado perdió el permiso
-            // FOREGROUND_SERVICE_HEALTH, no tumbamos la app:
-            // simplemente la sesión sigue sin notificación.
+        } catch (e: Exception) {
+            recordError("startForeground", e.toString())
             stopSelf()
             return START_NOT_STICKY
         }

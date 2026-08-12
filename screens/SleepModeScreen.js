@@ -99,6 +99,26 @@ export default function SleepModeScreen({ navigation }) {
   const [notificationStatus, setNotificationStatus] =
     useState(null);
 
+  const [logLines, setLogLines] = useState([]);
+
+  function addLog(line) {
+    const time = new Date().toLocaleTimeString();
+    setLogLines((prev) =>
+      [`${time} ${line}`, ...prev].slice(0, 30)
+    );
+  }
+
+  function showLog() {
+    const nativeErrors =
+      notificationStatus?.errors?.length
+        ? notificationStatus.errors.join("\n")
+        : t.noNativeErrors;
+    Alert.alert(
+      "SleepPet Logs",
+      `${logLines.length ? logLines.join("\n") : t.noLogs}\n\n── ${t.nativeSection} ──\n${nativeErrors}`
+    );
+  }
+
   const {
 
     running,
@@ -126,6 +146,8 @@ export default function SleepModeScreen({ navigation }) {
           await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
           );
+
+        addLog(`Permiso notificaciones: ${result}`);
 
         if (
           result !== "granted" &&
@@ -180,14 +202,27 @@ export default function SleepModeScreen({ navigation }) {
         t.notificationUnlocks
       );
 
+      addLog("startNotification llamada");
+
+    } else {
+
+      addLog("Sin sesión activa al iniciar");
+
     }
 
     getNotificationStatus()
       .then((status) => {
         setNotificationStatus(status);
+        addLog(
+          `Estado: 🔔=${status.notificationsEnabled} ⚙️=${status.serviceRunning}` +
+            (status.errors?.length
+              ? ` (${status.errors.length} errores nativos)`
+              : "")
+        );
       })
-      .catch(() => {
+      .catch((e) => {
         setNotificationStatus(null);
+        addLog(`Error leyendo estado: ${e?.message ?? e}`);
       });
 
   }
@@ -419,6 +454,17 @@ export default function SleepModeScreen({ navigation }) {
         )
       }
 
+      {
+        running &&
+        notificationStatus?.errors?.length && (
+          <Text style={styles.diagError}>
+            {notificationStatus.errors[
+              notificationStatus.errors.length - 1
+            ]}
+          </Text>
+        )
+      }
+
       {!running ? (
 
         <TouchableOpacity
@@ -478,6 +524,20 @@ export default function SleepModeScreen({ navigation }) {
 
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.logButton,
+            ]}
+            onPress={showLog}
+          >
+
+            <Text style={styles.buttonText}>
+              {t.viewLogs}
+            </Text>
+
+          </TouchableOpacity>
+
         </>
 
       )}
@@ -519,8 +579,21 @@ const styles = StyleSheet.create({
   diag: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginBottom: 30,
+    marginBottom: 10,
     textAlign: "center",
+  },
+
+  diagError: {
+    fontSize: 13,
+    color: COLORS.danger,
+    marginBottom: 30,
+    marginHorizontal: 30,
+    textAlign: "center",
+  },
+
+  logButton: {
+    backgroundColor: COLORS.secondary,
+    marginTop: 15,
   },
 
   button: {

@@ -304,6 +304,10 @@ export default {
   notifOff: "Notif. bloqueadas",
   serviceOn: "Servicio activo",
   serviceOff: "Servicio detenido",
+  viewLogs: "Ver logs",
+  noLogs: "(sin logs todavía)",
+  nativeSection: "Nativo",
+  noNativeErrors: "(sin errores nativos)",
 
   // ==========================
   // Recomendación por edad

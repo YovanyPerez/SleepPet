@@ -303,6 +303,10 @@ export default {
   notifOff: "Notifs blocked",
   serviceOn: "Service running",
   serviceOff: "Service stopped",
+  viewLogs: "View logs",
+  noLogs: "(no logs yet)",
+  nativeSection: "Native",
+  noNativeErrors: "(no native errors)",
 
   // ==========================
   // Age recommendation

@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.WritableNativeArray
 import com.facebook.react.bridge.WritableNativeMap
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -43,12 +44,17 @@ class NotificationModule(
             } catch (e: Exception) {
                 false
             }
+            val errors = WritableNativeArray().apply {
+                SleepForegroundService.getErrorLog()
+                    .forEach { pushString(it) }
+            }
             val map = WritableNativeMap().apply {
                 putBoolean(
                     "notificationsEnabled",
                     notificationsEnabled
                 )
                 putBoolean("serviceRunning", serviceRunning)
+                putArray("errors", errors)
             }
             promise.resolve(map)
         } catch (e: Exception) {
@@ -127,8 +133,10 @@ class NotificationModule(
                 reactContext.startService(intent)
             }
         } catch (e: Exception) {
-            // La app estaba en segundo plano y Android no permitió
-            // arrancar el servicio; no debe tumbar la app.
+            SleepForegroundService.recordError(
+                "startNotification",
+                e.toString()
+            )
         }
     }
 
