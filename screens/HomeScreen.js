@@ -2,17 +2,19 @@ import React, { useContext } from "react";
 import {
   ScrollView,
   View,
-  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
 } from "react-native";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 import StatCard from "../components/StatCard";
 import { PET_IMAGES } from "../constants/PetImages";
 import { getTranslations } from "../services/TranslationService";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function HomeScreen({ navigation }) {
 
@@ -72,7 +74,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.screen}>
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -86,21 +88,24 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate("PetShop")}
           >
 
-            <Text style={styles.menuIcon}>
+            <AppText style={styles.menuIcon}>
               🏪
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
 
-            <Text style={styles.greeting}>
+            <AppText
+              color={COLORS.textSecondary}
+              style={styles.greeting}
+            >
               {greeting()}
-            </Text>
+            </AppText>
 
-            <Text style={styles.name}>
+            <AppText style={styles.name}>
               {userName || "Player"} 👋
-            </Text>
+            </AppText>
 
           </View>
 
@@ -109,9 +114,9 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate("Menu")}
           >
 
-            <Text style={styles.menuIcon}>
+            <AppText style={styles.menuIcon}>
               ☰
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
@@ -138,17 +143,20 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.levelCard}>
 
-            <Text style={styles.levelIcon}>
+            <AppText style={styles.levelIcon}>
               ⭐
-            </Text>
+            </AppText>
 
-            <Text style={styles.levelLabel}>
+            <AppText
+              color={COLORS.textSecondary}
+              style={styles.levelLabel}
+            >
               {t.level}
-            </Text>
+            </AppText>
 
-            <Text style={styles.levelValue}>
+            <AppText style={styles.levelValue}>
               {level}
-            </Text>
+            </AppText>
 
             <View style={styles.levelBarBackground}>
 
@@ -163,9 +171,12 @@ export default function HomeScreen({ navigation }) {
 
             </View>
 
-            <Text style={styles.levelXp}>
+            <AppText
+              color={COLORS.textSecondary}
+              style={styles.levelXp}
+            >
               {xp} / 100 {t.xp}
-            </Text>
+            </AppText>
 
           </View>
 
@@ -186,151 +197,145 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("SleepMode")}
         >
 
-          <Text style={styles.startText}>
+          <AppText style={styles.startText}>
             🌙 {t.startSleep.toUpperCase()}
-          </Text>
+          </AppText>
 
         </TouchableOpacity>
 
       </View>
 
-    </View>
+    </ScreenContainer>
 
   );
 
 }
 const styles = StyleSheet.create({
 
-  container:{
-    flex:1,
-    backgroundColor:COLORS.background,
+  screen: {
+    padding: 0,
   },
 
-  content:{
-    paddingTop:55,
-    paddingHorizontal:20,
-    paddingBottom:130,
+  content: {
+    paddingTop: 55,
+    paddingHorizontal: 20,
+    paddingBottom: 130,
   },
 
-  header:{
-    flexDirection:"row",
-    alignItems:"center",
-    justifyContent:"space-between",
-    marginBottom:20,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
   },
 
-  headerCenter:{
-    flex:1,
-    marginHorizontal:15,
+  headerCenter: {
+    flex: 1,
+    marginHorizontal: 15,
   },
 
-  greeting:{
-    color:COLORS.textSecondary,
-    fontSize:17,
+  greeting: {
+    fontSize: 17,
   },
 
-  name:{
-    fontSize:30,
-    fontWeight:"bold",
-    color:COLORS.text,
-    marginTop:4,
+  name: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginTop: 4,
   },
 
-  circleButton:{
-    width:50,
-    height:50,
-    borderRadius:25,
-    backgroundColor:COLORS.primary,
-    justifyContent:"center",
-    alignItems:"center",
-    elevation:5,
+  circleButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
   },
 
-  menuIcon:{
-    color:"white",
-    fontSize:24,
+  menuIcon: {
+    color: "white",
+    fontSize: 24,
   },
 
-  pet:{
-    width:190,
-    height:190,
-    resizeMode:"contain",
-    alignSelf:"center",
-    marginBottom:20,
+  pet: {
+    width: 190,
+    height: 190,
+    resizeMode: "contain",
+    alignSelf: "center",
+    marginBottom: 20,
   },
 
-  grid:{
-    flexDirection:"row",
-    flexWrap:"wrap",
-    justifyContent:"space-between",
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
 
-  levelCard:{
-    width:"48%",
-    backgroundColor:"white",
-    borderRadius:20,
-    padding:18,
-    alignItems:"center",
-    elevation:4,
-    marginBottom:18,
+  levelCard: {
+    width: "48%",
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 18,
+    alignItems: "center",
+    elevation: 4,
+    marginBottom: 18,
   },
 
-  levelIcon:{
-    fontSize:42,
+  levelIcon: {
+    fontSize: 42,
   },
 
-  levelLabel:{
-    fontSize:18,
-    color:COLORS.textSecondary,
-    marginTop:8,
+  levelLabel: {
+    fontSize: 18,
+    marginTop: 8,
   },
 
-  levelValue:{
-    fontSize:34,
-    fontWeight:"bold",
-    color:COLORS.text,
-    marginVertical:6,
+  levelValue: {
+    fontSize: 34,
+    fontWeight: "bold",
+    marginVertical: 6,
   },
 
-  levelBarBackground:{
-    width:"100%",
-    height:8,
-    backgroundColor:"#E5E5E5",
-    borderRadius:10,
-    overflow:"hidden",
-    marginTop:8,
+  levelBarBackground: {
+    width: "100%",
+    height: 8,
+    backgroundColor: "#E5E5E5",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginTop: 8,
   },
 
-  levelBarFill:{
-    height:8,
-    backgroundColor:COLORS.primary,
+  levelBarFill: {
+    height: 8,
+    backgroundColor: COLORS.primary,
   },
 
-  levelXp:{
-    marginTop:8,
-    fontSize:12,
-    color:COLORS.textSecondary,
+  levelXp: {
+    marginTop: 8,
+    fontSize: 12,
   },
 
-  bottomContainer:{
-    position:"absolute",
-    left:20,
-    right:20,
-    bottom:25,
+  bottomContainer: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 25,
   },
 
-  startButton:{
-    backgroundColor:COLORS.primary,
-    paddingVertical:18,
-    borderRadius:20,
-    alignItems:"center",
-    elevation:6,
+  startButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 18,
+    borderRadius: 20,
+    alignItems: "center",
+    elevation: 6,
   },
 
-  startText:{
-    color:"white",
-    fontWeight:"bold",
-    fontSize:22,
+  startText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 22,
   },
 
 });

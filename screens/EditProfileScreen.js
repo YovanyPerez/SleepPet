@@ -1,7 +1,5 @@
 import React, { useContext, useState } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -9,7 +7,7 @@ import {
 } from "react-native";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 
 import {
   getTranslations,
@@ -18,6 +16,10 @@ import {
 import {
   calculateGoalHours,
 } from "../utils/sleepUtils";
+
+import ScreenContainer from "../components/ScreenContainer";
+import Card from "../components/Card";
+import AppText from "../components/AppText";
 
 export default function EditProfileScreen({ navigation }) {
 
@@ -67,108 +69,125 @@ export default function EditProfileScreen({ navigation }) {
 
   return (
 
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{
-        paddingBottom:40,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScreenContainer style={styles.screen}>
 
-      <Text style={styles.title}>
-        ✏️ {t.editProfile}
-      </Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{
+          paddingBottom: 40,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
 
-      <View style={styles.card}>
+        <AppText
+          variant="title"
+          center
+          style={styles.title}
+        >
+          ✏️ {t.editProfile}
+        </AppText>
 
-        <Text style={styles.label}>
-          {t.name}
-        </Text>
+        <Card style={styles.card}>
 
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder={t.yourName}
-          style={styles.input}
-        />
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.label}
+          >
+            {t.name}
+          </AppText>
 
-      </View>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder={t.yourName}
+            style={styles.input}
+          />
 
-      <View style={styles.card}>
+        </Card>
 
-        <Text style={styles.label}>
-          {t.age}
-        </Text>
+        <Card style={styles.card}>
 
-        <TextInput
-          value={age}
-          onChangeText={setAge}
-          placeholder={t.age}
-          keyboardType="numeric"
-          style={styles.input}
-        />
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.label}
+          >
+            {t.age}
+          </AppText>
 
-      </View>
+          <TextInput
+            value={age}
+            onChangeText={setAge}
+            placeholder={t.age}
+            keyboardType="numeric"
+            style={styles.input}
+          />
 
-      <View style={styles.card}>
+        </Card>
 
-        <Text style={styles.label}>
-          {t.sleepGoal} ({t.hours})
-        </Text>
+        <Card style={styles.card}>
 
-        <TextInput
-          value={goal}
-          onChangeText={setGoal}
-          keyboardType="numeric"
-          style={styles.input}
-        />
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.label}
+          >
+            {t.sleepGoal} ({t.hours})
+          </AppText>
 
-        {
-          recommendedHours &&
-          recommendedHours !== Number(goal) && (
-            <TouchableOpacity
-              style={styles.recommended}
-              onPress={() =>
-                setGoal(String(recommendedHours))
-              }
-            >
-              <Text style={styles.recommendedText}>
-                💡 {
-                  t.recommendedHours.replace(
-                    "{{hours}}",
-                    recommendedHours
-                  )
+          <TextInput
+            value={goal}
+            onChangeText={setGoal}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+
+          {
+            recommendedHours &&
+            recommendedHours !== Number(goal) && (
+              <TouchableOpacity
+                style={styles.recommended}
+                onPress={() =>
+                  setGoal(String(recommendedHours))
                 }
-              </Text>
-            </TouchableOpacity>
-          )
-        }
+              >
+                <AppText style={styles.recommendedText}>
+                  💡 {
+                    t.recommendedHours.replace(
+                      "{{hours}}",
+                      recommendedHours
+                    )
+                  }
+                </AppText>
+              </TouchableOpacity>
+            )
+          }
 
-      </View>
+        </Card>
 
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={saveProfile}
-      >
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={saveProfile}
+        >
 
-        <Text style={styles.buttonText}>
-          💾 {t.saveChanges}
-        </Text>
+          <AppText style={styles.buttonText}>
+            💾 {t.saveChanges}
+          </AppText>
 
-      </TouchableOpacity>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.cancelButton}
-        onPress={() => navigation.goBack()}
-      >
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => navigation.goBack()}
+        >
 
-        <Text style={styles.buttonText}>
-          {t.cancel}
-        </Text>
+          <AppText style={styles.buttonText}>
+            {t.cancel}
+          </AppText>
 
-      </TouchableOpacity>
+        </TouchableOpacity>
 
-    </ScrollView>
+      </ScrollView>
+
+    </ScreenContainer>
 
   );
 
@@ -176,31 +195,26 @@ export default function EditProfileScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
+  screen: {
+    padding: 0,
+  },
+
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
     padding: 20,
   },
 
   title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: COLORS.text,
     marginBottom: 25,
   },
 
   card: {
-    backgroundColor: "white",
-    borderRadius: 18,
     padding: 18,
     marginBottom: 18,
-    elevation: 4,
   },
 
   label: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     marginBottom: 10,
   },
 
@@ -227,7 +241,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-    saveButton: {
+
+  saveButton: {
     backgroundColor: COLORS.primary,
     borderRadius: 20,
     paddingVertical: 18,

@@ -1,13 +1,10 @@
 import React, { useContext } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
 } from "react-native";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS, FONT } from "../constants/theme";
 
 import AchievementCard from "../components/AchievementCard";
 
@@ -18,6 +15,9 @@ import {
 import {
   getTranslations,
 } from "../services/TranslationService";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function AchievementsScreen() {
 
@@ -55,11 +55,14 @@ export default function AchievementsScreen() {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        style={styles.title}
+      >
         🏆 {t.achievements}
-      </Text>
+      </AppText>
 
       <FlatList
         data={achievements}
@@ -75,7 +78,7 @@ export default function AchievementsScreen() {
         contentContainerStyle={styles.list}
       />
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -85,10 +88,6 @@ const styles = StyleSheet.create({
 
   container: {
 
-    flex: 1,
-
-    backgroundColor: COLORS.background,
-
     paddingTop: 55,
 
     paddingHorizontal: 20,
@@ -96,12 +95,6 @@ const styles = StyleSheet.create({
   },
 
   title: {
-
-    fontSize: FONT.title,
-
-    fontWeight: "bold",
-
-    color: COLORS.text,
 
     marginBottom: 20,
 

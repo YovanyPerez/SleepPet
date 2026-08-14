@@ -1,7 +1,5 @@
 import React, { useContext } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
   Alert,
@@ -16,7 +14,10 @@ import {
 import {
   getTranslations,
 } from "../services/TranslationService";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function PetShopScreen() {
 
@@ -75,15 +76,18 @@ export default function PetShopScreen() {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        style={styles.title}
+      >
         🐾 {t.petShop}
-      </Text>
+      </AppText>
 
-      <Text style={styles.coins}>
+      <AppText style={styles.coins}>
         💰 {coins} {t.coins}
-      </Text>
+      </AppText>
 
       <FlatList
         data={PETS}
@@ -108,7 +112,7 @@ export default function PetShopScreen() {
         )}
       />
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -118,10 +122,6 @@ const styles = StyleSheet.create({
 
   container: {
 
-    flex: 1,
-
-    backgroundColor: COLORS.background,
-
     paddingTop: 55,
 
     paddingHorizontal: 20,
@@ -130,19 +130,11 @@ const styles = StyleSheet.create({
 
   title: {
 
-    fontSize: FONT.title,
-
-    fontWeight: "bold",
-
     marginBottom: 8,
-
-    color: COLORS.text,
 
   },
 
   coins: {
-
-    fontSize: 18,
 
     marginBottom: 20,
 

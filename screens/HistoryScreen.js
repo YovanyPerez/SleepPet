@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
 } from "react-native";
@@ -14,7 +12,10 @@ import {
 
 import { getSleepHistory } from "../storage/SleepStorage";
 import SleepCard from "../components/SleepCard";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function HistoryScreen() {
 
@@ -40,19 +41,27 @@ export default function HistoryScreen() {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+        style={styles.title}
+      >
         📅 {t.sleepHistory}
-      </Text>
+      </AppText>
 
       {
 
         history.length === 0 ?
 
-        <Text style={styles.empty}>
+        <AppText
+          variant="body"
+          color={COLORS.textSecondary}
+          style={styles.empty}
+        >
           {t.noSleepSessions}
-        </Text>
+        </AppText>
 
         :
 
@@ -70,7 +79,7 @@ export default function HistoryScreen() {
 
       }
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -78,25 +87,13 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
 
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    padding: 20,
-  },
-
   title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
-    color: COLORS.text,
     marginBottom: 20,
-    textAlign: "center",
   },
 
   empty: {
     textAlign: "center",
     marginTop: 80,
-    fontSize: 18,
-    color: COLORS.textSecondary,
   },
 
 });

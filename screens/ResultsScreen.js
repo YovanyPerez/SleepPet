@@ -1,18 +1,21 @@
 import React, { useContext } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   TouchableOpacity,
 } from "react-native";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 import { PET_IMAGES } from "../constants/PetImages";
 import {
   getTranslations,
 } from "../services/TranslationService";
+
+import ScreenContainer from "../components/ScreenContainer";
+import Card from "../components/Card";
+import AppText from "../components/AppText";
 
 export default function ResultsScreen({ navigation }) {
 
@@ -32,13 +35,13 @@ export default function ResultsScreen({ navigation }) {
 
     return (
 
-      <View style={styles.container}>
+      <ScreenContainer style={styles.container}>
 
-        <Text style={styles.empty}>
+        <AppText style={styles.empty}>
           {t.noSleepSession}
-        </Text>
+        </AppText>
 
-      </View>
+      </ScreenContainer>
 
     );
 
@@ -66,111 +69,137 @@ export default function ResultsScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+        style={styles.title}
+      >
         {getTitle()}
-      </Text>
+      </AppText>
 
       <Image
         source={PET_IMAGES[selectedPet][lastSleepSession.mood]}
         style={styles.pet}
       />
 
-      <View style={styles.card}>
+      <Card style={styles.card}>
 
-        <Text style={styles.label}>
+        <AppText
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
           {t.sleepTime}
-        </Text>
+        </AppText>
 
-        <Text style={styles.value}>
+        <AppText style={styles.value}>
           {lastSleepSession.hours} {t.hours}
-        </Text>
+        </AppText>
 
-      </View>
+      </Card>
 
-      <View style={styles.card}>
+      <Card style={styles.card}>
 
-        <Text style={styles.label}>
+        <AppText
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
           {t.sleepQuality}
-        </Text>
+        </AppText>
 
-        <Text style={styles.value}>
+        <AppText style={styles.value}>
           😴 {lastSleepSession.quality}
-        </Text>
+        </AppText>
 
-      </View>
+      </Card>
 
-      <View style={styles.card}>
+      <Card style={styles.card}>
 
-        <Text style={styles.label}>
+        <AppText
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
           {t.sleepScore}
-        </Text>
+        </AppText>
 
-        <Text style={styles.value}>
+        <AppText style={styles.value}>
           💯 {lastSleepSession.score}/100
-        </Text>
+        </AppText>
 
-      </View>
+      </Card>
 
-      <View style={styles.card}>
+      <Card style={styles.card}>
 
-        <Text style={styles.label}>
-        📱 {t.phoneUnlocks}
-       </Text>
+        <AppText
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
+          📱 {t.phoneUnlocks}
+        </AppText>
 
-       <Text style={styles.value}>
-       {lastSleepSession.unlockCount}
-       </Text>
-     </View>
+        <AppText style={styles.value}>
+          {lastSleepSession.unlockCount}
+        </AppText>
 
-     <View style={styles.card}>
+      </Card>
 
-       <Text style={styles.label}>
-       ⚠️ {t.penalty}
-       </Text>
+      <Card style={styles.card}>
 
-       <Text style={styles.value}>
-        {lastSleepSession.penalty > 0
-        ? `-${lastSleepSession.penalty}`
-        : t.none}
-       </Text>
+        <AppText
+          color={COLORS.textSecondary}
+          style={styles.label}
+        >
+          ⚠️ {t.penalty}
+        </AppText>
 
-</View>
+        <AppText style={styles.value}>
+          {lastSleepSession.penalty > 0
+            ? `-${lastSleepSession.penalty}`
+            : t.none}
+        </AppText>
+
+      </Card>
 
       <View style={styles.rewardRow}>
 
-        <View style={styles.rewardCard}>
+        <Card style={styles.rewardCard}>
 
-          <Text style={styles.rewardIcon}>
+          <AppText style={styles.rewardIcon}>
             💰
-          </Text>
+          </AppText>
 
-          <Text style={styles.rewardValue}>
+          <AppText style={styles.rewardValue}>
             +{lastSleepSession.coins}
-          </Text>
+          </AppText>
 
-          <Text style={styles.rewardLabel}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.rewardLabel}
+          >
             {t.coins}
-          </Text>
+          </AppText>
 
-        </View>
+        </Card>
 
-        <View style={styles.rewardCard}>
+        <Card style={styles.rewardCard}>
 
-          <Text style={styles.rewardIcon}>
+          <AppText style={styles.rewardIcon}>
             ⭐
-          </Text>
+          </AppText>
 
-          <Text style={styles.rewardValue}>
+          <AppText style={styles.rewardValue}>
             +{lastSleepSession.earnedXP}
-          </Text>
+          </AppText>
 
-          <Text style={styles.rewardLabel}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.rewardLabel}
+          >
             XP
-          </Text>
+          </AppText>
 
-        </View>
+        </Card>
 
       </View>
 
@@ -178,17 +207,17 @@ export default function ResultsScreen({ navigation }) {
 
         <View style={styles.levelUpCard}>
 
-          <Text style={styles.levelUpTitle}>
+          <AppText style={styles.levelUpTitle}>
             {t.levelUp}
-          </Text>
+          </AppText>
 
-          <Text style={styles.levelUpText}>
+          <AppText style={styles.levelUpText}>
             {t.congratulations}
-          </Text>
+          </AppText>
 
-          <Text style={styles.levelUpText}>
+          <AppText style={styles.levelUpText}>
             {t.youReachedLevel} {lastSleepSession.newLevel}
-          </Text>
+          </AppText>
 
         </View>
 
@@ -199,13 +228,13 @@ export default function ResultsScreen({ navigation }) {
         onPress={() => navigation.navigate("Home")}
       >
 
-        <Text style={styles.buttonText}>
+        <AppText style={styles.buttonText}>
           {t.continue}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -214,124 +243,107 @@ export default function ResultsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container:{
-    flex:1,
-    backgroundColor:COLORS.background,
-    alignItems:"center",
-    justifyContent:"center",
-    padding:20,
+  container: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  empty:{
-    fontSize:20,
-    color:COLORS.text,
+  empty: {
+    fontSize: 20,
   },
 
-  title:{
-    fontSize:FONT.title,
-    fontWeight:"bold",
-    color:COLORS.text,
-    marginBottom:15,
-    textAlign:"center",
+  title: {
+    marginBottom: 15,
   },
 
-  pet:{
-    width:180,
-    height:180,
-    resizeMode:"contain",
-    marginBottom:20,
+  pet: {
+    width: 180,
+    height: 180,
+    resizeMode: "contain",
+    marginBottom: 20,
   },
 
-  card:{
-    width:"100%",
-    backgroundColor:"white",
-    borderRadius:20,
-    padding:18,
-    marginBottom:15,
-    alignItems:"center",
-    elevation:4,
+  card: {
+    width: "100%",
+    padding: 18,
+    marginBottom: 15,
+    alignItems: "center",
   },
 
-  label:{
-    color:COLORS.textSecondary,
-    fontSize:17,
-    marginBottom:5,
+  label: {
+    fontSize: 17,
+    marginBottom: 5,
   },
 
-  value:{
-    fontSize:24,
-    fontWeight:"bold",
-    color:COLORS.text,
+  value: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
 
-  rewardRow:{
-    flexDirection:"row",
-    justifyContent:"space-between",
-    width:"100%",
-    marginBottom:20,
+  rewardRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 20,
   },
 
-  rewardCard:{
-    width:"48%",
-    backgroundColor:"white",
-    borderRadius:20,
-    padding:20,
-    alignItems:"center",
-    elevation:4,
+  rewardCard: {
+    width: "48%",
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 0,
   },
 
-  rewardIcon:{
-    fontSize:38,
+  rewardIcon: {
+    fontSize: 38,
   },
 
-  rewardValue:{
-    fontSize:28,
-    fontWeight:"bold",
-    marginTop:10,
-    color:COLORS.text,
+  rewardValue: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginTop: 10,
   },
 
-  rewardLabel:{
-    marginTop:6,
-    color:COLORS.textSecondary,
-    fontSize:16,
+  rewardLabel: {
+    marginTop: 6,
+    fontSize: 16,
   },
 
-  levelUpCard:{
-    width:"100%",
-    backgroundColor:"#FFE082",
-    borderRadius:20,
-    padding:20,
-    alignItems:"center",
-    marginBottom:20,
-    elevation:6,
+  levelUpCard: {
+    width: "100%",
+    backgroundColor: "#FFE082",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 20,
+    elevation: 6,
   },
 
-  levelUpTitle:{
-    fontSize:28,
-    fontWeight:"bold",
-    color:"#C77700",
-    marginBottom:8,
+  levelUpTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#C77700",
+    marginBottom: 8,
   },
 
-  levelUpText:{
-    fontSize:18,
-    fontWeight:"600",
-    color:"#7A5200",
+  levelUpText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#7A5200",
   },
 
-  button:{
-    backgroundColor:COLORS.primary,
-    paddingHorizontal:60,
-    paddingVertical:18,
-    borderRadius:20,
-    elevation:5,
+  button: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 60,
+    paddingVertical: 18,
+    borderRadius: 20,
+    elevation: 5,
   },
 
-  buttonText:{
-    color:"white",
-    fontSize:20,
-    fontWeight:"bold",
+  buttonText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 
 });

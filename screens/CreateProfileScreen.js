@@ -1,16 +1,17 @@
 import React, { useState, useContext } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
 } from "react-native";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 import { getTranslations } from "../services/TranslationService";
 import { calculateGoalHours } from "../utils/sleepUtils";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function CreateProfileScreen({ navigation }) {
 
@@ -64,11 +65,14 @@ export default function CreateProfileScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
-      <Text style={styles.progress}>
+      <AppText
+        color={COLORS.textSecondary}
+        style={styles.progress}
+      >
         {t.step} {step} {t.of} 3
-      </Text>
+      </AppText>
 
       {
 
@@ -76,9 +80,13 @@ export default function CreateProfileScreen({ navigation }) {
 
           <>
 
-            <Text style={styles.title}>
+            <AppText
+              variant="title"
+              center
+              style={styles.title}
+            >
               {t.whatsYourName}
-            </Text>
+            </AppText>
 
             <TextInput
               value={name}
@@ -93,9 +101,9 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setStep(2)}
             >
 
-              <Text style={styles.buttonText}>
+              <AppText style={styles.buttonText}>
                 {t.continue}
-              </Text>
+              </AppText>
 
             </TouchableOpacity>
 
@@ -111,9 +119,13 @@ export default function CreateProfileScreen({ navigation }) {
 
           <>
 
-            <Text style={styles.title}>
+            <AppText
+              variant="title"
+              center
+              style={styles.title}
+            >
               {t.howOldAreYou}
-            </Text>
+            </AppText>
 
             <TextInput
               value={age}
@@ -129,9 +141,9 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setStep(3)}
             >
 
-              <Text style={styles.buttonText}>
+              <AppText style={styles.buttonText}>
                 {t.continue}
-              </Text>
+              </AppText>
 
             </TouchableOpacity>
 
@@ -147,18 +159,22 @@ export default function CreateProfileScreen({ navigation }) {
 
           <>
 
-            <Text style={styles.title}>
+            <AppText
+              variant="title"
+              center
+              style={styles.title}
+            >
               {t.whatsYourGoal}
-            </Text>
+            </AppText>
 
             <TouchableOpacity
               style={styles.option}
               onPress={() => setGoal(t.goalImproveSleep)}
             >
 
-              <Text style={styles.optionText}>
+              <AppText>
                 😴 {t.goalImproveSleep}
-              </Text>
+              </AppText>
 
             </TouchableOpacity>
 
@@ -167,9 +183,9 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setGoal(t.goalHealthyHabits)}
             >
 
-              <Text style={styles.optionText}>
+              <AppText>
                 🌱 {t.goalHealthyHabits}
-              </Text>
+              </AppText>
 
             </TouchableOpacity>
 
@@ -178,9 +194,9 @@ export default function CreateProfileScreen({ navigation }) {
               onPress={() => setGoal(t.goalMoreEnergy)}
             >
 
-              <Text style={styles.optionText}>
+              <AppText>
                 ⚡ {t.goalMoreEnergy}
-              </Text>
+              </AppText>
 
             </TouchableOpacity>
 
@@ -193,9 +209,9 @@ export default function CreateProfileScreen({ navigation }) {
                   onPress={finishSetup}
                 >
 
-                  <Text style={styles.buttonText}>
+                  <AppText style={styles.buttonText}>
                     {t.finish}
-                  </Text>
+                  </AppText>
 
                 </TouchableOpacity>
 
@@ -209,7 +225,7 @@ export default function CreateProfileScreen({ navigation }) {
 
       }
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -217,61 +233,49 @@ export default function CreateProfileScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container:{
-    flex:1,
-    justifyContent:"center",
-    padding:25,
-    backgroundColor:COLORS.background,
+  container: {
+    justifyContent: "center",
+    padding: 25,
   },
 
-  progress:{
-    textAlign:"center",
-    marginBottom:40,
-    color:COLORS.textSecondary,
-    fontSize:16,
+  progress: {
+    textAlign: "center",
+    marginBottom: 40,
+    fontSize: 16,
   },
 
-  title:{
-    fontSize:FONT.title,
-    fontWeight:"bold",
-    marginBottom:25,
-    textAlign:"center",
-    color:COLORS.text,
+  title: {
+    marginBottom: 25,
   },
 
-  input:{
-    backgroundColor:"white",
-    borderRadius:15,
-    padding:15,
-    fontSize:18,
-    marginBottom:25,
-    color:COLORS.text,
+  input: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 15,
+    fontSize: 18,
+    marginBottom: 25,
+    color: COLORS.text,
   },
 
-  option:{
-    backgroundColor:"white",
-    padding:18,
-    borderRadius:15,
-    marginBottom:15,
+  option: {
+    backgroundColor: "white",
+    padding: 18,
+    borderRadius: 15,
+    marginBottom: 15,
   },
 
-  optionText:{
-    color:COLORS.text,
-    fontSize:18,
+  button: {
+    marginTop: 30,
+    backgroundColor: COLORS.primary,
+    padding: 18,
+    borderRadius: 15,
+    alignItems: "center",
   },
 
-  button:{
-    marginTop:30,
-    backgroundColor:COLORS.primary,
-    padding:18,
-    borderRadius:15,
-    alignItems:"center",
-  },
-
-  buttonText:{
-    color:"white",
-    fontWeight:"bold",
-    fontSize:18,
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
   },
 
 });

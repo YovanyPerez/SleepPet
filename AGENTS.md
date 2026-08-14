@@ -36,5 +36,42 @@ Read the exact versioned Expo docs at https://docs.expo.dev/versions/v54.0.0/ be
 ## Foreground service
 - `SleepForegroundService.kt` shows the persistent notification (elapsed time + unlock count). It uses `foregroundServiceType="specialUse"` with `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` — do not revert to `health`; that caused `SecurityException` crashes on `startForeground`.
 
+## App architecture & main flows
+
+### Bootstrap & navigation
+- `App.js` → `AppProvider` (`context/AppContext.js`) wraps `navigation/AppNavigator.js` (single native stack, `headerShown: false`).
+- Initial route: `Welcome` if no `userName`, else `Home`. Screens live in `screens/`; shared UI in `components/`.
+- `AppContext` is the single source of state (profile, economy, pets, achievements, session, unlocks). It auto-saves to AsyncStorage (`storage/AppStorage.js`) on changes and restores on load. On mount it also restarts an active session (notification) and re-schedules the bedtime reminder.
+
+### Sleep session flow
+1. `SleepModeScreen.handleStartSleep` → requests `POST_NOTIFICATIONS` (Android 13+) + `ACTIVITY_RECOGNITION` → `setSleepSessionStarted(true)` → `startSleep()` writes `current_sleep_session` (`{startTime, active, unlockCount: 0, unlockTimes: []}`) → `startNotification` starts `SleepForegroundService` (persistent notification with elapsed time + unlock count).
+2. `hooks/useSleepSession.js` ticks elapsed time every second from `startTime`.
+3. Unlocks increment in `AppContext` while `sleepSessionStarted`; persisted by `updateUnlockState` (`services/SleepService.js`) and mirrored to the notification by `updateUnlocks`.
+4. `finishSleep` → `finishSleepSession()` clears the active session; sessions < 0.5 h are discarded. Otherwise: `calculateSleepRewards` → `SleepScoreService.calculateSleepScore` (score = 100 − (goal−hours)·10 − unlocks·5) → coins (score ≥90: 50, ≥75: 35, ≥60: 20, else 5) → XP via `LevelService.getXPFromQuality` (Excellent 25, Good 18, Fair 10, else 5; 100 XP per level) → session saved to `sleep_history` → streak (+1 if ≥7 h, else 0) → `unlockAchievements` → navigate to `Results`.
+
+### Economy / gamification
+- Coins: sleep rewards + achievement rewards; spent in PetShop.
+- Level: `addXP` accumulates 100 XP per level.
+- Pet mood: derived from sleep score (happy ≥90, normal ≥75, sleepy ≥60, sad).
+- Pets: `PETS` catalog in `services/PetService.js` (cat is default/0; dog 100 … dragon 3000). Only pets with `available: true` can be bought; buying checks `canBuyPet`.
+
+### Storage (AsyncStorage keys)
+- `sleep_pet_data` — profile + economy + settings (coins, streak, petMood, petHappiness, userName, userAge, goalHours, goalType, selectedPet, ownedPets, language, level, xp).
+- `current_sleep_session` — active session state.
+- `sleep_history` — array of finished session objects.
+- `sleep_pet_achievements` — unlocked achievement ids.
+- `sleep_reminder_settings` — `{enabled, hour, minute}`.
+
+### Translations
+- `translations/es.js` and `translations/en.js`; selected via `services/TranslationService.js` (`getTranslations(language)`). All UI strings go through `t.*`.
+
+### Bedtime reminder
+- `SettingsScreen` saves `{enabled, hour, minute}` and calls `scheduleReminder`/`cancelReminder` (`services/ReminderService.js`).
+- `ReminderModule.schedule` stores title/content in SharedPreferences and sets an inexact daily `AlarmManager` (`RTC_WAKEUP`, `INTERVAL_DAY`) → `ReminderReceiver` shows the notification.
+- `AppContext` re-schedules on app start and language change if enabled. **No `BOOT_COMPLETED` receiver** → the alarm is lost on reboot until the app is opened again.
+
+### Dead code (safe to remove)
+- `storage/StorageService.js`, `services/UsageService.js` (empty), `services/SleepSessionManager.js` (one stray line), `components/CustomButton.js` (empty), `styles/globalStyles.js` (empty).
+
 ## Conventions
 - Code comments, log strings, and user-facing copy are in Spanish — keep new code consistent.

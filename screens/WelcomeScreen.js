@@ -8,7 +8,10 @@ import {
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function WelcomeScreen({ navigation }) {
 
@@ -21,19 +24,26 @@ export default function WelcomeScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
       <Text style={styles.logo}>
         🐱
       </Text>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+        style={styles.title}
+      >
         {t.welcomeTitle}
-      </Text>
+      </AppText>
 
-      <Text style={styles.subtitle}>
+      <AppText
+        color={COLORS.textSecondary}
+        style={styles.subtitle}
+      >
         {t.welcomeSubtitle}
-      </Text>
+      </AppText>
 
       <View style={styles.languageContainer}>
 
@@ -45,9 +55,9 @@ export default function WelcomeScreen({ navigation }) {
           onPress={() => setLanguage("en")}
         >
 
-          <Text style={styles.languageText}>
+          <AppText style={styles.languageText}>
             🇺🇸 English
-          </Text>
+          </AppText>
 
         </TouchableOpacity>
 
@@ -59,9 +69,9 @@ export default function WelcomeScreen({ navigation }) {
           onPress={() => setLanguage("es")}
         >
 
-          <Text style={styles.languageText}>
+          <AppText style={styles.languageText}>
             🇪🇸 Español
-          </Text>
+          </AppText>
 
         </TouchableOpacity>
 
@@ -72,13 +82,13 @@ export default function WelcomeScreen({ navigation }) {
         onPress={() => navigation.navigate("CreateProfile")}
       >
 
-        <Text style={styles.buttonText}>
+        <AppText style={styles.buttonText}>
           {t.getStarted}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -86,70 +96,63 @@ export default function WelcomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container:{
-    flex:1,
-    justifyContent:"center",
-    alignItems:"center",
-    backgroundColor:COLORS.background,
-    padding:30,
+  container: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 30,
   },
 
-  logo:{
-    fontSize:90,
-    marginBottom:25,
+  logo: {
+    fontSize: 90,
+    marginBottom: 25,
   },
 
-  title:{
-    fontSize:30,
-    fontWeight:"bold",
-    color:COLORS.text,
-    textAlign:"center",
-    marginBottom:15,
+  title: {
+    marginBottom: 15,
   },
 
-  subtitle:{
-    fontSize:18,
-    color:COLORS.textSecondary,
-    textAlign:"center",
-    lineHeight:28,
-    marginBottom:35,
+  subtitle: {
+    fontSize: 18,
+    textAlign: "center",
+    lineHeight: 28,
+    marginBottom: 35,
   },
 
-  languageContainer:{
-    flexDirection:"row",
-    marginBottom:40,
+  languageContainer: {
+    flexDirection: "row",
+    marginBottom: 40,
   },
 
-  languageButton:{
-    backgroundColor:"#EAEAEA",
-    paddingVertical:14,
-    paddingHorizontal:18,
-    borderRadius:14,
-    marginHorizontal:8,
+  languageButton: {
+    backgroundColor: "#EAEAEA",
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    marginHorizontal: 8,
   },
 
-  selectedButton:{
-    backgroundColor:COLORS.primary,
+  selectedButton: {
+    backgroundColor: COLORS.primary,
   },
 
-  languageText:{
-    color:"white",
-    fontWeight:"bold",
-    fontSize:16,
+  languageText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 
-  button:{
-    backgroundColor:COLORS.primary,
-    paddingHorizontal:45,
-    paddingVertical:16,
-    borderRadius:20,
-    elevation:5,
+  button: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 45,
+    paddingVertical: 16,
+    borderRadius: 20,
+    elevation: 5,
   },
 
-  buttonText:{
-    color:"white",
-    fontSize:18,
-    fontWeight:"bold",
+  buttonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 
 });

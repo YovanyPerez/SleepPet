@@ -1,14 +1,16 @@
 import React, { useContext } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 export default function MenuScreen({ navigation }) {
 
@@ -18,32 +20,41 @@ export default function MenuScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+      >
         📂 {t.menu}
-      </Text>
+      </AppText>
 
-      <Text style={styles.subtitle}>
+      <AppText
+        color={COLORS.textSecondary}
+        style={styles.subtitle}
+      >
         {t.chooseDestination}
-      </Text>
+      </AppText>
 
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate("Profile")}
       >
 
-        <Text style={styles.icon}>👤</Text>
+        <AppText style={styles.icon}>👤</AppText>
 
         <View style={styles.textContainer}>
 
-          <Text style={styles.cardTitle}>
+          <AppText style={styles.cardTitle}>
             {t.myProfile}
-          </Text>
+          </AppText>
 
-          <Text style={styles.cardSubtitle}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.cardSubtitle}
+          >
             {t.viewProfile}
-          </Text>
+          </AppText>
 
         </View>
 
@@ -54,17 +65,20 @@ export default function MenuScreen({ navigation }) {
         onPress={() => navigation.navigate("History")}
       >
 
-        <Text style={styles.icon}>📅</Text>
+        <AppText style={styles.icon}>📅</AppText>
 
         <View style={styles.textContainer}>
 
-          <Text style={styles.cardTitle}>
+          <AppText style={styles.cardTitle}>
             {t.sleepHistory}
-          </Text>
+          </AppText>
 
-          <Text style={styles.cardSubtitle}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.cardSubtitle}
+          >
             {t.viewSleepHistory}
-          </Text>
+          </AppText>
 
         </View>
 
@@ -75,17 +89,20 @@ export default function MenuScreen({ navigation }) {
         onPress={() => navigation.navigate("Statistics")}
       >
 
-        <Text style={styles.icon}>📊</Text>
+        <AppText style={styles.icon}>📊</AppText>
 
         <View style={styles.textContainer}>
 
-          <Text style={styles.cardTitle}>
+          <AppText style={styles.cardTitle}>
             {t.statistics}
-          </Text>
+          </AppText>
 
-          <Text style={styles.cardSubtitle}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.cardSubtitle}
+          >
             {t.checkProgress}
-          </Text>
+          </AppText>
 
         </View>
 
@@ -96,17 +113,20 @@ export default function MenuScreen({ navigation }) {
         onPress={() => navigation.navigate("Achievements")}
       >
 
-        <Text style={styles.icon}>🏆</Text>
+        <AppText style={styles.icon}>🏆</AppText>
 
         <View style={styles.textContainer}>
 
-          <Text style={styles.cardTitle}>
+          <AppText style={styles.cardTitle}>
             {t.achievements}
-          </Text>
+          </AppText>
 
-          <Text style={styles.cardSubtitle}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.cardSubtitle}
+          >
             {t.viewAchievements}
-          </Text>
+          </AppText>
 
         </View>
 
@@ -117,17 +137,20 @@ export default function MenuScreen({ navigation }) {
         onPress={() => navigation.navigate("Settings")}
       >
 
-        <Text style={styles.icon}>⚙️</Text>
+        <AppText style={styles.icon}>⚙️</AppText>
 
         <View style={styles.textContainer}>
 
-          <Text style={styles.cardTitle}>
+          <AppText style={styles.cardTitle}>
             {t.settings}
-          </Text>
+          </AppText>
 
-          <Text style={styles.cardSubtitle}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.cardSubtitle}
+          >
             {t.customizeApp}
-          </Text>
+          </AppText>
 
         </View>
 
@@ -138,13 +161,13 @@ export default function MenuScreen({ navigation }) {
         onPress={() => navigation.goBack()}
       >
 
-        <Text style={styles.backText}>
+        <AppText style={styles.backText}>
           ← {t.backHome}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -153,22 +176,12 @@ export default function MenuScreen({ navigation }) {
 const styles = StyleSheet.create({
 
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
     padding: 25,
     justifyContent: "center",
   },
 
-  title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
-    color: COLORS.text,
-    textAlign: "center",
-  },
-
   subtitle: {
     textAlign: "center",
-    color: COLORS.textSecondary,
     fontSize: 17,
     marginTop: 10,
     marginBottom: 40,
@@ -196,13 +209,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.text,
   },
 
   cardSubtitle: {
     marginTop: 5,
     fontSize: 15,
-    color: COLORS.textSecondary,
   },
 
   backButton: {

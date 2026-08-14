@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
@@ -9,7 +8,7 @@ import {
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 
 import {
   clearAppData,
@@ -33,6 +32,10 @@ import {
   cancelReminder,
 } from "../services/ReminderService";
 
+import ScreenContainer from "../components/ScreenContainer";
+import Card from "../components/Card";
+import AppText from "../components/AppText";
+
 function TimeStepper({ label, value, min, max, onChange }) {
 
   function stepUp() {
@@ -45,22 +48,27 @@ function TimeStepper({ label, value, min, max, onChange }) {
 
   return (
     <View style={styles.stepperCol}>
-      <Text style={styles.stepperLabel}>{label}</Text>
+      <AppText
+        color={COLORS.textSecondary}
+        style={styles.stepperLabel}
+      >
+        {label}
+      </AppText>
       <View style={styles.stepperRow}>
         <TouchableOpacity
           style={styles.stepperBtn}
           onPress={stepDown}
         >
-          <Text style={styles.stepperBtnText}>−</Text>
+          <AppText style={styles.stepperBtnText}>−</AppText>
         </TouchableOpacity>
-        <Text style={styles.stepperValue}>
+        <AppText style={styles.stepperValue}>
           {String(value).padStart(2, "0")}
-        </Text>
+        </AppText>
         <TouchableOpacity
           style={styles.stepperBtn}
           onPress={stepUp}
         >
-          <Text style={styles.stepperBtnText}>+</Text>
+          <AppText style={styles.stepperBtnText}>+</AppText>
         </TouchableOpacity>
       </View>
     </View>
@@ -243,19 +251,23 @@ export default function SettingsScreen({ navigation }) {
 
   return (
 
-    <View style={styles.container}>
+    <ScreenContainer>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+        style={styles.title}
+      >
         ⚙️ {t.settings}
-      </Text>
+      </AppText>
 
       {/* Language */}
 
-      <View style={styles.card}>
+      <Card>
 
-        <Text style={styles.cardTitle}>
+        <AppText style={styles.cardTitle}>
           🌐 {t.language}
-        </Text>
+        </AppText>
 
         <View style={styles.buttons}>
 
@@ -267,9 +279,9 @@ export default function SettingsScreen({ navigation }) {
             onPress={() => setLanguage("en")}
           >
 
-            <Text style={styles.buttonText}>
+            <AppText style={styles.buttonText}>
               🇺🇸 English
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
@@ -281,27 +293,30 @@ export default function SettingsScreen({ navigation }) {
             onPress={() => setLanguage("es")}
           >
 
-            <Text style={styles.buttonText}>
+            <AppText style={styles.buttonText}>
               🇪🇸 Español
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
         </View>
 
-      </View>
+      </Card>
 
       {/* Bedtime reminder */}
 
-      <View style={styles.card}>
+      <Card>
 
-        <Text style={styles.cardTitle}>
+        <AppText style={styles.cardTitle}>
           ⏰ {t.sleepReminder}
-        </Text>
+        </AppText>
 
-        <Text style={styles.cardDesc}>
+        <AppText
+          color={COLORS.textSecondary}
+          style={styles.cardDesc}
+        >
           {t.sleepReminderDesc}
-        </Text>
+        </AppText>
 
         <TouchableOpacity
           style={[
@@ -315,11 +330,11 @@ export default function SettingsScreen({ navigation }) {
             })
           }
         >
-          <Text style={styles.toggleText}>
+          <AppText style={styles.toggleText}>
             {reminder.enabled
               ? `✅ ${t.reminderOn}`
               : `⏸ ${t.reminderOff}`}
-          </Text>
+          </AppText>
         </TouchableOpacity>
 
         {
@@ -339,7 +354,7 @@ export default function SettingsScreen({ navigation }) {
                 }
               />
 
-              <Text style={styles.colon}>:</Text>
+              <AppText style={styles.colon}>:</AppText>
 
               <TimeStepper
                 label={t.reminderMinute}
@@ -358,7 +373,7 @@ export default function SettingsScreen({ navigation }) {
           )
         }
 
-      </View>
+      </Card>
 
       {/* Reset */}
 
@@ -367,9 +382,9 @@ export default function SettingsScreen({ navigation }) {
         onPress={resetProgress}
       >
 
-        <Text style={styles.cardTitle}>
+        <AppText style={styles.cardTitle}>
           🗑 {t.resetProgress}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
 
@@ -380,34 +395,27 @@ export default function SettingsScreen({ navigation }) {
         onPress={() => navigation.navigate("About")}
       >
 
-        <Text style={styles.cardTitle}>
+        <AppText style={styles.cardTitle}>
           ℹ️ {t.about}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
 
-      <Text style={styles.version}>
+      <AppText
+        color={COLORS.textSecondary}
+        style={styles.version}
+      >
         SleepPet v1.0
-      </Text>
+      </AppText>
 
-    </View>
+    </ScreenContainer>
 
   );
 
 }
 const styles = StyleSheet.create({
 
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    padding: 20,
-  },
-
   title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
-    color: COLORS.text,
-    textAlign: "center",
     marginVertical: 25,
   },
 
@@ -422,12 +430,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.text,
     marginBottom: 15,
   },
 
   cardDesc: {
-    color: COLORS.textSecondary,
     fontSize: 15,
     marginBottom: 15,
   },
@@ -459,7 +465,6 @@ const styles = StyleSheet.create({
   colon: {
     fontSize: 30,
     fontWeight: "bold",
-    color: COLORS.text,
     marginHorizontal: 4,
   },
 
@@ -469,7 +474,6 @@ const styles = StyleSheet.create({
   },
 
   stepperLabel: {
-    color: COLORS.textSecondary,
     fontSize: 14,
     marginBottom: 8,
   },
@@ -499,7 +503,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 30,
     fontWeight: "bold",
-    color: COLORS.text,
   },
 
   buttons: {
@@ -529,7 +532,6 @@ const styles = StyleSheet.create({
   version: {
     textAlign: "center",
     marginTop: 30,
-    color: COLORS.textSecondary,
     fontSize: 15,
   },
 

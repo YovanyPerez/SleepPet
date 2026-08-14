@@ -1,7 +1,5 @@
 import React, { useContext, useState } from "react";
 import {
-  View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
@@ -36,7 +34,7 @@ import {
 } from "../services/TranslationService";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS, FONT } from "../constants/theme";
+import { COLORS } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
@@ -47,6 +45,9 @@ import {
   openNotificationSettings,
   getNotificationStatus,
 } from "../services/NotificationService";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 
 const MIN_SLEEP_HOURS = 0.5;
@@ -453,24 +454,31 @@ export default function SleepModeScreen({ navigation }) {
   }
     return (
 
-    <View style={styles.container}>
+    <ScreenContainer style={styles.container}>
 
-      <Text style={styles.moon}>
+      <AppText style={styles.moon}>
         🌙
-      </Text>
+      </AppText>
 
-      <Text style={styles.title}>
+      <AppText
+        variant="title"
+        center
+        style={styles.title}
+      >
         {t.sleepMode}
-      </Text>
+      </AppText>
 
-      <Text style={styles.timer}>
+      <AppText style={styles.timer}>
         {formatTime()}
-      </Text>
+      </AppText>
 
       {
         running &&
         notificationStatus && (
-          <Text style={styles.diag}>
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.diag}
+          >
             🔔 {
               notificationStatus.notificationsEnabled
                 ? t.notifOn
@@ -482,18 +490,21 @@ export default function SleepModeScreen({ navigation }) {
                 ? t.serviceOn
                 : t.serviceOff
             }
-          </Text>
+          </AppText>
         )
       }
 
       {
         running &&
         notificationStatus?.errors?.length > 0 && (
-          <Text style={styles.diagError}>
+          <AppText
+            color={COLORS.danger}
+            style={styles.diagError}
+          >
             {notificationStatus.errors[
               notificationStatus.errors.length - 1
             ]}
-          </Text>
+          </AppText>
         )
       }
 
@@ -504,9 +515,9 @@ export default function SleepModeScreen({ navigation }) {
           onPress={handleStartSleep}
         >
 
-          <Text style={styles.buttonText}>
+          <AppText style={styles.buttonText}>
             {t.startSleep}
-          </Text>
+          </AppText>
 
         </TouchableOpacity>
 
@@ -524,9 +535,9 @@ export default function SleepModeScreen({ navigation }) {
             onPress={finishSleep}
           >
 
-            <Text style={styles.buttonText}>
+            <AppText style={styles.buttonText}>
               {t.finishSleep}
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
@@ -550,9 +561,9 @@ export default function SleepModeScreen({ navigation }) {
             }}
           >
 
-            <Text style={styles.buttonText}>
+            <AppText style={styles.buttonText}>
               {t.cancelSession}
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
@@ -564,9 +575,9 @@ export default function SleepModeScreen({ navigation }) {
             onPress={showLog}
           >
 
-            <Text style={styles.buttonText}>
+            <AppText style={styles.buttonText}>
               {t.viewLogs}
-            </Text>
+            </AppText>
 
           </TouchableOpacity>
 
@@ -574,7 +585,7 @@ export default function SleepModeScreen({ navigation }) {
 
       )}
 
-    </View>
+    </ScreenContainer>
 
   );
 
@@ -583,10 +594,9 @@ export default function SleepModeScreen({ navigation }) {
 const styles = StyleSheet.create({
 
   container: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.background,
+    padding: 0,
   },
 
   moon: {
@@ -595,10 +605,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
     marginBottom: 20,
-    color: COLORS.text,
   },
 
   timer: {
@@ -610,14 +617,12 @@ const styles = StyleSheet.create({
 
   diag: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginBottom: 10,
     textAlign: "center",
   },
 
   diagError: {
     fontSize: 13,
-    color: COLORS.danger,
     marginBottom: 30,
     marginHorizontal: 30,
     textAlign: "center",

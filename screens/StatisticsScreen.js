@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 import {
   ScrollView,
   View,
-  Text,
   StyleSheet,
 } from "react-native";
 
@@ -12,7 +11,6 @@ import {
   getTranslations,
 } from "../services/TranslationService";
 
-import { COLORS, FONT } from "../constants/theme";
 import StatCard from "../components/StatCard";
 import WeeklyBarChart from "../components/WeeklyBarChart";
 import NightChart from "../components/NightChart";
@@ -20,6 +18,9 @@ import {
   toDateKey,
   getWeekDates,
 } from "../utils/dateUtils";
+
+import ScreenContainer from "../components/ScreenContainer";
+import AppText from "../components/AppText";
 
 const DAY_KEYS = [
   "day_sun",
@@ -118,99 +119,107 @@ export default function StatisticsScreen() {
 
   return (
 
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScreenContainer style={styles.screen}>
 
-      <Text style={styles.title}>
-        📊 {t.statistics}
-      </Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
 
-      <Text style={styles.chartTitle}>
-        🌙 {t.weeklySleep}
-      </Text>
+        <AppText
+          variant="title"
+          center
+          style={styles.title}
+        >
+          📊 {t.statistics}
+        </AppText>
 
-      <WeeklyBarChart
-        data={weeklyData}
-        goalHours={goalHours}
-        goalLabel={t.goal}
-      />
+        <AppText style={styles.chartTitle}>
+          🌙 {t.weeklySleep}
+        </AppText>
 
-      {
-        latestSessionHasChart && (
-          <View>
-
-            <Text style={styles.chartTitle}>
-              🌙 {t.nightWakeups}
-            </Text>
-
-            <NightChart
-              startMs={latestSession.startMs}
-              endMs={latestSession.endMs}
-              unlockTimes={latestSession.unlockTimes || []}
-              countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
-              emptyLabel={t.noWakeups}
-            />
-
-          </View>
-        )
-      }
-
-      <View style={styles.grid}>
-
-        <StatCard
-          icon="😴"
-          label={t.average}
-          value={`${averageSleep} h`}
+        <WeeklyBarChart
+          data={weeklyData}
+          goalHours={goalHours}
+          goalLabel={t.goal}
         />
 
-        <StatCard
-          icon="🌙"
-          label={t.best}
-          value={`${maxHours} h`}
-        />
+        {
+          latestSessionHasChart && (
+            <View>
 
-        <StatCard
-          icon="💰"
-          label={t.coins}
-          value={coins}
-        />
+              <AppText style={styles.chartTitle}>
+                🌙 {t.nightWakeups}
+              </AppText>
 
-        <StatCard
-          icon="📅"
-          label={t.nights}
-          value={nights}
-        />
+              <NightChart
+                startMs={latestSession.startMs}
+                endMs={latestSession.endMs}
+                unlockTimes={latestSession.unlockTimes || []}
+                countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
+                emptyLabel={t.noWakeups}
+              />
 
-        <StatCard
-          icon="💯"
-          label={t.averageScore}
-          value={averageScore}
-        />
+            </View>
+          )
+        }
 
-        <StatCard
-          icon="🏆"
-          label={t.bestScore}
-          value={best}
-        />
+        <View style={styles.grid}>
 
-        <StatCard
-          icon="⭐"
-          label={t.totalXP}
-          value={xp}
-        />
+          <StatCard
+            icon="😴"
+            label={t.average}
+            value={`${averageSleep} h`}
+          />
 
-        <StatCard
-          icon="🌟"
-          label={t.perfect}
-          value={perfect}
-        />
+          <StatCard
+            icon="🌙"
+            label={t.best}
+            value={`${maxHours} h`}
+          />
 
-      </View>
+          <StatCard
+            icon="💰"
+            label={t.coins}
+            value={coins}
+          />
 
-    </ScrollView>
+          <StatCard
+            icon="📅"
+            label={t.nights}
+            value={nights}
+          />
+
+          <StatCard
+            icon="💯"
+            label={t.averageScore}
+            value={averageScore}
+          />
+
+          <StatCard
+            icon="🏆"
+            label={t.bestScore}
+            value={best}
+          />
+
+          <StatCard
+            icon="⭐"
+            label={t.totalXP}
+            value={xp}
+          />
+
+          <StatCard
+            icon="🌟"
+            label={t.perfect}
+            value={perfect}
+          />
+
+        </View>
+
+      </ScrollView>
+
+    </ScreenContainer>
 
   );
 
@@ -218,9 +227,12 @@ export default function StatisticsScreen() {
 
 const styles = StyleSheet.create({
 
+  screen: {
+    padding: 0,
+  },
+
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
     padding: 20,
   },
 
@@ -229,17 +241,12 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: FONT.title,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: COLORS.text,
     marginBottom: 22,
   },
 
   chartTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.text,
     marginBottom: 12,
   },
 
