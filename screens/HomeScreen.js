@@ -14,6 +14,7 @@ import ProgressBar from "../components/ProgressBar";
 import BottomNav from "../components/BottomNav";
 import NightBackground from "../components/NightBackground";
 import AppIcon from "../components/AppIcon";
+import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import { PET_IMAGES } from "../constants/PetImages";
 import { getPet } from "../services/PetService";
 import { getTranslations } from "../services/TranslationService";
@@ -75,6 +76,8 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
+
+    <SwipeableTabScreen active="Home" navigation={navigation}>
 
     <NightBackground>
 
@@ -371,12 +374,13 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.bottomNav}>
         <BottomNav
           active="Home"
-          t={t}
           navigation={navigation}
         />
       </View>
 
     </NightBackground>
+
+    </SwipeableTabScreen>
 
   );
 

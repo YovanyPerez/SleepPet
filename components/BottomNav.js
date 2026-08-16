@@ -1,37 +1,33 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import AppText from "./AppText";
 import AppIcon from "./AppIcon";
 import { NIGHT } from "../constants/theme";
+import { TAB_ORDER } from "../constants/tabs";
 
-const TABS = [
-  { key: "Home", icon: "home", labelKey: "home" },
-  { key: "Statistics", icon: "statistics", labelKey: "statistics" },
-  { key: "Achievements", icon: "achievements", labelKey: "achievements" },
-  { key: "PetShop", icon: "store", labelKey: "petShop" },
-  { key: "Settings", icon: "settings", labelKey: "settings" },
-];
+const TAB_ICONS = {
+  Home: "home",
+  Statistics: "statistics",
+  Achievements: "achievements",
+  PetShop: "store",
+  Settings: "settings",
+};
 
-export default function BottomNav({ active, t, navigation }) {
+export default function BottomNav({ active, navigation }) {
   return (
     <View style={styles.bar}>
-      {TABS.map((tab) => {
-        const isActive = active === tab.key;
+      {TAB_ORDER.map((key) => {
+        const isActive = active === key;
         return (
           <TouchableOpacity
-            key={tab.key}
+            key={key}
             style={[styles.tab, isActive && styles.tabActive]}
-            onPress={() => navigation.navigate(tab.key)}
+            onPress={() => navigation.navigate(key)}
           >
             <AppIcon
-              name={tab.icon}
-              size={18}
+              name={TAB_ICONS[key]}
+              size={20}
               color="#FFFFFF"
-              style={styles.icon}
             />
-            <AppText style={styles.label}>
-              {t[tab.labelKey]}
-            </AppText>
           </TouchableOpacity>
         );
       })}
@@ -45,7 +41,7 @@ const styles = StyleSheet.create({
     backgroundColor: NIGHT.start,
     borderRadius: 28,
     paddingHorizontal: 6,
-    paddingVertical: 8,
+    paddingVertical: 10,
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -63,15 +59,5 @@ const styles = StyleSheet.create({
 
   tabActive: {
     backgroundColor: "rgba(255,255,255,0.14)",
-  },
-
-  icon: {
-    marginBottom: 2,
-  },
-
-  label: {
-    color: NIGHT.textOnNight,
-    fontSize: 10,
-    fontFamily: "Nunito_700Bold",
   },
 });

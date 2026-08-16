@@ -23,6 +23,7 @@ import BottomNav from "../components/BottomNav";
 import AchievementCard from "../components/AchievementCard";
 import AchievementSummary from "../components/AchievementSummary";
 import AchievementFilter from "../components/AchievementFilter";
+import SwipeableTabScreen from "../components/SwipeableTabScreen";
 
 import {
   checkAchievements,
@@ -112,6 +113,8 @@ export default function AchievementsScreen({ navigation }) {
   });
 
   return (
+
+    <SwipeableTabScreen active="Achievements" navigation={navigation}>
 
     <NightBackground
       colors={[NIGHT.start, "#25256F", "#5751C9"]}
@@ -219,7 +222,6 @@ export default function AchievementsScreen({ navigation }) {
         <View style={styles.bottomNav}>
           <BottomNav
             active="Achievements"
-            t={t}
             navigation={navigation}
           />
         </View>
@@ -227,6 +229,8 @@ export default function AchievementsScreen({ navigation }) {
       </SafeAreaView>
 
     </NightBackground>
+
+    </SwipeableTabScreen>
 
   );
 

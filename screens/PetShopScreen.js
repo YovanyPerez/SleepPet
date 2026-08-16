@@ -27,6 +27,7 @@ import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
+import SwipeableTabScreen from "../components/SwipeableTabScreen";
 
 export default function PetShopScreen({ navigation }) {
 
@@ -104,6 +105,8 @@ export default function PetShopScreen({ navigation }) {
   });
 
   return (
+
+    <SwipeableTabScreen active="PetShop" navigation={navigation}>
 
     <NightBackground moon={false}>
 
@@ -188,7 +191,6 @@ export default function PetShopScreen({ navigation }) {
         <View style={styles.bottomNav}>
           <BottomNav
             active="PetShop"
-            t={t}
             navigation={navigation}
           />
         </View>
@@ -196,6 +198,8 @@ export default function PetShopScreen({ navigation }) {
       </SafeAreaView>
 
     </NightBackground>
+
+    </SwipeableTabScreen>
 
   );
 

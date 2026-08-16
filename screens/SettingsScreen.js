@@ -46,6 +46,7 @@ import Card from "../components/Card";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
+import SwipeableTabScreen from "../components/SwipeableTabScreen";
 
 const APP_VERSION = "1.0.2";
 
@@ -375,6 +376,8 @@ export default function SettingsScreen({ navigation }) {
 
   return (
 
+    <SwipeableTabScreen active="Settings" navigation={navigation}>
+
     <NightBackground moon={false}>
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -635,7 +638,6 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.bottomNav}>
           <BottomNav
             active="Settings"
-            t={t}
             navigation={navigation}
           />
         </View>
@@ -643,6 +645,8 @@ export default function SettingsScreen({ navigation }) {
       </SafeAreaView>
 
     </NightBackground>
+
+    </SwipeableTabScreen>
 
   );
 

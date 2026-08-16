@@ -26,6 +26,7 @@ import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
 import SectionHeader from "../components/SectionHeader";
 import MotivationalCard from "../components/MotivationalCard";
+import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import { NIGHT } from "../constants/theme";
 import {
   toDateKey,
@@ -148,6 +149,8 @@ export default function StatisticsScreen({ navigation }) {
   });
 
   return (
+
+    <SwipeableTabScreen active="Statistics" navigation={navigation}>
 
     <NightBackground moon={false}>
 
@@ -337,7 +340,6 @@ export default function StatisticsScreen({ navigation }) {
         <View style={styles.bottomNav}>
           <BottomNav
             active="Statistics"
-            t={t}
             navigation={navigation}
           />
         </View>
@@ -345,6 +347,8 @@ export default function StatisticsScreen({ navigation }) {
       </SafeAreaView>
 
     </NightBackground>
+
+    </SwipeableTabScreen>
 
   );
 
