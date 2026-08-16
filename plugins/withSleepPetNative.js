@@ -12,6 +12,7 @@ const PERMISSIONS = [
   "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
   "android.permission.ACTIVITY_RECOGNITION",
   "android.permission.QUERY_ALL_PACKAGES",
+  "android.permission.SCHEDULE_EXACT_ALARM",
 ];
 
 const PACKAGE_ADDS = [

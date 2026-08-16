@@ -6,7 +6,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
+import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
@@ -72,12 +75,31 @@ class ReminderModule(
 
             val pendingIntent = buildPendingIntent(context)
 
-            val info = AlarmManager.AlarmClockInfo(
-                nextTriggerAt(hour, minute),
-                pendingIntent
-            )
+            val trigger = nextTriggerAt(hour, minute)
 
-            alarmManager.setAlarmClock(info, pendingIntent)
+            val canUseExact =
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                    alarmManager.canScheduleExactAlarms()
+
+            if (canUseExact) {
+
+                val info = AlarmManager.AlarmClockInfo(
+                    trigger,
+                    pendingIntent
+                )
+
+                alarmManager.setAlarmClock(info, pendingIntent)
+
+            } else {
+
+                alarmManager.setInexactRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    trigger,
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+                )
+
+            }
         }
     }
 
@@ -109,6 +131,33 @@ class ReminderModule(
         createChannel(channelName, channelDescription)
 
         scheduleAlarmClock(reactContext, hour, minute)
+    }
+
+    @ReactMethod
+    fun canScheduleExact(promise: Promise) {
+        val alarmManager = reactContext.getSystemService(
+            Context.ALARM_SERVICE
+        ) as AlarmManager
+
+        val ok =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                alarmManager.canScheduleExactAlarms()
+
+        promise.resolve(ok)
+    }
+
+    @ReactMethod
+    fun openExactAlarmSettings() {
+        try {
+            val intent = Intent(
+                Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                Uri.parse("package:" + reactContext.packageName)
+            )
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            reactContext.startActivity(intent)
+        } catch (e: Exception) {
+            // Dispositivo o ROM sin esta pantalla: se ignora.
+        }
     }
 
     @ReactMethod

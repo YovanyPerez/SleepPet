@@ -39,6 +39,8 @@ import {
 import {
   scheduleReminder,
   cancelReminder,
+  canScheduleExact,
+  openExactAlarmSettings,
 } from "../services/ReminderService";
 
 import NightBackground from "../components/NightBackground";
@@ -48,7 +50,7 @@ import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
 import SwipeableTabScreen from "../components/SwipeableTabScreen";
 
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 
 function wrapValue(value, direction, min, max) {
   if (direction > 0) {
@@ -200,6 +202,8 @@ export default function SettingsScreen({ navigation }) {
     minute: 30,
   });
 
+  const [exactAlarmOk, setExactAlarmOk] = useState(true);
+
   const reminderRef = useRef({
     enabled: false,
     hour: 22,
@@ -213,6 +217,21 @@ export default function SettingsScreen({ navigation }) {
       setReminder(settings);
     })();
   }, []);
+
+  function checkExactAlarm() {
+    canScheduleExact()
+      .then(setExactAlarmOk)
+      .catch(() => setExactAlarmOk(true));
+  }
+
+  useEffect(() => {
+    checkExactAlarm();
+    const unsubscribe = navigation.addListener(
+      "focus",
+      checkExactAlarm
+    );
+    return unsubscribe;
+  }, [navigation]);
 
   function applyReminder(next) {
     reminderRef.current = next;
@@ -573,6 +592,23 @@ export default function SettingsScreen({ navigation }) {
 
               </View>
 
+              {
+                reminder.enabled && !exactAlarmOk && (
+                  <TouchableOpacity
+                    style={styles.exactAlarmLink}
+                    onPress={openExactAlarmSettings}
+                  >
+
+                    <AppIcon name="reminder" size={16} color={NIGHT.yellow} style={styles.exactAlarmIcon} />
+
+                    <AppText style={styles.exactAlarmText}>
+                      {t.exactAlarmHint}
+                    </AppText>
+
+                  </TouchableOpacity>
+                )
+              }
+
             </Card>
 
             {/* Reiniciar progreso */}
@@ -876,6 +912,25 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular",
     textAlign: "center",
     marginTop: 4,
+  },
+
+  exactAlarmLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 14,
+    padding: 6,
+  },
+
+  exactAlarmIcon: {
+    marginRight: 6,
+  },
+
+  exactAlarmText: {
+    color: NIGHT.yellow,
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+    textDecorationLine: "underline",
   },
 
   optionCard: {

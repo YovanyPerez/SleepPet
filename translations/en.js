@@ -449,6 +449,8 @@ export default {
   sleepReminder: "Bedtime reminder",
   sleepReminderDesc: "We'll remind you when it's time to sleep",
 
+  exactAlarmHint: "Enable exact alarms for on-time reminders",
+
   settingsSubtitle: "Personalize your experience",
 
   languageDesc: "Choose your preferred language",

@@ -23,3 +23,11 @@ export function scheduleReminder(
 export function cancelReminder() {
   ReminderModule?.cancel();
 }
+
+export function canScheduleExact() {
+  return ReminderModule?.canScheduleExact?.();
+}
+
+export function openExactAlarmSettings() {
+  ReminderModule?.openExactAlarmSettings?.();
+}

@@ -450,6 +450,8 @@ export default {
   sleepReminder: "Recordatorio para dormir",
   sleepReminderDesc: "Te recordamos cuándo ir a dormir",
 
+  exactAlarmHint: "Activa las alarmas exactas para recordatorios puntuales",
+
   settingsSubtitle: "Personaliza tu experiencia",
 
   languageDesc: "Elige tu idioma preferido",

@@ -101,7 +101,7 @@ export default function AboutScreen({ navigation }) {
             </AppText>
 
             <AppText style={styles.value}>
-              1.0.2
+              1.0.3
             </AppText>
 
           </View>
