@@ -32,7 +32,7 @@ export default function HomeScreen({ navigation }) {
 
     userName,
 
-    petName,
+    petNames,
 
     streak,
 
@@ -55,6 +55,8 @@ export default function HomeScreen({ navigation }) {
   const t = getTranslations(language);
 
   const pet = getPet(selectedPet);
+
+  const petName = petNames?.[selectedPet] || "";
 
   const petDisplayName =
     petName && petName.trim()

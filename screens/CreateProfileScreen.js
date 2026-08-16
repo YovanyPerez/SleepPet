@@ -5,11 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
+import { PET_IMAGES } from "../constants/PetImages";
 import { getTranslations } from "../services/TranslationService";
 import { calculateGoalHours } from "../utils/sleepUtils";
 
@@ -30,6 +32,7 @@ export default function CreateProfileScreen({ navigation }) {
     setUserAge,
     setGoalHours,
     setGoalType,
+    setPetNames,
     language,
   } = useContext(AppContext);
 
@@ -43,6 +46,8 @@ export default function CreateProfileScreen({ navigation }) {
 
   const [goal, setGoal] = useState("");
 
+  const [petNameInput, setPetNameInput] = useState("");
+
   async function finishSetup() {
 
     const hours = calculateGoalHours(Number(age));
@@ -54,6 +59,11 @@ export default function CreateProfileScreen({ navigation }) {
     setGoalHours(hours);
 
     setGoalType(goal);
+
+    setPetNames((prev) => ({
+      ...prev,
+      cat: petNameInput,
+    }));
 
     navigation.reset({
 
@@ -89,7 +99,7 @@ export default function CreateProfileScreen({ navigation }) {
           <View style={styles.stepPill}>
 
             <AppText style={styles.stepText}>
-              {t.step} {step} {t.of} 3
+              {t.step} {step} {t.of} 4
             </AppText>
 
           </View>
@@ -211,7 +221,7 @@ export default function CreateProfileScreen({ navigation }) {
 
                     <TouchableOpacity
                       style={styles.button}
-                      onPress={finishSetup}
+                      onPress={() => setStep(4)}
                     >
 
                       <AppText style={styles.buttonText}>
@@ -222,6 +232,45 @@ export default function CreateProfileScreen({ navigation }) {
 
                   )
                 }
+
+              </>
+
+            )
+          }
+
+          {
+            step === 4 && (
+
+              <>
+
+                <AppText style={styles.title}>
+                  {t.nameYourPet}
+                </AppText>
+
+                <Image
+                  source={PET_IMAGES.cat.happy}
+                  style={styles.pet}
+                />
+
+                <TextInput
+                  value={petNameInput}
+                  onChangeText={setPetNameInput}
+                  placeholder={t.petNamePlaceholder}
+                  placeholderTextColor="#B8B2E8"
+                  cursorColor={NIGHT.end}
+                  style={styles.input}
+                />
+
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={finishSetup}
+                >
+
+                  <AppText style={styles.buttonText}>
+                    {t.finish}
+                  </AppText>
+
+                </TouchableOpacity>
 
               </>
 
@@ -274,6 +323,14 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
     textAlign: "center",
     marginBottom: 26,
+  },
+
+  pet: {
+    width: 150,
+    height: 150,
+    resizeMode: "contain",
+    alignSelf: "center",
+    marginBottom: 20,
   },
 
   input: {

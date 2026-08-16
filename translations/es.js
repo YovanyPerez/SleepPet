@@ -240,6 +240,12 @@ export default {
 
   petNamePlaceholder: "Ponle un nombre a tu mascota",
 
+  nameYourPet: "Nombra a tu mascota",
+
+  petPurchasedTitle: "¡Mascota comprada!",
+
+  petPurchasedNameMessage: "Ponle un nombre a tu nueva mascota",
+
   editSubtitle: "Actualiza tu información",
 
   editIntro: "Estos datos ayudan a personalizar tu experiencia en SleepPet.",

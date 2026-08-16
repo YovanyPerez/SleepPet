@@ -2,6 +2,7 @@ import React, {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import {
   View,
@@ -28,6 +29,7 @@ import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
 import SwipeableTabScreen from "../components/SwipeableTabScreen";
+import NamePetModal from "../components/NamePetModal";
 
 export default function PetShopScreen({ navigation }) {
 
@@ -44,9 +46,14 @@ export default function PetShopScreen({ navigation }) {
     selectedPet,
     setSelectedPet,
 
+    petNames,
+    setPetNames,
+
   } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  const [namingPet, setNamingPet] = useState(null);
 
   const appear = useRef(new Animated.Value(0)).current;
 
@@ -78,19 +85,30 @@ export default function PetShopScreen({ navigation }) {
       pet.id,
     ]);
 
-    Alert.alert(
-      t.petPurchased,
-      t.petPurchasedMessage.replace(
-        "{{pet}}",
-        t[pet.nameKey]
-      )
-    );
+    setNamingPet(pet);
 
   }
 
   function selectPet(id) {
 
     setSelectedPet(id);
+
+  }
+
+  function confirmPetName(name) {
+
+    if (namingPet) {
+
+      if (name) {
+        setPetNames({
+          ...petNames,
+          [namingPet.id]: name,
+        });
+      }
+
+      setNamingPet(null);
+
+    }
 
   }
 
@@ -194,6 +212,19 @@ export default function PetShopScreen({ navigation }) {
             navigation={navigation}
           />
         </View>
+
+        {/* Nombrar mascota comprada */}
+
+        <NamePetModal
+          visible={!!namingPet}
+          title={t.petPurchasedTitle}
+          message={t.petPurchasedNameMessage}
+          placeholder={t.petNamePlaceholder}
+          cancelLabel={t.cancel}
+          confirmLabel={t.ok}
+          onConfirm={confirmPetName}
+          onCancel={() => setNamingPet(null)}
+        />
 
       </SafeAreaView>
 

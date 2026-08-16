@@ -37,8 +37,10 @@ export default function EditProfileScreen({ navigation }) {
     userName,
     setUserName,
 
-    petName,
-    setPetName,
+    petNames,
+    setPetNames,
+
+    selectedPet,
 
     userAge,
     setUserAge,
@@ -64,7 +66,9 @@ export default function EditProfileScreen({ navigation }) {
 
   const [name, setName] = useState(userName);
 
-  const [petNameInput, setPetNameInput] = useState(petName);
+  const [petNameInput, setPetNameInput] = useState(
+    petNames?.[selectedPet] || ""
+  );
 
   const [age, setAge] = useState(
     userAge ? String(userAge) : ""
@@ -83,7 +87,10 @@ export default function EditProfileScreen({ navigation }) {
 
     setUserName(name);
 
-    setPetName(petNameInput);
+    setPetNames((prev) => ({
+      ...prev,
+      [selectedPet]: petNameInput,
+    }));
 
     setUserAge(Number(age));
 

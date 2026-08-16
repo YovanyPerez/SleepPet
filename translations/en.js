@@ -240,6 +240,12 @@ export default {
 
   petNamePlaceholder: "Give your pet a name",
 
+  nameYourPet: "Name your pet",
+
+  petPurchasedTitle: "Pet purchased!",
+
+  petPurchasedNameMessage: "Give your new pet a name",
+
   editSubtitle: "Update your information",
 
   editIntro: "These details help personalize your SleepPet experience.",
