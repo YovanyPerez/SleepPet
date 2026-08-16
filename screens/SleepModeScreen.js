@@ -46,6 +46,7 @@ import {
 import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
+import { calculatePetHappiness } from "../services/PetHappinessService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
 
@@ -112,6 +113,9 @@ export default function SleepModeScreen({ navigation }) {
     setLastSleepSession,
     setPetMood,
     setLastSleepHours,
+
+    petHappiness,
+    setPetHappiness,
 
     sleepHistory,
     setSleepHistory,
@@ -343,6 +347,13 @@ export default function SleepModeScreen({ navigation }) {
      unlockCount,
 
     });
+
+    setPetHappiness(
+      calculatePetHappiness(petHappiness, {
+        score: reward.score,
+        hours: result.hours,
+      })
+    );
 
     const earnedXP = getXPFromQuality(
       reward.quality
