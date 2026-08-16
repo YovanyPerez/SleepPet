@@ -1,20 +1,26 @@
 import React, { useContext } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 
-import { COLORS } from "../constants/theme";
+import { COLORS, NIGHT } from "../constants/theme";
 import { AppContext } from "../context/AppContext";
 import {
   getTranslations,
 } from "../services/TranslationService";
 
+import AppText from "./AppText";
+import AppIcon from "./AppIcon";
+import ProgressBar from "./ProgressBar";
+
+const TYPE_COLORS = {
+  sessions: "#6B5BE7",
+  streak: "#F97316",
+  coins: "#F59E0B",
+  level: NIGHT.yellow,
+  pets: NIGHT.pink,
+};
+
 export default function AchievementCard({
-
   achievement,
-
 }) {
 
   const { language } = useContext(AppContext);
@@ -26,62 +32,119 @@ export default function AchievementCard({
     100
   );
 
+  const unlocked = achievement.unlocked;
+
+  const inProgress = !unlocked && achievement.progress > 0;
+
+  const typeColor = TYPE_COLORS[achievement.type] || "#6B5BE7";
+
+  const iconColor = unlocked ? typeColor : "#9AA0B8";
+
+  const iconCircleBg = unlocked ? "#EDEAFF" : "#F0F0F5";
+
+  const barColor = unlocked
+    ? COLORS.success
+    : inProgress
+    ? NIGHT.end
+    : "#D5D1EE";
+
+  const statusIcon = unlocked ? "check" : "lock";
+
+  const statusText = unlocked
+    ? t.completed
+    : inProgress
+    ? t.inProgress
+    : t.locked;
+
+  const statusBg = unlocked
+    ? "#DCF5E3"
+    : inProgress
+    ? "#EDEAFF"
+    : "#EEEEEE";
+
+  const statusColor = unlocked
+    ? "#2E7D32"
+    : inProgress
+    ? "#5751C9"
+    : "#9AA0B8";
+
   return (
 
     <View
       style={[
         styles.card,
-        achievement.unlocked && styles.unlockedCard,
+        unlocked && styles.cardUnlocked,
       ]}
     >
 
-      <Text style={styles.icon}>
-        {achievement.icon}
-      </Text>
+      {/* Icono */}
 
-      <Text style={styles.title}>
-        {t[achievement.title]}
-      </Text>
+      <View style={[styles.iconCircle, { backgroundColor: iconCircleBg }]}>
 
-      <Text style={styles.description}>
-        {t[achievement.description]}
-      </Text>
-
-      <View style={styles.progressBackground}>
-
-        <View
-          style={[
-            styles.progressFill,
-            {
-              width: `${percentage}%`,
-            },
-          ]}
-        />
+        {
+          achievement.iconName ? (
+            <AppIcon name={achievement.iconName} size={26} color={iconColor} />
+          ) : (
+            <AppText style={styles.iconText}>{achievement.icon}</AppText>
+          )
+        }
 
       </View>
 
-      <Text style={styles.progressText}>
-        {achievement.progress} / {achievement.goal}
-      </Text>
+      {/* Centro */}
 
-      <View style={styles.footer}>
+      <View style={styles.middle}>
 
-        <Text style={styles.reward}>
-          💰 {achievement.reward}
-        </Text>
+        <AppText style={styles.title} numberOfLines={1}>
+          {t[achievement.title]}
+        </AppText>
 
-        <Text
-          style={[
-            styles.status,
-            achievement.unlocked
-              ? styles.completed
-              : styles.locked,
-          ]}
-        >
-          {achievement.unlocked
-            ? `✅ ${t.completed}`
-            : `🔒 ${t.locked}`}
-        </Text>
+        <AppText style={styles.description} numberOfLines={2}>
+          {t[achievement.description]}
+        </AppText>
+
+        <ProgressBar
+          progress={percentage}
+          color={barColor}
+          background="#EAE7FF"
+          height={8}
+          radius={4}
+        />
+
+        <AppText style={styles.progressText}>
+          {achievement.progress} / {achievement.goal}
+        </AppText>
+
+      </View>
+
+      {/* Derecha */}
+
+      <View style={styles.right}>
+
+        <View style={styles.rewardCapsule}>
+
+          <AppIcon name="coins" size={14} color="#F59E0B" style={styles.rewardIcon} />
+
+          <AppText style={styles.reward}>
+            {achievement.reward}
+          </AppText>
+
+        </View>
+
+        <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
+
+          <AppIcon
+            name={statusIcon}
+            size={12}
+            color={statusColor}
+            style={styles.statusIcon}
+          />
+
+          <AppText style={[styles.status, { color: statusColor }]}>
+            {statusText}
+          </AppText>
+
+        </View>
 
       </View>
 
@@ -94,135 +157,109 @@ export default function AchievementCard({
 const styles = StyleSheet.create({
 
   card: {
-
-    backgroundColor: "white",
-
-    borderRadius: 20,
-
-    padding: 20,
-
-    marginBottom: 18,
-
-    elevation: 4,
-
-  },
-
-  unlockedCard: {
-
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
     borderWidth: 2,
-
-    borderColor: "#FFD54F",
-
+    borderColor: "transparent",
+    padding: 14,
+    marginBottom: 14,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
 
-  icon: {
+  cardUnlocked: {
+    borderColor: "#4CAF50",
+  },
 
-    fontSize: 48,
+  iconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
 
-    textAlign: "center",
+  iconText: {
+    fontSize: 26,
+  },
 
+  middle: {
+    flex: 1,
+    marginRight: 8,
   },
 
   title: {
-
-    marginTop: 10,
-
-    fontSize: 22,
-
-    fontWeight: "bold",
-
-    textAlign: "center",
-
+    fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.text,
-
   },
 
   description: {
-
-    marginTop: 8,
-
-    textAlign: "center",
-
+    fontSize: 12,
+    fontFamily: "Nunito_400Regular",
     color: COLORS.textSecondary,
-
-    fontSize: 15,
-
-  },
-
-  progressBackground: {
-
-    height: 12,
-
-    backgroundColor: "#E0E0E0",
-
-    borderRadius: 10,
-
-    marginTop: 20,
-
-    overflow: "hidden",
-
-  },
-
-  progressFill: {
-
-    height: 12,
-
-    backgroundColor: COLORS.primary,
-
+    marginTop: 2,
   },
 
   progressText: {
-
-    textAlign: "center",
-
-    marginTop: 10,
-
-    fontWeight: "bold",
-
+    fontSize: 12,
+    fontFamily: "Nunito_700Bold",
     color: COLORS.text,
-
+    marginTop: 4,
   },
 
-  footer: {
+  right: {
+    alignItems: "flex-end",
+  },
 
-    marginTop: 18,
-
+  rewardCapsule: {
     flexDirection: "row",
-
-    justifyContent: "space-between",
-
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EEE7FB",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+  },
 
+  rewardIcon: {
+    marginRight: 4,
   },
 
   reward: {
+    fontSize: 15,
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#5751C9",
+  },
 
-    fontSize: 17,
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
 
-    fontWeight: "bold",
-
-    color: COLORS.primary,
-
+  statusIcon: {
+    marginRight: 4,
   },
 
   status: {
-
-    fontSize: 15,
-
-    fontWeight: "bold",
-
-  },
-
-  completed: {
-
-    color: "#4CAF50",
-
-  },
-
-  locked: {
-
-    color: "#999",
-
+    fontSize: 12,
+    fontFamily: "Nunito_700Bold",
   },
 
 });

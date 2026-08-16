@@ -157,10 +157,14 @@ const styles = StyleSheet.create({
 
   container: {
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 26,
     padding: 18,
     elevation: 4,
-    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: 22,
   },
 
   track: {

@@ -4,8 +4,9 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { COLORS } from "../constants/theme";
+import { COLORS, NIGHT, SHADOW } from "../constants/theme";
 
 const CHART_HEIGHT = 150;
 
@@ -40,7 +41,7 @@ export default function WeeklyBarChart({
         >
 
           <Text style={styles.goalText}>
-            {goalLabel}
+            {goalLabel} {goalHours}h
           </Text>
 
         </View>
@@ -56,7 +57,10 @@ export default function WeeklyBarChart({
 
             <View
               key={item.key}
-              style={styles.column}
+              style={[
+                styles.column,
+                item.isToday && styles.columnToday,
+              ]}
             >
 
               <Text style={styles.barValue}>
@@ -65,17 +69,29 @@ export default function WeeklyBarChart({
                   : ""}
               </Text>
 
-              <View
-                style={[
-                  styles.bar,
-                  { height: Math.max(height, 3) },
-                  item.isToday
-                    ? styles.barToday
-                    : item.value > 0
-                    ? styles.barNormal
-                    : styles.barEmpty,
-                ]}
-              />
+              {
+                item.value > 0 ? (
+                  <LinearGradient
+                    colors={
+                      item.isToday
+                        ? [NIGHT.end, "#4A3F8F"]
+                        : [NIGHT.end, "#7C6FD0"]
+                    }
+                    style={[
+                      styles.bar,
+                      { height: Math.max(height, 3) },
+                    ]}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.bar,
+                      styles.barEmpty,
+                      { height: Math.max(height, 3) },
+                    ]}
+                  />
+                )
+              }
 
             </View>
 
@@ -115,11 +131,11 @@ const styles = StyleSheet.create({
 
   container: {
     backgroundColor: "white",
-    borderRadius: 20,
-    padding: 18,
+    borderRadius: 26,
+    padding: 16,
     paddingTop: 26,
-    elevation: 4,
-    marginBottom: 20,
+    marginBottom: 22,
+    ...SHADOW.card,
   },
 
   chartArea: {
@@ -146,6 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.warning,
     fontWeight: "bold",
+    fontFamily: "Nunito_700Bold",
   },
 
   column: {
@@ -153,27 +170,24 @@ const styles = StyleSheet.create({
     height: CHART_HEIGHT + TOP_SPACE,
     justifyContent: "flex-end",
     alignItems: "center",
-    marginHorizontal: 4,
+    marginHorizontal: 3,
+    borderRadius: 14,
+  },
+
+  columnToday: {
+    backgroundColor: "rgba(107,91,231,0.12)",
   },
 
   barValue: {
     fontSize: 11,
     color: COLORS.textSecondary,
     marginBottom: 3,
-    fontWeight: "bold",
+    fontFamily: "Nunito_700Bold",
   },
 
   bar: {
     width: 22,
     borderRadius: 6,
-  },
-
-  barNormal: {
-    backgroundColor: COLORS.primary,
-  },
-
-  barToday: {
-    backgroundColor: COLORS.secondary,
   },
 
   barEmpty: {
@@ -188,13 +202,15 @@ const styles = StyleSheet.create({
   dayLabel: {
     flex: 1,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.textSecondary,
+    fontFamily: "Nunito_600SemiBold",
   },
 
   dayLabelToday: {
-    color: COLORS.primary,
+    color: NIGHT.end,
     fontWeight: "bold",
+    fontFamily: "Nunito_800ExtraBold",
   },
 
 });

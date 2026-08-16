@@ -1,75 +1,89 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-} from "react-native";
-
-import { COLORS } from "../constants/theme";
+import { View, StyleSheet } from "react-native";
+import AppText from "./AppText";
+import AppIcon from "./AppIcon";
+import { COLORS, SHADOW } from "../constants/theme";
 
 export default function StatCard({
-
   icon,
-
+  iconColor,
   label,
-
   value,
-
+  sub,
 }) {
-
   return (
-
     <View style={styles.card}>
 
-      <Text style={styles.icon}>
-        {icon}
-      </Text>
+      <View style={styles.iconCircle}>
+        <AppIcon name={icon} size={22} color={iconColor} />
+      </View>
 
-      <Text style={styles.label}>
-        {label}
-      </Text>
+      <View style={styles.text}>
 
-      <Text
-        style={styles.value}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
-        {value}
-      </Text>
+        <AppText style={styles.label}>
+          {label}
+        </AppText>
+
+        <AppText
+          style={styles.value}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
+          {value}
+        </AppText>
+
+        <AppText style={styles.sub}>
+          {sub}
+        </AppText>
+
+      </View>
 
     </View>
-
   );
-
 }
 
 const styles = StyleSheet.create({
-
   card: {
     width: "48%",
-    backgroundColor: "white",
-    borderRadius: 20,
-    paddingVertical: 22,
-    marginBottom: 15,
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 4,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
+    padding: 14,
+    marginBottom: 14,
+    ...SHADOW.card,
   },
 
-  icon: {
-    fontSize: 34,
-    marginBottom: 10,
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EDEBFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  text: {
+    flex: 1,
   },
 
   label: {
-    fontSize: 18,
+    fontSize: 12,
+    fontFamily: "Nunito_600SemiBold",
     color: COLORS.textSecondary,
-    marginBottom: 8,
   },
 
   value: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.text,
+    marginTop: 1,
   },
 
+  sub: {
+    fontSize: 11,
+    fontFamily: "Nunito_400Regular",
+    color: COLORS.textSecondary,
+  },
 });

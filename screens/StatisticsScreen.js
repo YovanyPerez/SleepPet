@@ -1,9 +1,15 @@
-import React, { useContext } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import {
-  ScrollView,
   View,
   StyleSheet,
+  ScrollView,
+  Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppContext } from "../context/AppContext";
 
@@ -14,13 +20,17 @@ import {
 import StatCard from "../components/StatCard";
 import WeeklyBarChart from "../components/WeeklyBarChart";
 import NightChart from "../components/NightChart";
+import NightBackground from "../components/NightBackground";
+import AppText from "../components/AppText";
+import AppIcon from "../components/AppIcon";
+import BottomNav from "../components/BottomNav";
+import SectionHeader from "../components/SectionHeader";
+import MotivationalCard from "../components/MotivationalCard";
+import { NIGHT } from "../constants/theme";
 import {
   toDateKey,
   getWeekDates,
 } from "../utils/dateUtils";
-
-import ScreenContainer from "../components/ScreenContainer";
-import AppText from "../components/AppText";
 
 const DAY_KEYS = [
   "day_sun",
@@ -32,7 +42,7 @@ const DAY_KEYS = [
   "day_sat",
 ];
 
-export default function StatisticsScreen() {
+export default function StatisticsScreen({ navigation }) {
 
   const {
     language,
@@ -41,6 +51,16 @@ export default function StatisticsScreen() {
   } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  const appear = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(appear, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [appear]);
 
   const history = sleepHistory;
 
@@ -117,109 +137,214 @@ export default function StatisticsScreen() {
 
   });
 
+  const fadeOpacity = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const fadeTranslate = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0],
+  });
+
   return (
 
-    <ScreenContainer style={styles.screen}>
+    <NightBackground moon={false}>
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
 
-        <AppText
-          variant="title"
-          center
-          style={styles.title}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
-          📊 {t.statistics}
-        </AppText>
 
-        <AppText style={styles.chartTitle}>
-          🌙 {t.weeklySleep}
-        </AppText>
+          <Animated.View
+            style={{
+              opacity: fadeOpacity,
+              transform: [{ translateY: fadeTranslate }],
+            }}
+          >
 
-        <WeeklyBarChart
-          data={weeklyData}
-          goalHours={goalHours}
-          goalLabel={t.goal}
-        />
+            {/* Header */}
 
-        {
-          latestSessionHasChart && (
-            <View>
+            <View style={styles.header}>
 
-              <AppText style={styles.chartTitle}>
-                🌙 {t.nightWakeups}
-              </AppText>
+              <View style={styles.headerIconCircle}>
+                <AppIcon name="statistics" size={24} color={NIGHT.yellow} />
+              </View>
 
-              <NightChart
-                startMs={latestSession.startMs}
-                endMs={latestSession.endMs}
-                unlockTimes={latestSession.unlockTimes || []}
-                countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
-                emptyLabel={t.noWakeups}
-              />
+              <View style={styles.headerText}>
+
+                <AppText style={styles.title}>
+                  {t.statistics}
+                </AppText>
+
+                <AppText style={styles.subtitle}>
+                  {t.statisticsSubtitle}
+                </AppText>
+
+              </View>
 
             </View>
-          )
-        }
 
-        <View style={styles.grid}>
+            {
+              nights === 0 ? (
 
-          <StatCard
-            icon="😴"
-            label={t.average}
-            value={`${averageSleep} h`}
+                <View style={styles.emptyCard}>
+
+                  <AppIcon
+                    name="night"
+                    size={36}
+                    color={NIGHT.yellow}
+                    style={styles.emptyIcon}
+                  />
+
+                  <AppText style={styles.emptyTitle}>
+                    {t.noStatsTitle}
+                  </AppText>
+
+                  <AppText style={styles.emptyMessage}>
+                    {t.noStatsMessage}
+                  </AppText>
+
+                </View>
+
+              ) : (
+
+                <>
+
+                  {/* Sueño de esta semana */}
+
+                  <SectionHeader
+                    icon="night"
+                    title={t.weeklySleep}
+                  />
+
+                  <WeeklyBarChart
+                    data={weeklyData}
+                    goalHours={goalHours}
+                    goalLabel={t.goal}
+                  />
+
+                  {/* Despertares de la última noche */}
+
+                  {
+                    latestSessionHasChart && (
+                      <View>
+
+                        <SectionHeader
+                          icon="night"
+                          title={t.nightWakeups}
+                        />
+
+                        <NightChart
+                          startMs={latestSession.startMs}
+                          endMs={latestSession.endMs}
+                          unlockTimes={latestSession.unlockTimes || []}
+                          countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
+                          emptyLabel={t.noWakeups}
+                        />
+
+                      </View>
+                    )
+                  }
+
+                  {/* Grid de estadísticas */}
+
+                  <View style={styles.grid}>
+
+                    <StatCard
+                      icon="sleep"
+                      iconColor="#7C6FD0"
+                      label={t.average}
+                      value={`${averageSleep} h`}
+                      sub={t.ofSleep}
+                    />
+
+                    <StatCard
+                      icon="night"
+                      iconColor={NIGHT.yellow}
+                      label={t.best}
+                      value={`${maxHours} h`}
+                      sub={t.ofSleep}
+                    />
+
+                    <StatCard
+                      icon="coins"
+                      iconColor="#F59E0B"
+                      label={t.coins}
+                      value={coins}
+                      sub={t.totalSub}
+                    />
+
+                    <StatCard
+                      icon="calendar"
+                      iconColor="#5E60CE"
+                      label={t.nights}
+                      value={nights}
+                      sub={t.registered}
+                    />
+
+                    <StatCard
+                      icon="score"
+                      iconColor="#5E60CE"
+                      label={t.averageScore}
+                      value={averageScore}
+                      sub={t.ofSleep}
+                    />
+
+                    <StatCard
+                      icon="trophy"
+                      iconColor="#FFB703"
+                      label={t.bestScore}
+                      value={best}
+                      sub={t.ofSleep}
+                    />
+
+                    <StatCard
+                      icon="level"
+                      iconColor={NIGHT.yellow}
+                      label={t.totalXP}
+                      value={xp}
+                      sub={t.earnedSub}
+                    />
+
+                    <StatCard
+                      icon="sparkles"
+                      iconColor={NIGHT.pink}
+                      label={t.perfect}
+                      value={perfect}
+                      sub={t.withoutWakeups}
+                    />
+
+                  </View>
+
+                  {/* Motivación */}
+
+                  <MotivationalCard t={t} />
+
+                </>
+
+              )
+            }
+
+          </Animated.View>
+
+        </ScrollView>
+
+        {/* Navegación inferior */}
+
+        <View style={styles.bottomNav}>
+          <BottomNav
+            active="Statistics"
+            t={t}
+            navigation={navigation}
           />
-
-          <StatCard
-            icon="🌙"
-            label={t.best}
-            value={`${maxHours} h`}
-          />
-
-          <StatCard
-            icon="💰"
-            label={t.coins}
-            value={coins}
-          />
-
-          <StatCard
-            icon="📅"
-            label={t.nights}
-            value={nights}
-          />
-
-          <StatCard
-            icon="💯"
-            label={t.averageScore}
-            value={averageScore}
-          />
-
-          <StatCard
-            icon="🏆"
-            label={t.bestScore}
-            value={best}
-          />
-
-          <StatCard
-            icon="⭐"
-            label={t.totalXP}
-            value={xp}
-          />
-
-          <StatCard
-            icon="🌟"
-            label={t.perfect}
-            value={perfect}
-          />
-
         </View>
 
-      </ScrollView>
+      </SafeAreaView>
 
-    </ScreenContainer>
+    </NightBackground>
 
   );
 
@@ -227,33 +352,91 @@ export default function StatisticsScreen() {
 
 const styles = StyleSheet.create({
 
-  screen: {
-    padding: 0,
-  },
-
-  container: {
+  safe: {
     flex: 1,
-    padding: 20,
   },
 
   content: {
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 120,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+
+  headerIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  headerText: {
+    flex: 1,
   },
 
   title: {
-    marginBottom: 22,
+    color: "#FFFFFF",
+    fontSize: 30,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
-  chartTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 12,
+  subtitle: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 15,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 2,
   },
 
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    marginTop: 6,
+  },
+
+  emptyCard: {
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    borderRadius: 24,
+    padding: 24,
+    alignItems: "center",
+    marginTop: 12,
+  },
+
+  emptyIcon: {
+    marginBottom: 10,
+  },
+
+  emptyTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold",
+    textAlign: "center",
+  },
+
+  emptyMessage: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 14,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+    marginTop: 6,
+  },
+
+  bottomNav: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 22,
   },
 
 });

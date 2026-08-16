@@ -174,6 +174,26 @@ export default {
 
   goal: "Goal",
 
+  statisticsSubtitle: "Your sleep progress",
+
+  ofSleep: "Of sleep",
+
+  totalSub: "Total",
+
+  registered: "Registered",
+
+  earnedSub: "Earned",
+
+  withoutWakeups: "Without wake-ups",
+
+  keepGoing: "Keep going!",
+
+  keepGoingMessage: "Your sleep progress keeps improving.",
+
+  noStatsTitle: "Not enough data yet",
+
+  noStatsMessage: "Log some nights to see your statistics.",
+
   day_mon: "Mon",
   day_tue: "Tue",
   day_wed: "Wed",
@@ -231,6 +251,26 @@ export default {
   completed: "Completed",
 
   locked: "Locked",
+
+  inProgress: "In progress",
+
+  achievementsSubtitle: "Your achievements and rewards",
+
+  achievementsUnlockedLabel: "Achievements unlocked",
+
+  totalRewardsLabel: "Total rewards",
+
+  filterAll: "All",
+
+  filterProgress: "In progress",
+
+  filterStreak: "Streaks",
+
+  filterSpecial: "Special",
+
+  noAchievementsTitle: "No achievements unlocked yet",
+
+  noAchievementsMessage: "Complete sleep sessions to earn your first rewards.",
 
   achievement_first_sleep_title: "First Night",
   achievement_first_sleep_description: "Complete your first sleep session.",
@@ -372,6 +412,16 @@ export default {
 
   sleepReminder: "Bedtime reminder",
   sleepReminderDesc: "We'll remind you when it's time to sleep",
+
+  settingsSubtitle: "Personalize your experience",
+
+  languageDesc: "Choose your preferred language",
+
+  sleepBetterTitle: "Sleep better, live better!",
+
+  sleepBetterMessage: "A good rest improves your energy, mood and health.",
+
+  resetDesc: "This will erase your current progress and start from scratch.",
   reminderOn: "On",
   reminderOff: "Off",
   reminderHour: "Hour",

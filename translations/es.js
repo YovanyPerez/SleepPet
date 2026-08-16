@@ -174,6 +174,26 @@ export default {
 
   goal: "Meta",
 
+  statisticsSubtitle: "Tu progreso del sueño",
+
+  ofSleep: "De sueño",
+
+  totalSub: "Total",
+
+  registered: "Registradas",
+
+  earnedSub: "Ganado",
+
+  withoutWakeups: "Sin despertarse",
+
+  keepGoing: "¡Sigue así!",
+
+  keepGoingMessage: "Tu progreso de sueño continúa mejorando.",
+
+  noStatsTitle: "Aún no hay suficientes datos",
+
+  noStatsMessage: "Registra algunas noches para ver tus estadísticas.",
+
   day_mon: "Lun",
   day_tue: "Mar",
   day_wed: "Mié",
@@ -231,6 +251,26 @@ export default {
   completed: "Completado",
 
   locked: "Bloqueado",
+
+  inProgress: "En progreso",
+
+  achievementsSubtitle: "Tus logros y recompensas",
+
+  achievementsUnlockedLabel: "Logros desbloqueados",
+
+  totalRewardsLabel: "Recompensas totales",
+
+  filterAll: "Todos",
+
+  filterProgress: "En progreso",
+
+  filterStreak: "Rachas",
+
+  filterSpecial: "Especiales",
+
+  noAchievementsTitle: "Aún no tienes logros desbloqueados",
+
+  noAchievementsMessage: "Completa sesiones de sueño para conseguir tus primeras recompensas.",
 
   achievement_first_sleep_title: "Primera noche",
   achievement_first_sleep_description: "Completa tu primera sesión de sueño.",
@@ -373,6 +413,16 @@ export default {
 
   sleepReminder: "Recordatorio para dormir",
   sleepReminderDesc: "Te recordamos cuándo ir a dormir",
+
+  settingsSubtitle: "Personaliza tu experiencia",
+
+  languageDesc: "Elige tu idioma preferido",
+
+  sleepBetterTitle: "¡Duerme mejor, vive mejor!",
+
+  sleepBetterMessage: "Un buen descanso mejora tu energía, tu ánimo y tu salud.",
+
+  resetDesc: "Esto borrará tu progreso actual y comenzará desde cero.",
   reminderOn: "Activo",
   reminderOff: "Apagado",
   reminderHour: "Hora",
