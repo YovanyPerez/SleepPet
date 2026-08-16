@@ -27,7 +27,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "./plugins/withSleepPetNative"
+      "./plugins/withSleepPetNative",
+      "expo-font"
     ],
     "extra": {
       "eas": {

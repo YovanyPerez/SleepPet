@@ -41,6 +41,24 @@ export default {
 
   startSleep: "Dormir",
 
+  startSleepSubtitle: "Registra tu sueño y protege tu racha",
+
+  petDialog: "Necesito dormir bien...",
+
+  happiness: "Felicidad ❤️",
+
+  lastNight: "ÚLTIMA NOCHE",
+
+  sleepLabel: "SUEÑO",
+
+  scoreLabel: "PUNTUACIÓN",
+
+  unlocksLabel: "DESBLOQUEOS",
+
+  levelHint: "¡Sigue durmiendo bien para subir de nivel! ✨",
+
+  noDataYet: "Aún sin datos",
+
   // ==========================
   // Menú
   // ==========================
@@ -157,6 +175,10 @@ export default {
   editProfile: "Editar perfil",
 
   yourName: "Tu nombre",
+
+  petName: "Nombre de la mascota",
+
+  petNamePlaceholder: "Ponle un nombre a tu mascota",
 
   saveChanges: "Guardar cambios",
 

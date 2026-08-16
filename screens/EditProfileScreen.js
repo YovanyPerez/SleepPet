@@ -28,6 +28,9 @@ export default function EditProfileScreen({ navigation }) {
     userName,
     setUserName,
 
+    petName,
+    setPetName,
+
     userAge,
     setUserAge,
 
@@ -41,6 +44,8 @@ export default function EditProfileScreen({ navigation }) {
   const t = getTranslations(language);
 
   const [name, setName] = useState(userName);
+
+  const [petNameInput, setPetNameInput] = useState(petName);
 
   const [age, setAge] = useState(
     userAge ? String(userAge) : ""
@@ -58,6 +63,8 @@ export default function EditProfileScreen({ navigation }) {
   function saveProfile() {
 
     setUserName(name);
+
+    setPetName(petNameInput);
 
     setUserAge(Number(age));
 
@@ -100,6 +107,24 @@ export default function EditProfileScreen({ navigation }) {
             value={name}
             onChangeText={setName}
             placeholder={t.yourName}
+            style={styles.input}
+          />
+
+        </Card>
+
+        <Card style={styles.card}>
+
+          <AppText
+            color={COLORS.textSecondary}
+            style={styles.label}
+          >
+            {t.petName}
+          </AppText>
+
+          <TextInput
+            value={petNameInput}
+            onChangeText={setPetNameInput}
+            placeholder={t.petNamePlaceholder}
             style={styles.input}
           />
 

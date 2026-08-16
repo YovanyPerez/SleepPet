@@ -62,6 +62,8 @@ export function AppProvider({ children }) {
 
   const [userName, setUserName] = useState("");
 
+  const [petName, setPetName] = useState("");
+
   const [userAge, setUserAge] = useState(null);
 
   const [goalHours, setGoalHours] = useState(8);
@@ -181,6 +183,8 @@ export function AppProvider({ children }) {
 
         setUserName(data.userName ?? "");
 
+        setPetName(data.petName ?? "");
+
         setUserAge(data.userAge ?? null);
 
         setGoalHours(data.goalHours ?? 8);
@@ -279,6 +283,8 @@ export function AppProvider({ children }) {
 
       userName,
 
+      petName,
+
       userAge,
 
       goalHours,
@@ -314,6 +320,8 @@ export function AppProvider({ children }) {
     petHappiness,
 
     userName,
+
+    petName,
 
     userAge,
 
@@ -464,6 +472,9 @@ export function AppProvider({ children }) {
 
     userName,
     setUserName,
+
+    petName,
+    setPetName,
 
     userAge,
     setUserAge,

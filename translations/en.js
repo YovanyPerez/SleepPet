@@ -41,6 +41,24 @@ export default {
 
   startSleep: "Start Sleep",
 
+  startSleepSubtitle: "Track your sleep & protect your streak",
+
+  petDialog: "I need some good sleep...",
+
+  happiness: "Happiness ❤️",
+
+  lastNight: "LAST NIGHT",
+
+  sleepLabel: "SLEEP",
+
+  scoreLabel: "SCORE",
+
+  unlocksLabel: "UNLOCKS",
+
+  levelHint: "Keep sleeping well to level up! ✨",
+
+  noDataYet: "No data yet",
+
   // ==========================
   // Menu
   // ==========================
@@ -157,6 +175,10 @@ export default {
   editProfile: "Edit Profile",
 
   yourName: "Your name",
+
+  petName: "Pet name",
+
+  petNamePlaceholder: "Give your pet a name",
 
   saveChanges: "Save Changes",
 

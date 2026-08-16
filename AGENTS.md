@@ -70,8 +70,14 @@ Read the exact versioned Expo docs at https://docs.expo.dev/versions/v54.0.0/ be
 - `ReminderModule.schedule` stores title/content in SharedPreferences and sets an inexact daily `AlarmManager` (`RTC_WAKEUP`, `INTERVAL_DAY`) → `ReminderReceiver` shows the notification.
 - `AppContext` re-schedules on app start and language change if enabled. **No `BOOT_COMPLETED` receiver** → the alarm is lost on reboot until the app is opened again.
 
-### Dead code (safe to remove)
-- `storage/StorageService.js`, `services/UsageService.js` (empty), `services/SleepSessionManager.js` (one stray line), `components/CustomButton.js` (empty), `styles/globalStyles.js` (empty).
+## Design system (Home redesign, in progress)
+- Fonts: `@expo-google-fonts/nunito` + `expo-font`, cargadas en `App.js` con `useFonts` (`Nunito_400Regular`, `Nunito_600SemiBold`, `Nunito_700Bold`, `Nunito_800ExtraBold`). `theme.js` exporta `FONT_FAMILY` y las variantes `TEXT` ya traen `fontFamily` → todo `AppText` usa Nunito.
+- Paleta nocturna en `theme.js` bajo `NIGHT`: `start #1B1B4B`, `end #5E60CE`, `lavender #EAE6F7`, `lavenderSoft #F4F1FB`, `lavenderDark #C9B8E8`, `yellow #FFD166`, `pink #FF8FAB`, `textOnNight #FFFFFF`.
+- Primitivas de diseño: `ScreenContainer`, `Card`, `AppText` (compartidas) + `NightBackground` (degradado + estrellas/luna/nubes), `ProgressBar` (barra redondeada), `BottomNav` (4 tabs: Home/Statistics/Achievements/Settings; usa `navigation.navigate`, prop `active`, labels `t.*`).
+- `HomeScreen` es la pantalla de referencia rediseñada: header (saludo + nombre + botones tienda/menú) → tarjeta de mascota (imagen `PET_IMAGES[selectedPet][petMood]`, `petName`, globo de diálogo, barra de felicidad) → streak/coins → nivel + barra XP → LAST NIGHT (`lastSleepSession`) → botón START SLEEP (`SleepMode`) → `BottomNav active="Home"`.
+- `petName` editable: estado en `AppContext`, persistido en `sleep_pet_data`, editado en `EditProfileScreen` (input "Pet name"); Home muestra el nombre de la mascota traducido si está vacío.
+- Dependencias agregadas: `expo-linear-gradient`, `expo-font`, `@expo-google-fonts/nunito`, `@expo/vector-icons` (instalada, aún sin usar).
+- Pendiente: rediseñar el resto de pantallas al estilo nocturno; `MenuScreen` quedará solo con Profile/History/About (Statistics/Achievements/Settings pasan al BottomNav de Home); reemplazar emojis UI por `@expo/vector-icons` vía un `AppIcon` planeado.
 
 ## Conventions
 - Code comments, log strings, and user-facing copy are in Spanish — keep new code consistent.
