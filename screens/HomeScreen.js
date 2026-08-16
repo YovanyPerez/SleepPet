@@ -13,6 +13,7 @@ import AppText from "../components/AppText";
 import ProgressBar from "../components/ProgressBar";
 import BottomNav from "../components/BottomNav";
 import NightBackground from "../components/NightBackground";
+import AppIcon from "../components/AppIcon";
 import { PET_IMAGES } from "../constants/PetImages";
 import { getPet } from "../services/PetService";
 import { getTranslations } from "../services/TranslationService";
@@ -90,7 +91,7 @@ export default function HomeScreen({ navigation }) {
             style={[styles.circleButton, styles.circleButtonSoft]}
             onPress={() => navigation.navigate("PetShop")}
           >
-            <AppText style={styles.circleIcon}>🏪</AppText>
+            <AppIcon name="store" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -106,7 +107,7 @@ export default function HomeScreen({ navigation }) {
               color={NIGHT.textOnNight}
               style={styles.name}
             >
-              {userName || t.player} 👋
+              {userName || t.player}
             </AppText>
 
           </View>
@@ -115,7 +116,7 @@ export default function HomeScreen({ navigation }) {
             style={[styles.circleButton, styles.circleButtonPurple]}
             onPress={() => navigation.navigate("Menu")}
           >
-            <AppText style={styles.circleIcon}>☰</AppText>
+            <AppIcon name="menu" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
         </View>
@@ -141,9 +142,17 @@ export default function HomeScreen({ navigation }) {
               </AppText>
             </View>
 
-            <AppText style={styles.happiness}>
-              {t.happiness} {petHappiness}%
-            </AppText>
+            <View style={styles.happinessRow}>
+              <AppIcon
+                name="happiness"
+                size={13}
+                color="#6C63A8"
+                style={styles.happinessIcon}
+              />
+              <AppText style={styles.happiness}>
+                {t.happiness} {petHappiness}%
+              </AppText>
+            </View>
 
             <ProgressBar
               progress={petHappiness}
@@ -162,7 +171,12 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.statCard}>
 
-            <AppText style={styles.statIcon}>🔥</AppText>
+            <AppIcon
+              name="streak"
+              size={30}
+              color="#F97316"
+              style={styles.statIcon}
+            />
 
             <AppText style={styles.statLabel}>
               {t.streak.toUpperCase()}
@@ -180,7 +194,12 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.statCard}>
 
-            <AppText style={styles.statIcon}>💰</AppText>
+            <AppIcon
+              name="coins"
+              size={30}
+              color="#F59E0B"
+              style={styles.statIcon}
+            />
 
             <AppText style={styles.statLabel}>
               {t.coins.toUpperCase()}
@@ -207,7 +226,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.levelLeft}>
 
               <View style={styles.levelIconCircle}>
-                <AppText style={styles.levelIconText}>⭐</AppText>
+                <AppIcon name="level" size={24} color={NIGHT.yellow} />
               </View>
 
               <AppText style={styles.levelTitle}>
@@ -246,6 +265,12 @@ export default function HomeScreen({ navigation }) {
             </AppText>
 
             <View style={styles.badge}>
+              <AppIcon
+                name="check"
+                size={12}
+                color="#2E7D32"
+                style={styles.badgeIcon}
+              />
               <AppText style={styles.badgeText}>
                 {t.goodSleep}
               </AppText>
@@ -259,7 +284,12 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.lastNightRow}>
 
                 <View style={styles.lastNightStat}>
-                  <AppText style={styles.lastNightIcon}>😴</AppText>
+                  <AppIcon
+                    name="sleep"
+                    size={20}
+                    color="#7C6FD0"
+                    style={styles.lastNightIcon}
+                  />
                   <AppText style={styles.lastNightValue}>
                     {formatHours(lastSleepSession.hours)}
                   </AppText>
@@ -271,7 +301,12 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.lastNightDivider} />
 
                 <View style={styles.lastNightStat}>
-                  <AppText style={styles.lastNightIcon}>💯</AppText>
+                  <AppIcon
+                    name="score"
+                    size={20}
+                    color="#5E60CE"
+                    style={styles.lastNightIcon}
+                  />
                   <AppText style={styles.lastNightValue}>
                     {lastSleepSession.score}
                   </AppText>
@@ -283,7 +318,12 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.lastNightDivider} />
 
                 <View style={styles.lastNightStat}>
-                  <AppText style={styles.lastNightIcon}>📱</AppText>
+                  <AppIcon
+                    name="unlocks"
+                    size={20}
+                    color="#5E60CE"
+                    style={styles.lastNightIcon}
+                  />
                   <AppText style={styles.lastNightValue}>
                     {lastSleepSession.unlockCount}
                   </AppText>
@@ -312,7 +352,12 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("SleepMode")}
         >
 
-          <AppText style={styles.startIcon}>🌙</AppText>
+          <AppIcon
+            name="night"
+            size={26}
+            color={NIGHT.yellow}
+            style={styles.startIcon}
+          />
 
           <AppText style={styles.startTitle}>
             {t.startSleep.toUpperCase()}
@@ -393,11 +438,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  circleIcon: {
-    color: NIGHT.textOnNight,
-    fontSize: 22,
-  },
-
   // Mascota
 
   petCard: {
@@ -442,8 +482,17 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_600SemiBold",
   },
 
-  happiness: {
+  happinessRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 10,
+  },
+
+  happinessIcon: {
+    marginRight: 5,
+  },
+
+  happiness: {
     fontSize: 13,
     fontFamily: "Nunito_700Bold",
     color: "#6C63A8",
@@ -468,7 +517,6 @@ const styles = StyleSheet.create({
   },
 
   statIcon: {
-    fontSize: 30,
     marginBottom: 6,
   },
 
@@ -525,10 +573,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  levelIconText: {
-    fontSize: 24,
-  },
-
   levelTitle: {
     fontSize: 20,
     fontFamily: "Nunito_800ExtraBold",
@@ -573,10 +617,16 @@ const styles = StyleSheet.create({
   },
 
   badge: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#DCF5E3",
     borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 6,
+  },
+
+  badgeIcon: {
+    marginRight: 4,
   },
 
   badgeText: {
@@ -596,7 +646,6 @@ const styles = StyleSheet.create({
   },
 
   lastNightIcon: {
-    fontSize: 20,
     marginBottom: 4,
   },
 
@@ -639,7 +688,6 @@ const styles = StyleSheet.create({
   },
 
   startIcon: {
-    fontSize: 28,
     marginBottom: 6,
   },
 

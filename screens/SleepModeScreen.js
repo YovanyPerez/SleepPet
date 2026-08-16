@@ -1,11 +1,21 @@
-import React, { useContext, useState } from "react";
+import React, {
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import {
   StyleSheet,
   TouchableOpacity,
   Alert,
   PermissionsAndroid,
   Platform,
+  Animated,
+  View,
+  ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import {
   finishSleepSession,
@@ -34,7 +44,7 @@ import {
 } from "../services/TranslationService";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS } from "../constants/theme";
+import { NIGHT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
@@ -46,11 +56,40 @@ import {
   getNotificationStatus,
 } from "../services/NotificationService";
 
-import ScreenContainer from "../components/ScreenContainer";
+import NightBackground from "../components/NightBackground";
+import GlowMoon from "../components/GlowMoon";
 import AppText from "../components/AppText";
 
 
 const MIN_SLEEP_HOURS = 0.5;
+
+function TrackingDot() {
+
+  const anim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, {
+          toValue: 0.3,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [anim]);
+
+  return (
+    <Animated.View style={[styles.trackingDot, { opacity: anim }]} />
+  );
+}
 
 export default function SleepModeScreen({ navigation }) {
 
@@ -102,6 +141,16 @@ export default function SleepModeScreen({ navigation }) {
 
   const [logLines, setLogLines] = useState([]);
 
+  const appear = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(appear, {
+      toValue: 1,
+      duration: 700,
+      useNativeDriver: true,
+    }).start();
+  }, [appear]);
+
   function addLog(line) {
     const time = new Date().toLocaleTimeString();
     setLogLines((prev) =>
@@ -134,6 +183,11 @@ export default function SleepModeScreen({ navigation }) {
 
   } = useSleepSession();
 
+  function paddedTime() {
+    const parts = formatTime().split(":");
+    const h = parts[0].padStart(2, "0");
+    return `${h}:${parts[1]}:${parts[2]}`;
+  }
 
   async function handleStartSleep() {
 
@@ -452,140 +506,195 @@ export default function SleepModeScreen({ navigation }) {
     navigation.navigate("Results");
 
   }
-    return (
 
-    <ScreenContainer style={styles.container}>
+  const cardOpacity = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
 
-      <AppText style={styles.moon}>
-        🌙
-      </AppText>
+  const cardTranslate = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [24, 0],
+  });
 
-      <AppText
-        variant="title"
-        center
-        style={styles.title}
-      >
-        {t.sleepMode}
-      </AppText>
+  return (
 
-      <AppText style={styles.timer}>
-        {formatTime()}
-      </AppText>
+    <NightBackground
+      colors={[NIGHT.start, "#4A4A9E", NIGHT.lavenderDark]}
+      moon={false}
+    >
 
-      {
-        running &&
-        notificationStatus && (
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.diag}
-          >
-            🔔 {
-              notificationStatus.notificationsEnabled
-                ? t.notifOn
-                : t.notifOff
-            }
-            {"  "}
-            ⚙️ {
-              notificationStatus.serviceRunning
-                ? t.serviceOn
-                : t.serviceOff
-            }
-          </AppText>
-        )
-      }
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
 
-      {
-        running &&
-        notificationStatus?.errors?.length > 0 && (
-          <AppText
-            color={COLORS.danger}
-            style={styles.diagError}
-          >
-            {notificationStatus.errors[
-              notificationStatus.errors.length - 1
-            ]}
-          </AppText>
-        )
-      }
-
-      {!running ? (
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleStartSleep}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
 
-          <AppText style={styles.buttonText}>
-            {t.startSleep}
+          {/* Cápsula de estado */}
+
+          <View style={[styles.pill, running && styles.pillActive]}>
+
+            {
+              running ? (
+                <View style={styles.pillDot} />
+              ) : (
+                <MaterialCommunityIcons
+                  name="weather-night"
+                  size={16}
+                  color="#FFFFFF"
+                />
+              )
+            }
+
+            <AppText style={styles.pillText}>
+              {running ? t.sleepModeActive : t.readyForSleep}
+            </AppText>
+
+          </View>
+
+          {/* Luna principal */}
+
+          <GlowMoon size={110} />
+
+          {/* Título y subtítulo */}
+
+          <AppText style={styles.title}>
+            {t.sleepMode}
           </AppText>
 
-        </TouchableOpacity>
+          <AppText style={styles.subtitle}>
+            {running ? t.trackingSubtitle : t.readyToTrack}
+          </AppText>
 
-      ) : (
+          {/* Contador */}
 
-        <>
+          <AppText style={styles.timer}>
+            {paddedTime()}
+          </AppText>
 
-          <TouchableOpacity
+          <View style={styles.timeLabels}>
+            <AppText style={styles.timeLabel}>{t.timeHrs}</AppText>
+            <AppText style={styles.timeLabel}>{t.timeMin}</AppText>
+            <AppText style={styles.timeLabel}>{t.timeSec}</AppText>
+          </View>
+
+          {/* Indicador de tracking */}
+
+          {
+            running && (
+              <View style={styles.trackingRow}>
+                <TrackingDot />
+                <AppText style={styles.trackingText}>
+                  {t.sleepTrackingActive}
+                </AppText>
+              </View>
+            )
+          }
+
+          {/* Phone unlocks */}
+
+          <Animated.View
             style={[
-              styles.button,
+              styles.cardFade,
               {
-                backgroundColor: "#EF476F",
+                opacity: cardOpacity,
+                transform: [{ translateY: cardTranslate }],
               },
             ]}
-            onPress={finishSleep}
           >
 
-            <AppText style={styles.buttonText}>
-              {t.finishSleep}
-            </AppText>
+            <View style={styles.glassCard}>
 
-          </TouchableOpacity>
+              <View style={styles.cardHeader}>
+
+                <View style={styles.cardIconCircle}>
+                  <MaterialCommunityIcons
+                    name="cellphone-lock"
+                    size={22}
+                    color={NIGHT.end}
+                  />
+                </View>
+
+                <AppText style={styles.cardTitle}>
+                  {t.phoneUnlocks}
+                </AppText>
+
+              </View>
+
+              <AppText style={styles.cardValue}>
+                {unlockCount}
+              </AppText>
+
+              <AppText style={styles.cardHint}>
+                {t.keepPhoneDown}
+              </AppText>
+
+            </View>
+
+            {/* Mensaje motivacional */}
+
+            <View style={[styles.glassCard, styles.motivationalCard]}>
+
+              <Ionicons name="moon" size={18} color={NIGHT.end} />
+
+              <AppText style={styles.motivationalTitle}>
+                {t.greatJob}
+              </AppText>
+
+              <AppText style={styles.motivationalText}>
+                {t.motivationalText}
+              </AppText>
+
+            </View>
+
+            {/* Botón principal */}
+
+            <TouchableOpacity
+              style={styles.mainButton}
+              onPress={running ? finishSleep : handleStartSleep}
+            >
+
+              {
+                running ? (
+                  <Ionicons name="sunny" size={26} color={NIGHT.yellow} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="weather-night"
+                    size={26}
+                    color={NIGHT.yellow}
+                  />
+                )
+              }
+
+              <AppText style={styles.mainButtonTitle}>
+                {(running ? t.wakeUp : t.startSleep).toUpperCase()}
+              </AppText>
+
+              <AppText style={styles.mainButtonSubtitle}>
+                {running ? t.finishSessionSubtitle : t.startSleepNightSubtitle}
+              </AppText>
+
+            </TouchableOpacity>
+
+          </Animated.View>
+
+          {/* Acceso secundario a logs */}
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.cancelButton,
-            ]}
-            onPress={async () => {
-
-              setSleepSessionStarted(false);
-
-              setUnlockCount(0);
-
-              setUnlockTimes([]);
-
-              stopNotification();
-
-              await cancelSleep();
-
-            }}
-          >
-
-            <AppText style={styles.buttonText}>
-              {t.cancelSession}
-            </AppText>
-
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              styles.logButton,
-            ]}
+            style={styles.logsLink}
             onPress={showLog}
           >
-
-            <AppText style={styles.buttonText}>
+            <AppText style={styles.logsText}>
               {t.viewLogs}
             </AppText>
-
           </TouchableOpacity>
 
-        </>
+        </ScrollView>
 
-      )}
+      </SafeAreaView>
 
-    </ScreenContainer>
+    </NightBackground>
 
   );
 
@@ -593,64 +702,238 @@ export default function SleepModeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container: {
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 0,
+  safe: {
+    flex: 1,
   },
 
-  moon: {
-    fontSize: 80,
-    marginBottom: 20,
+  content: {
+    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingTop: 14,
+    paddingBottom: 30,
   },
+
+  // Cápsula de estado
+
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+
+  pillActive: {
+    backgroundColor: "rgba(90,200,120,0.16)",
+    borderColor: "rgba(120,220,150,0.45)",
+  },
+
+  pillDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#4ADE80",
+    marginRight: 6,
+  },
+
+  pillText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+    marginLeft: 6,
+  },
+
+  // Título
 
   title: {
-    marginBottom: 20,
+    color: "#FFFFFF",
+    fontSize: 34,
+    fontFamily: "Nunito_800ExtraBold",
+    marginTop: 24,
   },
+
+  subtitle: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 15,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 6,
+    textAlign: "center",
+  },
+
+  // Contador
 
   timer: {
-    fontSize: 42,
-    fontWeight: "bold",
-    marginBottom: 40,
-    color: COLORS.primary,
+    color: "#F1EEFB",
+    fontSize: 52,
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 2,
+    marginTop: 34,
+    textShadowColor: "rgba(255,255,255,0.25)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
   },
 
-  diag: {
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: "center",
+  timeLabels: {
+    flexDirection: "row",
+    marginTop: 6,
   },
 
-  diagError: {
+  timeLabel: {
+    color: "rgba(255,255,255,0.55)",
     fontSize: 13,
-    marginBottom: 30,
-    marginHorizontal: 30,
-    textAlign: "center",
+    fontFamily: "Nunito_600SemiBold",
+    marginHorizontal: 18,
   },
 
-  logButton: {
-    backgroundColor: COLORS.secondary,
-    marginTop: 15,
+  // Indicador de tracking
+
+  trackingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
   },
 
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderRadius: 18,
-    minWidth: 220,
+  trackingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#4ADE80",
+    marginRight: 8,
+  },
+
+  trackingText: {
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
+  },
+
+  // Tarjetas
+
+  cardFade: {
+    width: "100%",
     alignItems: "center",
   },
 
-  cancelButton: {
-    marginTop: 15,
-    backgroundColor: "#777",
+  glassCard: {
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.68)",
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.85)",
+    padding: 22,
+    alignItems: "center",
+    marginTop: 26,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
 
-  buttonText: {
-    color: "white",
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+
+  cardIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  cardTitle: {
+    color: "#4A3F8F",
+    fontSize: 15,
+    fontFamily: "Nunito_700Bold",
+    letterSpacing: 1,
+  },
+
+  cardValue: {
+    color: "#1B1B4B",
+    fontSize: 46,
+    fontFamily: "Nunito_800ExtraBold",
+    marginVertical: 4,
+  },
+
+  cardHint: {
+    color: "#6A5FAF",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+  },
+
+  // Motivacional
+
+  motivationalCard: {
+    marginTop: 16,
+    paddingVertical: 20,
+  },
+
+  motivationalTitle: {
+    color: "#4A3F8F",
+    fontSize: 15,
+    fontFamily: "Nunito_700Bold",
+    marginTop: 8,
+  },
+
+  motivationalText: {
+    color: "#6A5FAF",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+    marginTop: 4,
+  },
+
+  // Botón principal
+
+  mainButton: {
+    width: "88%",
+    backgroundColor: NIGHT.end,
+    borderRadius: 30,
+    paddingVertical: 18,
+    alignItems: "center",
+    marginTop: 28,
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+  },
+
+  mainButtonTitle: {
+    color: "#FFFFFF",
     fontSize: 20,
-    fontWeight: "bold",
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 1,
+    marginTop: 6,
+  },
+
+  mainButtonSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 4,
+  },
+
+  // Logs
+
+  logsLink: {
+    marginTop: 20,
+    padding: 8,
+  },
+
+  logsText: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 12,
+    fontFamily: "Nunito_600SemiBold",
+    textDecorationLine: "underline",
   },
 
 });

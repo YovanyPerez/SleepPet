@@ -1,13 +1,14 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import AppText from "./AppText";
+import AppIcon from "./AppIcon";
 import { NIGHT } from "../constants/theme";
 
 const TABS = [
-  { key: "Home", icon: "🏠", labelKey: "home" },
-  { key: "Statistics", icon: "📊", labelKey: "statistics" },
-  { key: "Achievements", icon: "🏆", labelKey: "achievements" },
-  { key: "Settings", icon: "⚙️", labelKey: "settings" },
+  { key: "Home", icon: "home", labelKey: "home" },
+  { key: "Statistics", icon: "statistics", labelKey: "statistics" },
+  { key: "Achievements", icon: "achievements", labelKey: "achievements" },
+  { key: "Settings", icon: "settings", labelKey: "settings" },
 ];
 
 export default function BottomNav({ active, t, navigation }) {
@@ -21,7 +22,12 @@ export default function BottomNav({ active, t, navigation }) {
             style={[styles.tab, isActive && styles.tabActive]}
             onPress={() => navigation.navigate(tab.key)}
           >
-            <AppText style={styles.icon}>{tab.icon}</AppText>
+            <AppIcon
+              name={tab.icon}
+              size={20}
+              color="#FFFFFF"
+              style={styles.icon}
+            />
             <AppText style={styles.label}>
               {t[tab.labelKey]}
             </AppText>
@@ -59,7 +65,6 @@ const styles = StyleSheet.create({
   },
 
   icon: {
-    fontSize: 20,
     marginBottom: 2,
   },
 

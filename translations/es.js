@@ -13,9 +13,9 @@ export default {
   // Saludos
   // ==========================
 
-  greetingMorning: "Buenos días ☀️",
-  greetingAfternoon: "Buenas tardes 🌤️",
-  greetingEvening: "Buenas noches 🌙",
+  greetingMorning: "Buenos días",
+  greetingAfternoon: "Buenas tardes",
+  greetingEvening: "Buenas noches",
 
   player: "Jugador",
 
@@ -45,7 +45,7 @@ export default {
 
   petDialog: "Necesito dormir bien...",
 
-  happiness: "Felicidad ❤️",
+  happiness: "Felicidad",
 
   lastNight: "ÚLTIMA NOCHE",
 
@@ -88,6 +88,32 @@ export default {
 
   sleepMode: "Modo Sueño",
 
+  readyForSleep: "Listo para dormir",
+
+  sleepModeActive: "Modo Sueño Activo",
+
+  trackingSubtitle: "Estamos registrando tu sueño",
+
+  readyToTrack: "¿Listo para registrar tu sueño?",
+
+  timeHrs: "horas",
+  timeMin: "min",
+  timeSec: "seg",
+
+  sleepTrackingActive: "Seguimiento de sueño activo",
+
+  keepPhoneDown: "Mantén el teléfono alejado 😴",
+
+  greatJob: "¡Buen trabajo!",
+
+  motivationalText: "Lo estás haciendo muy bien. Duerme bien y despierta renovado. ⭐",
+
+  wakeUp: "Despertar",
+
+  finishSessionSubtitle: "Termina tu sesión de sueño",
+
+  startSleepNightSubtitle: "Registra tu sueño durante toda la noche",
+
   beginSleep: "Comenzar Sueño",
 
   finishSleep: "Finalizar Sueño",
@@ -107,7 +133,7 @@ export default {
   noSleepSession: "No se encontró ninguna sesión de sueño.",
 
   excellentSleep: "🎉 ¡Excelente descanso!",
-  goodSleep: "😊 ¡Buen descanso!",
+  goodSleep: "¡Buen descanso!",
   needMoreRest: "😴 Necesitas descansar más",
   trySleepingLonger: "💤 Intenta dormir más tiempo",
 

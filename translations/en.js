@@ -13,9 +13,9 @@ export default {
   // Greetings
   // ==========================
 
-  greetingMorning: "Good Morning ☀️",
-  greetingAfternoon: "Good Afternoon 🌤️",
-  greetingEvening: "Good Evening 🌙",
+  greetingMorning: "Good Morning",
+  greetingAfternoon: "Good Afternoon",
+  greetingEvening: "Good Evening",
 
   player: "Player",
 
@@ -45,7 +45,7 @@ export default {
 
   petDialog: "I need some good sleep...",
 
-  happiness: "Happiness ❤️",
+  happiness: "Happiness",
 
   lastNight: "LAST NIGHT",
 
@@ -88,6 +88,32 @@ export default {
 
   sleepMode: "Sleep Mode",
 
+  readyForSleep: "Ready for sleep",
+
+  sleepModeActive: "Sleep Mode Active",
+
+  trackingSubtitle: "We're tracking your sleep",
+
+  readyToTrack: "Ready to track your sleep?",
+
+  timeHrs: "hrs",
+  timeMin: "min",
+  timeSec: "sec",
+
+  sleepTrackingActive: "Sleep tracking active",
+
+  keepPhoneDown: "Keep your phone down 😴",
+
+  greatJob: "Great job!",
+
+  motivationalText: "You're doing great. Sleep well and wake up refreshed. ⭐",
+
+  wakeUp: "Wake Up",
+
+  finishSessionSubtitle: "Finish your sleep session",
+
+  startSleepNightSubtitle: "Track your sleep through the night",
+
   beginSleep: "Begin Sleep",
 
   finishSleep: "Finish Sleep",
@@ -107,7 +133,7 @@ export default {
   noSleepSession: "No sleep session found.",
 
   excellentSleep: "🎉 Excellent Sleep!",
-  goodSleep: "😊 Good Sleep!",
+  goodSleep: "Good Sleep!",
   needMoreRest: "😴 You Need More Rest",
   trySleepingLonger: "💤 Try Sleeping Longer",
 

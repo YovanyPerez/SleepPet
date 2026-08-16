@@ -3,11 +3,15 @@ import { View, StyleSheet, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { NIGHT } from "../constants/theme";
 
-export default function NightBackground({ children }) {
+export default function NightBackground({
+  children,
+  colors = [NIGHT.start, NIGHT.end],
+  moon = true,
+}) {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[NIGHT.start, NIGHT.end]}
+        colors={colors}
         style={StyleSheet.absoluteFill}
       />
 
@@ -19,7 +23,7 @@ export default function NightBackground({ children }) {
       <Text style={[styles.star, styles.s6]}>★</Text>
       <Text style={[styles.star, styles.s7]}>✦</Text>
 
-      <Text style={styles.moon}>🌙</Text>
+      {moon && <Text style={styles.moon}>🌙</Text>}
 
       <View style={[styles.cloud, styles.c1]} />
       <View style={[styles.cloud, styles.c2]} />
@@ -29,7 +33,6 @@ export default function NightBackground({ children }) {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
