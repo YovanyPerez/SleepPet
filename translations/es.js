@@ -153,6 +153,12 @@ export default {
 
   noSleepSessions: "Aún no hay sesiones de sueño.",
 
+  historySubtitle: "Revisa tus registros de sueño",
+
+  emptyHistoryTitle: "No hay sesiones todavía",
+
+  emptyHistoryMessage: "Completa tu primera sesión de sueño para comenzar a registrar tu progreso.",
+
   sleep: "Sueño",
 
   // ==========================
@@ -220,11 +226,33 @@ export default {
 
   editProfile: "Editar perfil",
 
+  profileSubtitle: "Tu progreso en SleepPet",
+
+  infoSection: "Información personal",
+
+  progressSection: "Tu progreso",
+
+  years: "años",
+
   yourName: "Tu nombre",
 
   petName: "Nombre de la mascota",
 
   petNamePlaceholder: "Ponle un nombre a tu mascota",
+
+  editSubtitle: "Actualiza tu información",
+
+  editIntro: "Estos datos ayudan a personalizar tu experiencia en SleepPet.",
+
+  goalQuestion: "¿Cuántas horas quieres dormir cada noche?",
+
+  hoursPerNight: "horas por noche",
+
+  yourGoal: "Tu objetivo",
+
+  hoursOfSleep: "horas de sueño",
+
+  goalMotivation: "¡Sigue así para alcanzar tus metas!",
 
   saveChanges: "Guardar cambios",
 
@@ -313,6 +341,8 @@ export default {
 
 
   petShop: "Tienda de Mascotas",
+
+  petShopSubtitle: "Compra nuevas mascotas para acompañarte",
 
   pet_cat: "Gato",
   pet_dog: "Perro",

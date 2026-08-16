@@ -1,13 +1,22 @@
-import React, { useContext, useState } from "react";
+import React, {
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
   ScrollView,
+  View,
+  Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { AppContext } from "../context/AppContext";
-import { COLORS } from "../constants/theme";
+import { NIGHT } from "../constants/theme";
 
 import {
   getTranslations,
@@ -17,9 +26,9 @@ import {
   calculateGoalHours,
 } from "../utils/sleepUtils";
 
-import ScreenContainer from "../components/ScreenContainer";
-import Card from "../components/Card";
+import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
+import AppIcon from "../components/AppIcon";
 
 export default function EditProfileScreen({ navigation }) {
 
@@ -42,6 +51,16 @@ export default function EditProfileScreen({ navigation }) {
   } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  const appear = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(appear, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [appear]);
 
   const [name, setName] = useState(userName);
 
@@ -74,145 +93,298 @@ export default function EditProfileScreen({ navigation }) {
 
   }
 
+  const fadeOpacity = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const fadeTranslate = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0],
+  });
+
   return (
 
-    <ScreenContainer style={styles.screen}>
+    <NightBackground moon={false}>
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{
-          paddingBottom: 40,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
 
-        <AppText
-          variant="title"
-          center
-          style={styles.title}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
-          ✏️ {t.editProfile}
-        </AppText>
 
-        <Card style={styles.card}>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.label}
+          <Animated.View
+            style={{
+              opacity: fadeOpacity,
+              transform: [{ translateY: fadeTranslate }],
+            }}
           >
-            {t.name}
-          </AppText>
 
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder={t.yourName}
-            style={styles.input}
-          />
+            {/* Header */}
 
-        </Card>
+            <View style={styles.headerRow}>
 
-        <Card style={styles.card}>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.label}
-          >
-            {t.petName}
-          </AppText>
-
-          <TextInput
-            value={petNameInput}
-            onChangeText={setPetNameInput}
-            placeholder={t.petNamePlaceholder}
-            style={styles.input}
-          />
-
-        </Card>
-
-        <Card style={styles.card}>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.label}
-          >
-            {t.age}
-          </AppText>
-
-          <TextInput
-            value={age}
-            onChangeText={setAge}
-            placeholder={t.age}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-
-        </Card>
-
-        <Card style={styles.card}>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.label}
-          >
-            {t.sleepGoal} ({t.hours})
-          </AppText>
-
-          <TextInput
-            value={goal}
-            onChangeText={setGoal}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-
-          {
-            recommendedHours &&
-            recommendedHours !== Number(goal) && (
               <TouchableOpacity
-                style={styles.recommended}
-                onPress={() =>
-                  setGoal(String(recommendedHours))
-                }
+                style={styles.circleButton}
+                onPress={() => navigation.goBack()}
               >
-                <AppText style={styles.recommendedText}>
-                  💡 {
-                    t.recommendedHours.replace(
-                      "{{hours}}",
-                      recommendedHours
-                    )
-                  }
-                </AppText>
+                <AppIcon name="back" size={20} color="#FFFFFF" />
               </TouchableOpacity>
-            )
-          }
 
-        </Card>
+              <View style={styles.headerCenter}>
 
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={saveProfile}
-        >
+                <AppText style={styles.title}>
+                  {t.editProfile}
+                </AppText>
 
-          <AppText style={styles.buttonText}>
-            💾 {t.saveChanges}
-          </AppText>
+                <AppText style={styles.subtitle}>
+                  {t.editSubtitle}
+                </AppText>
 
-        </TouchableOpacity>
+              </View>
 
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
+              <View style={styles.circleButton}>
+                <AppIcon name="pencil" size={20} color={NIGHT.yellow} />
+              </View>
 
-          <AppText style={styles.buttonText}>
-            {t.cancel}
-          </AppText>
+            </View>
 
-        </TouchableOpacity>
+            {/* Introducción */}
 
-      </ScrollView>
+            <View style={styles.introCard}>
 
-    </ScreenContainer>
+              <View style={styles.introIcon}>
+                <AppIcon name="sparkles" size={20} color={NIGHT.yellow} />
+              </View>
+
+              <View style={styles.introText}>
+
+                <AppText style={styles.introTitle}>
+                  {t.editSubtitle}
+                </AppText>
+
+                <AppText style={styles.introDesc}>
+                  {t.editIntro}
+                </AppText>
+
+              </View>
+
+            </View>
+
+            {/* Nombre */}
+
+            <View style={styles.glassCard}>
+
+              <View style={styles.fieldHeader}>
+
+                <View style={styles.fieldIcon}>
+                  <AppIcon name="person" size={18} color="#8FA3FF" />
+                </View>
+
+                <AppText style={styles.fieldLabel}>
+                  {t.name}
+                </AppText>
+
+              </View>
+
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder={t.yourName}
+                placeholderTextColor="#B8B2E8"
+                cursorColor={NIGHT.end}
+                style={styles.input}
+              />
+
+            </View>
+
+            {/* Edad */}
+
+            <View style={styles.glassCard}>
+
+              <View style={styles.fieldHeader}>
+
+                <View style={styles.fieldIcon}>
+                  <AppIcon name="cake" size={18} color={NIGHT.pink} />
+                </View>
+
+                <AppText style={styles.fieldLabel}>
+                  {t.age}
+                </AppText>
+
+              </View>
+
+              <TextInput
+                value={age}
+                onChangeText={setAge}
+                placeholder={t.age}
+                placeholderTextColor="#B8B2E8"
+                cursorColor={NIGHT.end}
+                keyboardType="numeric"
+                style={styles.input}
+              />
+
+            </View>
+
+            {/* Pet name */}
+
+            <View style={styles.glassCard}>
+
+              <View style={styles.fieldHeader}>
+
+                <View style={styles.fieldIcon}>
+                  <AppIcon name="paw" size={18} color={NIGHT.yellow} />
+                </View>
+
+                <AppText style={styles.fieldLabel}>
+                  {t.petName}
+                </AppText>
+
+              </View>
+
+              <TextInput
+                value={petNameInput}
+                onChangeText={setPetNameInput}
+                placeholder={t.petNamePlaceholder}
+                placeholderTextColor="#B8B2E8"
+                cursorColor={NIGHT.end}
+                style={styles.input}
+              />
+
+            </View>
+
+            {/* Meta de sueño */}
+
+            <View style={styles.glassCard}>
+
+              <View style={styles.fieldHeader}>
+
+                <View style={styles.fieldIcon}>
+                  <AppIcon name="night" size={18} color={NIGHT.yellow} />
+                </View>
+
+                <AppText style={styles.fieldLabel}>
+                  {t.sleepGoal}
+                </AppText>
+
+              </View>
+
+              <AppText style={styles.fieldDesc}>
+                {t.goalQuestion}
+              </AppText>
+
+              <View style={styles.goalRow}>
+
+                <TextInput
+                  value={goal}
+                  onChangeText={setGoal}
+                  keyboardType="numeric"
+                  placeholderTextColor="#B8B2E8"
+                  cursorColor={NIGHT.end}
+                  style={[styles.input, styles.goalInput]}
+                />
+
+                <AppText style={styles.goalUnit}>
+                  {t.hoursPerNight}
+                </AppText>
+
+              </View>
+
+              {
+                recommendedHours &&
+                recommendedHours !== Number(goal) && (
+                  <TouchableOpacity
+                    style={styles.recommended}
+                    onPress={() =>
+                      setGoal(String(recommendedHours))
+                    }
+                  >
+
+                    <AppIcon
+                      name="sparkles"
+                      size={14}
+                      color={NIGHT.yellow}
+                      style={styles.recommendedIcon}
+                    />
+
+                    <AppText style={styles.recommendedText}>
+                      {t.recommendedHours.replace(
+                        "{{hours}}",
+                        recommendedHours
+                      )}
+                    </AppText>
+
+                  </TouchableOpacity>
+                )
+              }
+
+            </View>
+
+            {/* Tu objetivo */}
+
+            <LinearGradient
+              colors={[NIGHT.end, "#4A3F8F"]}
+              style={styles.goalCard}
+            >
+
+              <View style={styles.goalDecorRow}>
+
+                <AppIcon name="night" size={20} color={NIGHT.yellow} style={styles.goalDecorIcon} />
+
+                <AppIcon name="sparkles" size={14} color={NIGHT.yellow} />
+
+              </View>
+
+              <AppText style={styles.goalCardTitle}>
+                {t.yourGoal}
+              </AppText>
+
+              <AppText style={styles.goalCardValue}>
+                {goal || "0"} {t.hoursOfSleep}
+              </AppText>
+
+              <AppText style={styles.goalCardMessage}>
+                {t.goalMotivation}
+              </AppText>
+
+            </LinearGradient>
+
+            {/* Guardar */}
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={saveProfile}
+            >
+
+              <AppIcon name="save" size={20} color="#FFFFFF" style={styles.saveIcon} />
+
+              <AppText style={styles.saveText}>
+                {t.saveChanges}
+              </AppText>
+
+            </TouchableOpacity>
+
+            {/* Cancelar */}
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+            >
+
+              <AppText style={styles.cancelText}>
+                {t.cancel}
+              </AppText>
+
+            </TouchableOpacity>
+
+          </Animated.View>
+
+        </ScrollView>
+
+      </SafeAreaView>
+
+    </NightBackground>
 
   );
 
@@ -220,73 +392,265 @@ export default function EditProfileScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  screen: {
-    padding: 0,
+  safe: {
+    flex: 1,
   },
 
-  container: {
+  content: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
+
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 22,
+  },
+
+  circleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  headerCenter: {
     flex: 1,
-    padding: 20,
+    alignItems: "center",
   },
 
   title: {
-    marginBottom: 25,
+    color: "#FFFFFF",
+    fontSize: 30,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
-  card: {
+  subtitle: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 2,
+  },
+
+  introCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.25)",
+    borderRadius: 24,
     padding: 18,
     marginBottom: 18,
   },
 
-  label: {
+  introIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  introText: {
+    flex: 1,
+  },
+
+  introTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold",
+  },
+
+  introDesc: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 3,
+  },
+
+  glassCard: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.20)",
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 16,
+  },
+
+  fieldHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  fieldIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+
+  fieldLabel: {
+    color: "#FFFFFF",
     fontSize: 16,
-    marginBottom: 10,
+    fontFamily: "Nunito_700Bold",
+  },
+
+  fieldDesc: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    marginBottom: 12,
   },
 
   input: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 15,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.35)",
+    borderRadius: 16,
+    paddingHorizontal: 18,
     paddingVertical: 14,
     fontSize: 18,
-    color: COLORS.text,
+    color: "#FFFFFF",
+  },
+
+  goalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  goalInput: {
+    flex: 1,
+  },
+
+  goalUnit: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 15,
+    fontFamily: "Nunito_600SemiBold",
+    marginLeft: 12,
   },
 
   recommended: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 12,
-    backgroundColor: "#E8E9FA",
-    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 15,
-    alignItems: "center",
+  },
+
+  recommendedIcon: {
+    marginRight: 6,
   },
 
   recommendedText: {
-    color: COLORS.primary,
+    color: "#C9C4E8",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+  },
+
+  goalCard: {
+    alignItems: "center",
+    borderRadius: 26,
+    padding: 22,
+    marginBottom: 20,
+    marginTop: 4,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+
+  goalDecorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  goalDecorIcon: {
+    marginRight: 6,
+  },
+
+  goalCardTitle: {
+    color: NIGHT.yellow,
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 1,
+  },
+
+  goalCardValue: {
+    color: "#FFFFFF",
+    fontSize: 26,
+    fontFamily: "Nunito_800ExtraBold",
+    marginTop: 6,
+  },
+
+  goalCardMessage: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+    marginTop: 6,
   },
 
   saveButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 20,
-    paddingVertical: 18,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
+    justifyContent: "center",
+    backgroundColor: NIGHT.end,
+    borderRadius: 24,
+    height: 60,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+
+  saveIcon: {
+    marginRight: 8,
+  },
+
+  saveText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
   cancelButton: {
-    backgroundColor: "#888",
-    borderRadius: 20,
-    paddingVertical: 18,
     alignItems: "center",
-    marginTop: 15,
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1.5,
+    borderColor: "rgba(150,130,255,0.4)",
+    borderRadius: 26,
+    height: 56,
+    marginTop: 14,
   },
 
-  buttonText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
+  cancelText: {
+    color: "#D5CFF5",
+    fontSize: 16,
+    fontFamily: "Nunito_700Bold",
   },
 
 });

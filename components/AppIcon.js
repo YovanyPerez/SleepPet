@@ -33,6 +33,12 @@ const ICONS = {
   chevron: { family: "io", name: "chevron-forward" },
   person: { family: "io", name: "person" },
   back: { family: "io", name: "arrow-back" },
+  cake: { family: "mci", name: "cake-variant" },
+  pencil: { family: "io", name: "pencil" },
+  save: { family: "io", name: "save" },
+  cloud: { family: "mci", name: "cloud" },
+  flash: { family: "io", name: "flash" },
+  warning: { family: "io", name: "warning" },
 };
 
 export default function AppIcon({

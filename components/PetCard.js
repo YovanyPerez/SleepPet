@@ -1,51 +1,43 @@
 import React, { useContext } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Image,
 } from "react-native";
 
-import { COLORS } from "../constants/theme";
+import { NIGHT } from "../constants/theme";
 import { PET_IMAGES } from "../constants/PetImages";
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
 
+import AppText from "./AppText";
+import AppIcon from "./AppIcon";
+
 const COMING_SOON = require("../assets/pets/comingsoon.png");
 
 export default function PetCard({
-
   pet,
-
   owned,
-
   selected,
-
   onBuy,
-
   onSelect,
-
 }) {
 
   const { language } = useContext(AppContext);
 
   const t = getTranslations(language);
 
-  function renderButton() {
+  function renderAction() {
 
     if (!pet.available) {
 
       return (
-
-        <View style={styles.comingSoonButton}>
-
-          <Text style={styles.buttonText}>
+        <View style={[styles.actionButton, styles.disabledButton]}>
+          <AppText style={styles.disabledText}>
             {t.comingSoon}
-          </Text>
-
+          </AppText>
         </View>
-
       );
 
     }
@@ -53,15 +45,15 @@ export default function PetCard({
     if (selected) {
 
       return (
+        <View style={[styles.actionButton, styles.selectedButton]}>
 
-        <View style={styles.selectedButton}>
+          <AppIcon name="check" size={14} color="#FFFFFF" style={styles.actionIcon} />
 
-          <Text style={styles.selectedText}>
+          <AppText style={styles.actionText}>
             {t.selected}
-          </Text>
+          </AppText>
 
         </View>
-
       );
 
     }
@@ -69,74 +61,97 @@ export default function PetCard({
     if (owned) {
 
       return (
-
         <TouchableOpacity
-          style={styles.selectButton}
+          style={[styles.actionButton, styles.selectButton]}
           onPress={onSelect}
         >
-
-          <Text style={styles.buttonText}>
+          <AppText style={styles.actionText}>
             {t.select}
-          </Text>
-
+          </AppText>
         </TouchableOpacity>
-
       );
 
     }
 
     return (
-
       <TouchableOpacity
-        style={styles.buyButton}
+        style={[styles.actionButton, styles.buyButton]}
         onPress={onBuy}
       >
 
-        <Text style={styles.buttonText}>
+        <AppIcon name="coins" size={14} color={NIGHT.yellow} style={styles.actionIcon} />
+
+        <AppText style={styles.actionText}>
           {t.buy}
-        </Text>
+        </AppText>
 
       </TouchableOpacity>
+    );
 
+  }
+
+  function renderPrice() {
+
+    if (!pet.available) {
+
+      return (
+        <AppText style={styles.priceText}>
+          {t.comingSoon}
+        </AppText>
+      );
+
+    }
+
+    if (pet.price === 0) {
+
+      return (
+        <AppText style={styles.priceText}>
+          {t.free}
+        </AppText>
+      );
+
+    }
+
+    return (
+      <View style={styles.priceRow}>
+
+        <AppIcon name="coins" size={14} color={NIGHT.yellow} style={styles.priceIcon} />
+
+        <AppText style={styles.priceText}>
+          {pet.price}
+        </AppText>
+
+        <AppText style={styles.priceUnit}>
+          {t.coins}
+        </AppText>
+
+      </View>
     );
 
   }
 
   return (
 
-    <View style={styles.card}>
+    <View style={[styles.card, selected && styles.cardSelected]}>
 
-      {pet.available ? (
+      <Image
+        source={pet.available ? PET_IMAGES[pet.id].happy : COMING_SOON}
+        style={styles.petImage}
+      />
 
-        <Image
-          source={PET_IMAGES[pet.id].happy}
-          style={styles.petImage}
-        />
+      <View style={styles.info}>
 
-      ) : (
+        <AppText style={styles.name}>
+          {t[pet.nameKey]}
+        </AppText>
 
-        <Image
-          source={COMING_SOON}
-          style={styles.petImage}
-        />
+        <View style={styles.priceArea}>
+          {renderPrice()}
+        </View>
 
-      )}
+        {renderAction()}
 
-      <Text style={styles.name}>
-        {t[pet.nameKey]}
-      </Text>
-
-      <Text style={styles.price}>
-
-        {!pet.available
-          ? t.comingSoon
-          : pet.price === 0
-          ? t.free
-          : `${pet.price} ${t.coins}`}
-
-      </Text>
-
-      {renderButton()}
+      </View>
 
     </View>
 
@@ -147,123 +162,114 @@ export default function PetCard({
 const styles = StyleSheet.create({
 
   card: {
-
-    backgroundColor: "white",
-
-    borderRadius: 20,
-
-    padding: 20,
-
-    marginBottom: 18,
-
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.25)",
+    borderRadius: 26,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
 
-    elevation: 4,
-
+  cardSelected: {
+    borderColor: "#FFC928",
+    shadowColor: "#FFC928",
+    shadowOpacity: 0.25,
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
 
   petImage: {
-
-    width: 130,
-
-    height: 130,
-
+    width: 100,
+    height: 100,
     resizeMode: "contain",
+    marginRight: 14,
+  },
 
-    marginBottom: 10,
-
+  info: {
+    flex: 1,
   },
 
   name: {
-
-    fontSize: 24,
-
-    fontWeight: "bold",
-
-    marginTop: 5,
-
-    color: COLORS.text,
-
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
-  price: {
+  priceArea: {
+    marginTop: 4,
+  },
 
-    marginTop: 8,
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 
-    marginBottom: 18,
+  priceIcon: {
+    marginRight: 4,
+  },
 
-    color: COLORS.textSecondary,
+  priceText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+  },
 
-    fontSize: 16,
+  priceUnit: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    marginLeft: 4,
+  },
 
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start",
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    marginTop: 12,
+  },
+
+  actionIcon: {
+    marginRight: 6,
   },
 
   buyButton: {
-
-    backgroundColor: COLORS.primary,
-
-    paddingHorizontal: 30,
-
-    paddingVertical: 12,
-
-    borderRadius: 16,
-
+    backgroundColor: NIGHT.end,
   },
 
   selectButton: {
-
-    backgroundColor: "#5CB85C",
-
-    paddingHorizontal: 30,
-
-    paddingVertical: 12,
-
-    borderRadius: 16,
-
+    backgroundColor: "rgba(255,255,255,0.16)",
   },
 
   selectedButton: {
-
-    backgroundColor: "#999",
-
-    paddingHorizontal: 30,
-
-    paddingVertical: 12,
-
-    borderRadius: 16,
-
+    backgroundColor: "rgba(94,209,200,0.25)",
   },
 
-  comingSoonButton: {
-
-    backgroundColor: "#BBBBBB",
-
-    paddingHorizontal: 30,
-
-    paddingVertical: 12,
-
-    borderRadius: 16,
-
+  disabledButton: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
   },
 
-  buttonText: {
-
-    color: "white",
-
-    fontWeight: "bold",
-
-    fontSize: 16,
-
+  actionText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
-  selectedText: {
-
-    color: "white",
-
-    fontWeight: "bold",
-
-    fontSize: 16,
-
+  disabledText: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 15,
+    fontFamily: "Nunito_700Bold",
   },
 
 });

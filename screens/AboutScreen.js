@@ -1,17 +1,19 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import {
-  Text,
+  View,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS } from "../constants/theme";
 
-import ScreenContainer from "../components/ScreenContainer";
-import Card from "../components/Card";
+import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
+import AppIcon from "../components/AppIcon";
+import GlowMoon from "../components/GlowMoon";
 
 export default function AboutScreen({ navigation }) {
 
@@ -19,66 +21,96 @@ export default function AboutScreen({ navigation }) {
 
   const t = getTranslations(language);
 
+  const appear = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(appear, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [appear]);
+
+  const fadeOpacity = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const fadeTranslate = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0],
+  });
+
   return (
 
-    <ScreenContainer style={styles.container}>
+    <NightBackground moon={false}>
 
-      <Text style={styles.logo}>
-        🐱
-      </Text>
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
 
-      <AppText
-        variant="title"
-        center
-        style={styles.title}
-      >
-        SleepPet
-      </AppText>
-
-      <Card style={styles.card}>
-
-        <AppText
-          variant="body"
-          color={COLORS.textSecondary}
-          style={styles.label}
+        <Animated.View
+          style={[
+            styles.wrap,
+            {
+              opacity: fadeOpacity,
+              transform: [{ translateY: fadeTranslate }],
+            },
+          ]}
         >
-          {t.madeBy}
-        </AppText>
 
-        <AppText variant="subtitle">
-          Yovany Perez
-        </AppText>
+          {/* Header */}
 
-      </Card>
+          <View style={styles.headerRow}>
 
-      <Card style={styles.card}>
+            <TouchableOpacity
+              style={styles.circleButton}
+              onPress={() => navigation.goBack()}
+            >
+              <AppIcon name="back" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
 
-        <AppText
-          variant="body"
-          color={COLORS.textSecondary}
-          style={styles.label}
-        >
-          {t.version}
-        </AppText>
+            <AppText style={styles.title}>
+              SleepPet
+            </AppText>
 
-        <AppText variant="subtitle">
-          v1.0
-        </AppText>
+            <View style={styles.circleButton}>
+              <AppIcon name="about" size={20} color="#C9B8E8" />
+            </View>
 
-      </Card>
+          </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.goBack()}
-      >
+          <GlowMoon size={72} />
 
-        <AppText style={styles.buttonText}>
-          ← {t.back}
-        </AppText>
+          {/* Cards de información */}
 
-      </TouchableOpacity>
+          <View style={styles.glassCard}>
 
-    </ScreenContainer>
+            <AppText style={styles.label}>
+              {t.madeBy}
+            </AppText>
+
+            <AppText style={styles.value}>
+              Yovany Perez
+            </AppText>
+
+          </View>
+
+          <View style={styles.glassCard}>
+
+            <AppText style={styles.label}>
+              {t.version}
+            </AppText>
+
+            <AppText style={styles.value}>
+              1.0.2
+            </AppText>
+
+          </View>
+
+        </Animated.View>
+
+      </SafeAreaView>
+
+    </NightBackground>
 
   );
 
@@ -86,41 +118,64 @@ export default function AboutScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container: {
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 25,
+  safe: {
+    flex: 1,
   },
 
-  logo: {
-    fontSize: 90,
-    marginBottom: 20,
+  wrap: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+
+  headerRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
+
+  circleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   title: {
-    marginBottom: 35,
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
-  card: {
+  glassCard: {
     width: "100%",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.2)",
+    borderRadius: 24,
+    padding: 20,
     alignItems: "center",
+    marginTop: 18,
   },
 
   label: {
-    marginBottom: 8,
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+    marginBottom: 6,
   },
 
-  button: {
-    marginTop: 25,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 18,
-  },
-
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
+  value: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
 });

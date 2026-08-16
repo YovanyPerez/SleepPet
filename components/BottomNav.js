@@ -8,6 +8,7 @@ const TABS = [
   { key: "Home", icon: "home", labelKey: "home" },
   { key: "Statistics", icon: "statistics", labelKey: "statistics" },
   { key: "Achievements", icon: "achievements", labelKey: "achievements" },
+  { key: "PetShop", icon: "store", labelKey: "petShop" },
   { key: "Settings", icon: "settings", labelKey: "settings" },
 ];
 
@@ -24,7 +25,7 @@ export default function BottomNav({ active, t, navigation }) {
           >
             <AppIcon
               name={tab.icon}
-              size={20}
+              size={18}
               color="#FFFFFF"
               style={styles.icon}
             />
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: NIGHT.start,
     borderRadius: 28,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 8,
     elevation: 8,
     shadowColor: "#000",
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
 
   label: {
     color: NIGHT.textOnNight,
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: "Nunito_700Bold",
   },
 });

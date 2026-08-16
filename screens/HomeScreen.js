@@ -88,10 +88,10 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.header}>
 
           <TouchableOpacity
-            style={[styles.circleButton, styles.circleButtonSoft]}
-            onPress={() => navigation.navigate("PetShop")}
+            style={[styles.circleButton, styles.circleButtonPurple]}
+            onPress={() => navigation.navigate("Menu")}
           >
-            <AppIcon name="store" size={22} color="#FFFFFF" />
+            <AppIcon name="menu" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -112,12 +112,7 @@ export default function HomeScreen({ navigation }) {
 
           </View>
 
-          <TouchableOpacity
-            style={[styles.circleButton, styles.circleButtonPurple]}
-            onPress={() => navigation.navigate("Menu")}
-          >
-            <AppIcon name="menu" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={styles.headerSpacer} />
 
         </View>
 
@@ -429,13 +424,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  circleButtonSoft: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-  },
-
   circleButtonPurple: {
     backgroundColor: NIGHT.end,
     elevation: 4,
+  },
+
+  headerSpacer: {
+    width: 48,
+    height: 48,
   },
 
   // Mascota

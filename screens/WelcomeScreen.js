@@ -1,17 +1,36 @@
 import React, { useContext } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS } from "../constants/theme";
+import { NIGHT } from "../constants/theme";
 
-import ScreenContainer from "../components/ScreenContainer";
+import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
+import AppIcon from "../components/AppIcon";
+import GlowMoon from "../components/GlowMoon";
+
+function LanguagePill({ label, active, onPress }) {
+  return (
+    <TouchableOpacity
+      style={[styles.languageButton, active && styles.selectedButton]}
+      onPress={onPress}
+    >
+      <AppText style={[styles.languageText, active && styles.languageTextActive]}>
+        {label}
+      </AppText>
+      {active && (
+        <AppIcon name="check" size={14} color="#FFFFFF" style={styles.languageCheck} />
+      )}
+    </TouchableOpacity>
+  );
+}
 
 export default function WelcomeScreen({ navigation }) {
 
@@ -24,71 +43,57 @@ export default function WelcomeScreen({ navigation }) {
 
   return (
 
-    <ScreenContainer style={styles.container}>
+    <NightBackground moon={false}>
 
-      <Text style={styles.logo}>
-        🐱
-      </Text>
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
 
-      <AppText
-        variant="title"
-        center
-        style={styles.title}
-      >
-        {t.welcomeTitle}
-      </AppText>
-
-      <AppText
-        color={COLORS.textSecondary}
-        style={styles.subtitle}
-      >
-        {t.welcomeSubtitle}
-      </AppText>
-
-      <View style={styles.languageContainer}>
-
-        <TouchableOpacity
-          style={[
-            styles.languageButton,
-            language === "en" && styles.selectedButton,
-          ]}
-          onPress={() => setLanguage("en")}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
 
-          <AppText style={styles.languageText}>
-            🇺🇸 English
+          <GlowMoon size={110} />
+
+          <AppText style={styles.title}>
+            {t.welcomeTitle}
           </AppText>
 
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.languageButton,
-            language === "es" && styles.selectedButton,
-          ]}
-          onPress={() => setLanguage("es")}
-        >
-
-          <AppText style={styles.languageText}>
-            🇪🇸 Español
+          <AppText style={styles.subtitle}>
+            {t.welcomeSubtitle}
           </AppText>
 
-        </TouchableOpacity>
+          <View style={styles.languageContainer}>
 
-      </View>
+            <LanguagePill
+              label="English"
+              active={language === "en"}
+              onPress={() => setLanguage("en")}
+            />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("CreateProfile")}
-      >
+            <LanguagePill
+              label="Español"
+              active={language === "es"}
+              onPress={() => setLanguage("es")}
+            />
 
-        <AppText style={styles.buttonText}>
-          {t.getStarted}
-        </AppText>
+          </View>
 
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("CreateProfile")}
+          >
 
-    </ScreenContainer>
+            <AppText style={styles.buttonText}>
+              {t.getStarted}
+            </AppText>
+
+          </TouchableOpacity>
+
+        </ScrollView>
+
+      </SafeAreaView>
+
+    </NightBackground>
 
   );
 
@@ -96,26 +101,33 @@ export default function WelcomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container: {
+  safe: {
+    flex: 1,
+  },
+
+  content: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 30,
   },
 
-  logo: {
-    fontSize: 90,
-    marginBottom: 25,
-  },
-
   title: {
-    marginBottom: 15,
+    color: "#FFFFFF",
+    fontSize: 32,
+    fontFamily: "Nunito_800ExtraBold",
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 12,
   },
 
   subtitle: {
-    fontSize: 18,
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 17,
+    fontFamily: "Nunito_400Regular",
     textAlign: "center",
-    lineHeight: 28,
-    marginBottom: 35,
+    lineHeight: 26,
+    marginBottom: 36,
   },
 
   languageContainer: {
@@ -124,35 +136,54 @@ const styles = StyleSheet.create({
   },
 
   languageButton: {
-    backgroundColor: "#EAEAEA",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
     paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderRadius: 14,
+    paddingHorizontal: 20,
+    borderRadius: 999,
     marginHorizontal: 8,
   },
 
   selectedButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: NIGHT.end,
+    borderColor: NIGHT.end,
   },
 
   languageText: {
-    color: "white",
+    color: "rgba(255,255,255,0.8)",
     fontWeight: "bold",
     fontSize: 16,
+    fontFamily: "Nunito_700Bold",
+  },
+
+  languageTextActive: {
+    color: "#FFFFFF",
+  },
+
+  languageCheck: {
+    marginLeft: 6,
   },
 
   button: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 45,
-    paddingVertical: 16,
-    borderRadius: 20,
+    backgroundColor: NIGHT.end,
+    paddingHorizontal: 48,
+    paddingVertical: 17,
+    borderRadius: 26,
     elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
 
   buttonText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
+    fontFamily: "Nunito_800ExtraBold",
   },
 
 });

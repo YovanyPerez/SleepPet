@@ -153,6 +153,12 @@ export default {
 
   noSleepSessions: "No sleep sessions yet.",
 
+  historySubtitle: "Review your sleep records",
+
+  emptyHistoryTitle: "No sessions yet",
+
+  emptyHistoryMessage: "Complete your first sleep session to start tracking your progress.",
+
   sleep: "Sleep",
 
   // ==========================
@@ -220,11 +226,33 @@ export default {
 
   editProfile: "Edit Profile",
 
+  profileSubtitle: "Your SleepPet progress",
+
+  infoSection: "Personal information",
+
+  progressSection: "Your progress",
+
+  years: "years",
+
   yourName: "Your name",
 
   petName: "Pet name",
 
   petNamePlaceholder: "Give your pet a name",
+
+  editSubtitle: "Update your information",
+
+  editIntro: "These details help personalize your SleepPet experience.",
+
+  goalQuestion: "How many hours do you want to sleep each night?",
+
+  hoursPerNight: "hours per night",
+
+  yourGoal: "Your goal",
+
+  hoursOfSleep: "hours of sleep",
+
+  goalMotivation: "Keep it up to reach your goals!",
 
   saveChanges: "Save Changes",
 
@@ -313,6 +341,8 @@ export default {
 
 
   petShop: "Pet Shop",
+
+  petShopSubtitle: "Buy new pets to keep you company",
 
   pet_cat: "Cat",
   pet_dog: "Dog",

@@ -1,37 +1,27 @@
-// SleepCard
-
 import React, { useContext } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 
 import { AppContext } from "../context/AppContext";
-
 import {
   getTranslations,
 } from "../services/TranslationService";
+import { NIGHT } from "../constants/theme";
 
-import { COLORS } from "../constants/theme";
+import AppText from "./AppText";
+import AppIcon from "./AppIcon";
+
+const MOOD_STYLES = {
+  happy: { icon: "sparkles", color: "#5ED1C8", bg: "rgba(94,209,200,0.16)" },
+  normal: { icon: "moon", color: "#8FA3FF", bg: "rgba(143,163,255,0.16)" },
+  sleepy: { icon: "night", color: "#C9B8E8", bg: "rgba(201,184,232,0.16)" },
+  sad: { icon: "cloud", color: "#F05A7A", bg: "rgba(240,90,122,0.16)" },
+};
 
 export default function SleepCard({ session }) {
 
   const { language } = useContext(AppContext);
 
   const t = getTranslations(language);
-
-  const moodEmoji = {
-
-    happy: "😊",
-
-    normal: "😐",
-
-    sleepy: "🥱",
-
-    sad: "😢",
-
-  };
 
   function moodText() {
 
@@ -53,33 +43,99 @@ export default function SleepCard({ session }) {
 
   }
 
+  const mood = MOOD_STYLES[session.mood] || MOOD_STYLES.normal;
+
+  const moodName = moodText();
+
   return (
 
     <View style={styles.card}>
 
-      <View style={styles.row}>
+      {/* Parte superior */}
 
-        <Text style={styles.emoji}>
-          {moodEmoji[session.mood]}
-        </Text>
+      <View style={styles.topRow}>
 
-        <Text style={styles.date}>
-          {session.date}
-        </Text>
+        <View style={[styles.moodCircle, { backgroundColor: mood.bg }]}>
+          <AppIcon name={mood.icon} size={24} color={mood.color} />
+        </View>
+
+        <View style={styles.dateBlock}>
+
+          <AppText style={styles.date}>
+            {session.date}
+          </AppText>
+
+          {
+            session.start && (
+              <AppText style={styles.time}>
+                {session.start}
+              </AppText>
+            )
+          }
+
+        </View>
+
+        <View style={[styles.badge, { backgroundColor: mood.bg }]}>
+          <AppText style={[styles.badgeText, { color: mood.color }]}>
+            {moodName}
+          </AppText>
+        </View>
 
       </View>
 
-      <Text style={styles.info}>
-        😴 {t.sleep}: {session.hours} {t.hours}
-      </Text>
+      <View style={styles.divider} />
 
-      <Text style={styles.info}>
-        💰 {t.coins}: +{session.coins}
-      </Text>
+      {/* Métricas */}
 
-      <Text style={styles.info}>
-        {t.mood}: {moodText()}
-      </Text>
+      <View style={styles.metricsRow}>
+
+        <View style={styles.metric}>
+
+          <AppIcon name="night" size={18} color="#C9B8E8" />
+
+          <AppText style={styles.metricLabel}>
+            {t.sleep}
+          </AppText>
+
+          <AppText style={styles.metricValue}>
+            {session.hours} {t.hours}
+          </AppText>
+
+        </View>
+
+        <View style={styles.metricDivider} />
+
+        <View style={styles.metric}>
+
+          <AppIcon name="coins" size={18} color={NIGHT.yellow} />
+
+          <AppText style={styles.metricLabel}>
+            {t.coins}
+          </AppText>
+
+          <AppText style={styles.metricValue}>
+            +{session.coins}
+          </AppText>
+
+        </View>
+
+        <View style={styles.metricDivider} />
+
+        <View style={styles.metric}>
+
+          <AppIcon name="sparkles" size={18} color={mood.color} />
+
+          <AppText style={styles.metricLabel}>
+            {t.mood}
+          </AppText>
+
+          <AppText style={styles.metricValue}>
+            {moodName}
+          </AppText>
+
+        </View>
+
+      </View>
 
     </View>
 
@@ -90,34 +146,95 @@ export default function SleepCard({ session }) {
 const styles = StyleSheet.create({
 
   card: {
-    backgroundColor: "white",
-    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    borderRadius: 26,
     padding: 18,
-    marginBottom: 16,
-    elevation: 4,
+    marginBottom: 14,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
 
-  row: {
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
   },
 
-  emoji: {
-    fontSize: 28,
-    marginRight: 10,
+  moodCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  dateBlock: {
+    flex: 1,
   },
 
   date: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.text,
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
-  info: {
-    marginTop: 4,
+  time: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
+    marginTop: 2,
+  },
+
+  badge: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+
+  badgeText: {
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    marginVertical: 14,
+  },
+
+  metricsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  metric: {
+    flex: 1,
+    alignItems: "center",
+  },
+
+  metricLabel: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 11,
+    fontFamily: "Nunito_600SemiBold",
+    marginTop: 6,
+  },
+
+  metricValue: {
+    color: "#FFFFFF",
     fontSize: 16,
-    color: COLORS.textSecondary,
+    fontFamily: "Nunito_800ExtraBold",
+    marginTop: 2,
+  },
+
+  metricDivider: {
+    width: 1,
+    height: 34,
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
 
 });
