@@ -31,6 +31,8 @@ const ICONS = {
   about: { family: "io", name: "information-circle" },
   pause: { family: "io", name: "pause-circle" },
   chevron: { family: "io", name: "chevron-forward" },
+  person: { family: "io", name: "person" },
+  back: { family: "io", name: "arrow-back" },
 };
 
 export default function AppIcon({

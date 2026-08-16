@@ -1,16 +1,56 @@
-import React, { useContext } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
+  Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
-import { COLORS } from "../constants/theme";
+import { NIGHT } from "../constants/theme";
 
-import ScreenContainer from "../components/ScreenContainer";
+import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
+import AppIcon from "../components/AppIcon";
+
+function GlassMenuCard({ icon, iconColor, title, subtitle, onPress }) {
+
+  return (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+    >
+
+      <View style={styles.cardIconCircle}>
+        <AppIcon name={icon} size={24} color={iconColor} />
+      </View>
+
+      <View style={styles.cardText}>
+
+        <AppText style={styles.cardTitle}>
+          {title}
+        </AppText>
+
+        <AppText style={styles.cardSubtitle}>
+          {subtitle}
+        </AppText>
+
+      </View>
+
+      <View style={styles.arrowButton}>
+        <AppIcon name="chevron" size={20} color="#FFFFFF" />
+      </View>
+
+    </TouchableOpacity>
+  );
+}
 
 export default function MenuScreen({ navigation }) {
 
@@ -18,156 +58,112 @@ export default function MenuScreen({ navigation }) {
 
   const t = getTranslations(language);
 
+  const appear = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(appear, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, [appear]);
+
+  const fadeOpacity = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const fadeTranslate = appear.interpolate({
+    inputRange: [0, 1],
+    outputRange: [20, 0],
+  });
+
   return (
 
-    <ScreenContainer style={styles.container}>
+    <NightBackground moon={false}>
 
-      <AppText
-        variant="title"
-        center
-      >
-        📂 {t.menu}
-      </AppText>
+      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
 
-      <AppText
-        color={COLORS.textSecondary}
-        style={styles.subtitle}
-      >
-        {t.chooseDestination}
-      </AppText>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
 
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate("Profile")}
-      >
-
-        <AppText style={styles.icon}>👤</AppText>
-
-        <View style={styles.textContainer}>
-
-          <AppText style={styles.cardTitle}>
-            {t.myProfile}
-          </AppText>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.cardSubtitle}
+          <Animated.View
+            style={{
+              opacity: fadeOpacity,
+              transform: [{ translateY: fadeTranslate }],
+            }}
           >
-            {t.viewProfile}
-          </AppText>
 
-        </View>
+            {/* Header */}
 
-      </TouchableOpacity>
+            <View style={styles.header}>
 
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate("History")}
-      >
+              <AppIcon
+                name="sparkles"
+                size={40}
+                color={NIGHT.yellow}
+                style={styles.headerIcon}
+              />
 
-        <AppText style={styles.icon}>📅</AppText>
+              <AppText style={styles.title}>
+                {t.menu}
+              </AppText>
 
-        <View style={styles.textContainer}>
+              <AppText style={styles.subtitle}>
+                {t.chooseDestination}
+              </AppText>
 
-          <AppText style={styles.cardTitle}>
-            {t.sleepHistory}
-          </AppText>
+            </View>
 
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.cardSubtitle}
-          >
-            {t.viewSleepHistory}
-          </AppText>
+            {/* Mi Perfil */}
 
-        </View>
+            <GlassMenuCard
+              icon="person"
+              iconColor="#8FA3FF"
+              title={t.myProfile}
+              subtitle={t.viewProfile}
+              onPress={() => navigation.navigate("Profile")}
+            />
 
-      </TouchableOpacity>
+            {/* Historial de Sueño */}
 
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate("Statistics")}
-      >
+            <GlassMenuCard
+              icon="calendar"
+              iconColor={NIGHT.yellow}
+              title={t.sleepHistory}
+              subtitle={t.viewSleepHistory}
+              onPress={() => navigation.navigate("History")}
+            />
 
-        <AppText style={styles.icon}>📊</AppText>
+            {/* Volver al Inicio */}
 
-        <View style={styles.textContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
 
-          <AppText style={styles.cardTitle}>
-            {t.statistics}
-          </AppText>
+              <AppIcon
+                name="back"
+                size={20}
+                color="#FFFFFF"
+                style={styles.backIcon}
+              />
 
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.cardSubtitle}
-          >
-            {t.checkProgress}
-          </AppText>
+              <AppText style={styles.backText}>
+                {t.backHome}
+              </AppText>
 
-        </View>
+            </TouchableOpacity>
 
-      </TouchableOpacity>
+          </Animated.View>
 
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate("Achievements")}
-      >
+        </ScrollView>
 
-        <AppText style={styles.icon}>🏆</AppText>
+      </SafeAreaView>
 
-        <View style={styles.textContainer}>
-
-          <AppText style={styles.cardTitle}>
-            {t.achievements}
-          </AppText>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.cardSubtitle}
-          >
-            {t.viewAchievements}
-          </AppText>
-
-        </View>
-
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate("Settings")}
-      >
-
-        <AppText style={styles.icon}>⚙️</AppText>
-
-        <View style={styles.textContainer}>
-
-          <AppText style={styles.cardTitle}>
-            {t.settings}
-          </AppText>
-
-          <AppText
-            color={COLORS.textSecondary}
-            style={styles.cardSubtitle}
-          >
-            {t.customizeApp}
-          </AppText>
-
-        </View>
-
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-
-        <AppText style={styles.backText}>
-          ← {t.backHome}
-        </AppText>
-
-      </TouchableOpacity>
-
-    </ScreenContainer>
+    </NightBackground>
 
   );
 
@@ -175,59 +171,119 @@ export default function MenuScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container: {
-    padding: 25,
+  safe: {
+    flex: 1,
+  },
+
+  content: {
+    flexGrow: 1,
     justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+  },
+
+  header: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+
+  headerIcon: {
+    marginBottom: 10,
+  },
+
+  title: {
+    color: "#FFFFFF",
+    fontSize: 34,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
   subtitle: {
-    textAlign: "center",
-    fontSize: 17,
-    marginTop: 10,
-    marginBottom: 40,
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 16,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 6,
   },
 
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    borderRadius: 28,
     padding: 20,
     marginBottom: 18,
     elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
 
-  icon: {
-    fontSize: 42,
-    marginRight: 20,
+  cardIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
   },
 
-  textContainer: {
+  cardText: {
     flex: 1,
+    marginRight: 8,
   },
 
   cardTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
   cardSubtitle: {
-    marginTop: 5,
-    fontSize: 15,
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    marginTop: 3,
+  },
+
+  arrowButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(107,91,231,0.5)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   backButton: {
-    marginTop: 20,
-    backgroundColor: COLORS.primary,
-    padding: 18,
-    borderRadius: 20,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: NIGHT.end,
+    borderRadius: 26,
+    paddingVertical: 16,
+    marginTop: 30,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+
+  backIcon: {
+    marginRight: 8,
   },
 
   backText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold",
   },
 
 });

@@ -28,6 +28,57 @@ class ReminderModule(
         const val CHANNEL_ID = "sleep_reminder_channel"
         const val NOTIFICATION_ID = 2001
         const val REQUEST_CODE = 2002
+
+        fun buildPendingIntent(context: Context): PendingIntent {
+            val alarmIntent = Intent(
+                context,
+                ReminderReceiver::class.java
+            )
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                alarmIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                    PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        fun nextTriggerAt(
+            hour: Int,
+            minute: Int
+        ): Long {
+            val calendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            if (calendar.timeInMillis <= System.currentTimeMillis()) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1)
+            }
+
+            return calendar.timeInMillis
+        }
+
+        fun scheduleAlarmClock(
+            context: Context,
+            hour: Int,
+            minute: Int
+        ) {
+            val alarmManager = context.getSystemService(
+                Context.ALARM_SERVICE
+            ) as AlarmManager
+
+            val pendingIntent = buildPendingIntent(context)
+
+            val info = AlarmManager.AlarmClockInfo(
+                nextTriggerAt(hour, minute),
+                pendingIntent
+            )
+
+            alarmManager.setAlarmClock(info, pendingIntent)
+        }
     }
 
     override fun getName(): String = "ReminderModule"
@@ -57,31 +108,7 @@ class ReminderModule(
 
         createChannel(channelName, channelDescription)
 
-        val triggerAtMillis = nextTriggerAt(hour, minute)
-
-        val alarmManager = reactContext.getSystemService(
-            Context.ALARM_SERVICE
-        ) as AlarmManager
-
-        val alarmIntent = Intent(
-            reactContext,
-            ReminderReceiver::class.java
-        )
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            reactContext,
-            REQUEST_CODE,
-            alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or
-                PendingIntent.FLAG_IMMUTABLE
-        )
-
-        alarmManager.setInexactRepeating(
-            AlarmManager.RTC_WAKEUP,
-            triggerAtMillis,
-            AlarmManager.INTERVAL_DAY,
-            pendingIntent
-        )
+        scheduleAlarmClock(reactContext, hour, minute)
     }
 
     @ReactMethod
@@ -90,20 +117,7 @@ class ReminderModule(
             Context.ALARM_SERVICE
         ) as AlarmManager
 
-        val alarmIntent = Intent(
-            reactContext,
-            ReminderReceiver::class.java
-        )
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            reactContext,
-            REQUEST_CODE,
-            alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or
-                PendingIntent.FLAG_IMMUTABLE
-        )
-
-        alarmManager.cancel(pendingIntent)
+        alarmManager.cancel(buildPendingIntent(reactContext))
 
         reactContext.getSharedPreferences(
             PREFS,
@@ -130,23 +144,5 @@ class ReminderModule(
 
             manager.createNotificationChannel(channel)
         }
-    }
-
-    private fun nextTriggerAt(
-        hour: Int,
-        minute: Int
-    ): Long {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        if (calendar.timeInMillis <= System.currentTimeMillis()) {
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-        }
-
-        return calendar.timeInMillis
     }
 }

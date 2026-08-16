@@ -78,6 +78,13 @@ class ReminderReceiver : BroadcastReceiver() {
             ReminderModule.NOTIFICATION_ID,
             notification
         )
+
+        // Re-agenda la siguiente dosis diaria a la misma hora
+        if (prefs.contains(ReminderModule.KEY_HOUR)) {
+            val hour = prefs.getInt(ReminderModule.KEY_HOUR, 22)
+            val minute = prefs.getInt(ReminderModule.KEY_MINUTE, 30)
+            ReminderModule.scheduleAlarmClock(context, hour, minute)
+        }
     }
 
     private fun createChannel(

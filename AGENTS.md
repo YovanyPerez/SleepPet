@@ -67,7 +67,7 @@ Read the exact versioned Expo docs at https://docs.expo.dev/versions/v54.0.0/ be
 
 ### Bedtime reminder
 - `SettingsScreen` saves `{enabled, hour, minute}` and calls `scheduleReminder`/`cancelReminder` (`services/ReminderService.js`).
-- `ReminderModule.schedule` stores title/content in SharedPreferences and sets an inexact daily `AlarmManager` (`RTC_WAKEUP`, `INTERVAL_DAY`) → `ReminderReceiver` shows the notification.
+- `ReminderModule.schedule` stores title/content in SharedPreferences and sets an **exact** daily alarm via `AlarmManager.setAlarmClock` (exempt from Doze and `SCHEDULE_EXACT_ALARM`). `ReminderReceiver` shows the notification and **re-arms the next daily alarm** (same hour/minute from prefs). Reuses `ReminderModule.buildPendingIntent`/`nextTriggerAt`/`scheduleAlarmClock` (companion).
 - `AppContext` re-schedules on app start and language change if enabled. **No `BOOT_COMPLETED` receiver** → the alarm is lost on reboot until the app is opened again.
 
 ## Design system (night redesign, in progress)
@@ -81,8 +81,9 @@ Read the exact versioned Expo docs at https://docs.expo.dev/versions/v54.0.0/ be
   - `StatisticsScreen`: `SectionHeader`, `WeeklyBarChart` (barras con degradado índigo→morado, línea de meta dorada "Meta Xh" con `goalHours`, día actual destacado con columna lavanda), `NightChart`, `StatCard` horizontal (icono en círculo lavanda + label/valor/sub), `MotivationalCard`, empty state si no hay sesiones registradas.
   - `AchievementsScreen`: `AchievementSummary` (desbloqueados + recompensas reales), `AchievementFilter` (pills funcionales Todos/En progreso/Rachas/Especiales, filtrado local de presentación), `AchievementCard` horizontal (estados Completado/En progreso/Bloqueado, recompensa en cápsula). `AchievementService` agregó `iconName` a cada logro (el `icon` emoji queda como fallback).
   - `SettingsScreen`: `Switch` nativo en el recordatorio + `TimeSelector` (cápsula única `[−] 19 : 15 [+]`, campos hora/minuto seleccionables por toque, botones −/+ actúan sobre el campo seleccionado con press-and-hold vía `setTimeout`/`setInterval`), caja motivacional navy, cards Reiniciar/Acerca de (`APP_VERSION` hardcode "1.0.2", sin mascota debajo).
+- `MenuScreen` rediseñada (solo 2 opciones): `NightBackground` + `SafeAreaView` + `ScrollView` + fade-in; header con `AppIcon sparkles` dorada + título + subtítulo; tarjetas **glassmorphism** (`rgba(255,255,255,0.12)` + borde translúcido + radio 28) con icono en círculo semi-transparente + botón circular `>`; botón "Volver al Inicio" (`navigation.goBack()`). Opciones: Mi Perfil (`AppIcon person`) e Historial (`AppIcon calendar`). Sin folder/mascota/emojis.
 - Dependencias agregadas: `expo-linear-gradient`, `expo-font`, `@expo-google-fonts/nunito`, `@expo/vector-icons` (en uso vía `AppIcon`).
-- Pendiente: rediseñar `MenuScreen` (quedará solo con Profile/History/About), `Welcome`, `Results`, `History`, `Profile`, `EditProfile`, `CreateProfile`, `PetShop`, `About`; terminar reemplazo de emojis UI por `AppIcon` en las pantallas restantes (Home/SleepMode/Statistics/Achievements/Settings ya sin emojis).
+- Pendiente: rediseñar `Welcome`, `Results`, `History`, `Profile`, `EditProfile`, `CreateProfile`, `PetShop`, `About`; terminar reemplazo de emojis UI por `AppIcon` en las pantallas restantes (Home/SleepMode/Statistics/Achievements/Settings/Menu ya sin emojis).
 
 ## Conventions
 - Code comments, log strings, and user-facing copy are in Spanish — keep new code consistent.
