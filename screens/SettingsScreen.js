@@ -170,6 +170,7 @@ export default function SettingsScreen({ navigation }) {
 
     setPetMood,
     setPetHappiness,
+    setLastHappinessUpdate,
 
     setUserName,
     setUserAge,
@@ -324,6 +325,7 @@ export default function SettingsScreen({ navigation }) {
 
             setPetMood("happy");
             setPetHappiness(100);
+            setLastHappinessUpdate(Date.now());
 
             setUserName("");
             setUserAge(null);

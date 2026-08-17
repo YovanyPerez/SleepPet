@@ -117,6 +117,8 @@ export default function SleepModeScreen({ navigation }) {
     petHappiness,
     setPetHappiness,
 
+    setLastHappinessUpdate,
+
     sleepHistory,
     setSleepHistory,
 
@@ -354,6 +356,8 @@ export default function SleepModeScreen({ navigation }) {
         hours: result.hours,
       })
     );
+
+    setLastHappinessUpdate(Date.now());
 
     const earnedXP = getXPFromQuality(
       reward.quality

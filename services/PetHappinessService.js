@@ -1,6 +1,9 @@
 const MIN_HAPPINESS = 0;
 const MAX_HAPPINESS = 100;
 
+const HAPPINESS_DECAY_PER_HOUR = 1;
+const HAPPINESS_GRACE_HOURS = 6;
+
 export function calculatePetHappiness(current, { score, hours }) {
 
   let delta = 0;
@@ -26,8 +29,24 @@ export function calculatePetHappiness(current, { score, hours }) {
 
 }
 
-// Cimientos para el decaimiento por tiempo (pendiente):
-// al abrir la app se restará según las horas sin dormir.
-export function decayPetHappiness(current) {
-  return current;
+// Decaimiento por tiempo: se aplica al abrir la app.
+// Tras HAPPINESS_GRACE_HOURS horas sin dormir, se resta
+// HAPPINESS_DECAY_PER_HOUR por cada hora adicional despierto.
+export function decayPetHappiness(current, elapsedHours = 0) {
+
+  const decayedHours = elapsedHours - HAPPINESS_GRACE_HOURS;
+
+  if (decayedHours <= 0) {
+    return current;
+  }
+
+  const lost = Math.round(
+    decayedHours * HAPPINESS_DECAY_PER_HOUR
+  );
+
+  return Math.max(
+    MIN_HAPPINESS,
+    Math.min(MAX_HAPPINESS, current - lost)
+  );
+
 }

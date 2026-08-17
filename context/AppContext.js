@@ -45,6 +45,10 @@ import {
   getTranslations,
 } from "../services/TranslationService";
 
+import {
+  decayPetHappiness,
+} from "../services/PetHappinessService";
+
 
 export const AppContext = createContext();
 
@@ -105,6 +109,11 @@ export function AppProvider({ children }) {
   const [petMood, setPetMood] = useState("happy");
 
   const [petHappiness, setPetHappiness] = useState(100);
+
+  const [
+    lastHappinessUpdate,
+    setLastHappinessUpdate,
+  ] = useState(Date.now());
 
   // ===========================
   // Economía
@@ -258,6 +267,40 @@ export function AppProvider({ children }) {
 
       }
 
+      // ===========================
+      // Decaimiento de felicidad por tiempo:
+      // al abrir la app se resta según las horas sin dormir.
+      // Si hay sesión activa, el decaimiento solo cuenta hasta
+      // el inicio de la sesión (dormir cuida a la mascota).
+      // ===========================
+
+      const lastUpdate =
+        data?.lastHappinessUpdate ?? Date.now();
+
+      let decayCap = Date.now();
+
+      if (
+        currentSleep &&
+        currentSleep.active &&
+        currentSleep.startTime
+      ) {
+        decayCap = currentSleep.startTime;
+      }
+
+      const elapsedHours = Math.max(
+        0,
+        (decayCap - lastUpdate) / 3600000
+      );
+
+      setPetHappiness(
+        decayPetHappiness(
+          data?.petHappiness ?? 100,
+          elapsedHours
+        )
+      );
+
+      setLastHappinessUpdate(Date.now());
+
       setLoading(false);
 
     }
@@ -283,6 +326,8 @@ export function AppProvider({ children }) {
       petMood,
 
       petHappiness,
+
+      lastHappinessUpdate,
 
       userName,
 
@@ -321,6 +366,8 @@ export function AppProvider({ children }) {
     petMood,
 
     petHappiness,
+
+    lastHappinessUpdate,
 
     userName,
 
@@ -516,6 +563,9 @@ export function AppProvider({ children }) {
 
     petHappiness,
     setPetHappiness,
+
+    lastHappinessUpdate,
+    setLastHappinessUpdate,
 
     // ===========================
     // Economía
