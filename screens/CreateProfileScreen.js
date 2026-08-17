@@ -1,7 +1,6 @@
 import React, { useState, useContext } from "react";
 import {
   View,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -18,6 +17,7 @@ import { calculateGoalHours } from "../utils/sleepUtils";
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
+import styles from "./styles/CreateProfileScreen.styles";
 
 const GOAL_OPTIONS = [
   { key: "improve", icon: "night", labelKey: "goalImproveSleep" },
@@ -287,118 +287,3 @@ export default function CreateProfileScreen({ navigation }) {
 
 }
 
-const styles = StyleSheet.create({
-
-  safe: {
-    flex: 1,
-  },
-
-  content: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 26,
-    paddingVertical: 30,
-  },
-
-  stepPill: {
-    alignSelf: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    marginBottom: 36,
-  },
-
-  stepText: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 15,
-    fontFamily: "Nunito_700Bold",
-  },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontFamily: "Nunito_800ExtraBold",
-    textAlign: "center",
-    marginBottom: 26,
-  },
-
-  pet: {
-    width: 150,
-    height: 150,
-    resizeMode: "contain",
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-
-  input: {
-    backgroundColor: "rgba(255,255,255,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(150,130,255,0.35)",
-    borderRadius: 16,
-    padding: 16,
-    fontSize: 18,
-    color: "#FFFFFF",
-    marginBottom: 26,
-  },
-
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(150,130,255,0.2)",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 14,
-  },
-
-  optionSelected: {
-    borderColor: NIGHT.yellow,
-    backgroundColor: "rgba(255,255,255,0.12)",
-  },
-
-  optionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  optionText: {
-    flex: 1,
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontFamily: "Nunito_700Bold",
-  },
-
-  button: {
-    marginTop: 26,
-    backgroundColor: NIGHT.end,
-    padding: 18,
-    borderRadius: 20,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-
-  buttonDisabled: {
-    opacity: 0.4,
-  },
-
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 18,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-});

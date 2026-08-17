@@ -5,7 +5,6 @@ import React, {
   useRef,
 } from "react";
 import {
-  StyleSheet,
   FlatList,
   View,
   Animated,
@@ -26,6 +25,7 @@ import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
 import SleepCard from "../components/SleepCard";
+import styles from "./styles/HistoryScreen.styles";
 
 export default function HistoryScreen({ navigation }) {
 
@@ -159,81 +159,3 @@ export default function HistoryScreen({ navigation }) {
 
 }
 
-const styles = StyleSheet.create({
-
-  safe: {
-    flex: 1,
-  },
-
-  wrap: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-
-  circleButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  headerCenter: {
-    flex: 1,
-    alignItems: "center",
-    marginHorizontal: 10,
-  },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-  subtitle: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 14,
-    fontFamily: "Nunito_400Regular",
-    marginTop: 2,
-  },
-
-  list: {
-    paddingBottom: 30,
-  },
-
-  emptyCard: {
-    alignItems: "center",
-    marginTop: 40,
-    paddingHorizontal: 24,
-  },
-
-  emptyIcon: {
-    marginBottom: 10,
-  },
-
-  emptyTitle: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontFamily: "Nunito_800ExtraBold",
-    textAlign: "center",
-  },
-
-  emptyMessage: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 14,
-    fontFamily: "Nunito_400Regular",
-    textAlign: "center",
-    marginTop: 6,
-  },
-
-});

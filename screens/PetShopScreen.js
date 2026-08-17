@@ -6,7 +6,6 @@ import React, {
 } from "react";
 import {
   View,
-  StyleSheet,
   FlatList,
   Alert,
   Animated,
@@ -30,6 +29,7 @@ import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
 import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import NamePetModal from "../components/NamePetModal";
+import styles from "./styles/PetShopScreen.styles";
 
 export default function PetShopScreen({ navigation }) {
 
@@ -236,84 +236,3 @@ export default function PetShopScreen({ navigation }) {
 
 }
 
-const styles = StyleSheet.create({
-
-  safe: {
-    flex: 1,
-  },
-
-  wrap: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-
-  header: {
-    marginBottom: 18,
-  },
-
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  headerIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  headerText: {
-    flex: 1,
-  },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-  subtitle: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 13,
-    fontFamily: "Nunito_400Regular",
-    marginTop: 2,
-  },
-
-  coinsCapsule: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,201,40,0.18)",
-    borderWidth: 1,
-    borderColor: "rgba(255,201,40,0.4)",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-
-  coinsIcon: {
-    marginRight: 6,
-  },
-
-  coinsValue: {
-    color: NIGHT.yellow,
-    fontSize: 15,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-  list: {
-    paddingBottom: 120,
-  },
-
-  bottomNav: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 22,
-  },
-
-});

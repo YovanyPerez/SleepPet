@@ -5,7 +5,6 @@ import React, {
 } from "react";
 import {
   View,
-  StyleSheet,
   ScrollView,
   Animated,
 } from "react-native";
@@ -28,6 +27,7 @@ import SectionHeader from "../components/SectionHeader";
 import MotivationalCard from "../components/MotivationalCard";
 import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import { NIGHT } from "../constants/theme";
+import styles from "./styles/StatisticsScreen.styles";
 import {
   toDateKey,
   getWeekDates,
@@ -354,93 +354,3 @@ export default function StatisticsScreen({ navigation }) {
 
 }
 
-const styles = StyleSheet.create({
-
-  safe: {
-    flex: 1,
-  },
-
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 120,
-  },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-
-  headerIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.14)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  headerText: {
-    flex: 1,
-  },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 30,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-  subtitle: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: 15,
-    fontFamily: "Nunito_400Regular",
-    marginTop: 2,
-  },
-
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 6,
-  },
-
-  emptyCard: {
-    width: "100%",
-    backgroundColor: "rgba(255,255,255,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-    borderRadius: 24,
-    padding: 24,
-    alignItems: "center",
-    marginTop: 12,
-  },
-
-  emptyIcon: {
-    marginBottom: 10,
-  },
-
-  emptyTitle: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontFamily: "Nunito_800ExtraBold",
-    textAlign: "center",
-  },
-
-  emptyMessage: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: 14,
-    fontFamily: "Nunito_400Regular",
-    textAlign: "center",
-    marginTop: 6,
-  },
-
-  bottomNav: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 22,
-  },
-
-});

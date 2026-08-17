@@ -5,7 +5,6 @@ import React, {
 } from "react";
 import {
   View,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -19,6 +18,7 @@ import { NIGHT } from "../constants/theme";
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
+import styles from "./styles/MenuScreen.styles";
 
 function GlassMenuCard({ icon, iconColor, title, subtitle, onPress }) {
 
@@ -169,121 +169,3 @@ export default function MenuScreen({ navigation }) {
 
 }
 
-const styles = StyleSheet.create({
-
-  safe: {
-    flex: 1,
-  },
-
-  content: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-
-  headerIcon: {
-    marginBottom: 10,
-  },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 34,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-  subtitle: {
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 16,
-    fontFamily: "Nunito_400Regular",
-    marginTop: 6,
-  },
-
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
-    borderRadius: 28,
-    padding: 20,
-    marginBottom: 18,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-
-  cardIconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
-  },
-
-  cardText: {
-    flex: 1,
-    marginRight: 8,
-  },
-
-  cardTitle: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-  cardSubtitle: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 13,
-    fontFamily: "Nunito_400Regular",
-    marginTop: 3,
-  },
-
-  arrowButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(107,91,231,0.5)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: NIGHT.end,
-    borderRadius: 26,
-    paddingVertical: 16,
-    marginTop: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-
-  backIcon: {
-    marginRight: 8,
-  },
-
-  backText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontFamily: "Nunito_800ExtraBold",
-  },
-
-});

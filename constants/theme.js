@@ -87,3 +87,99 @@ export const NIGHT = {
   textOnNight: "#FFFFFF",
   white: "#FFFFFF",
 };
+
+// Patrones reutilizables del tema nocturno.
+// Las pantallas los importan y sobreescriben solo lo que difiere.
+export const NIGHT_STYLES = {
+  safe: {
+    flex: 1,
+  },
+
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  headerBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  titleWhite: {
+    color: NIGHT.white,
+    fontFamily: FONT_FAMILY.extraBold,
+  },
+
+  subtitleWhite: {
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: FONT_FAMILY.regular,
+  },
+
+  glassCard: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: 24,
+    padding: 18,
+  },
+
+  cardWhite: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 26,
+    ...SHADOW.card,
+  },
+
+  primaryButton: {
+    backgroundColor: NIGHT.end,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  buttonShadow: {
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+
+  bottomNav: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 22,
+  },
+
+  inputGlass: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.35)",
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    fontSize: 18,
+    color: "#FFFFFF",
+  },
+
+  glassIconCircle: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+};
