@@ -1,10 +1,5 @@
 import React from "react";
 import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
-import {
   useFonts,
   Nunito_400Regular,
   Nunito_600SemiBold,
@@ -14,6 +9,7 @@ import {
 
 import { AppProvider } from "./context/AppContext";
 import AppNavigator from "./navigation/AppNavigator";
+import LoadingScreen from "./components/LoadingScreen";
 
 export default function App() {
 
@@ -26,15 +22,7 @@ export default function App() {
 
   if (!fontsLoaded) {
 
-    return (
-
-      <View style={styles.loading}>
-
-        <ActivityIndicator size="large" />
-
-      </View>
-
-    );
+    return <LoadingScreen />;
 
   }
 
@@ -44,11 +32,3 @@ export default function App() {
     </AppProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

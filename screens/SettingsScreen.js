@@ -50,7 +50,12 @@ import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
 import SwipeableTabScreen from "../components/SwipeableTabScreen";
 
-const APP_VERSION = "1.0.3";
+import Constants from "expo-constants";
+
+const APP_VERSION =
+  Constants.expoConfig?.version ||
+  Constants.nativeAppVersion ||
+  "1.0.0";
 
 function wrapValue(value, direction, min, max) {
   if (direction > 0) {

@@ -15,6 +15,13 @@ import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
 import GlowMoon from "../components/GlowMoon";
 
+import Constants from "expo-constants";
+
+const APP_VERSION =
+  Constants.expoConfig?.version ||
+  Constants.nativeAppVersion ||
+  "1.0.0";
+
 export default function AboutScreen({ navigation }) {
 
   const { language } = useContext(AppContext);
@@ -101,7 +108,7 @@ export default function AboutScreen({ navigation }) {
             </AppText>
 
             <AppText style={styles.value}>
-              1.0.3
+              {APP_VERSION}
             </AppText>
 
           </View>

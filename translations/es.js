@@ -19,6 +19,8 @@ export default {
 
   player: "Jugador",
 
+  splashTagline: "Duerme mejor, cuida a tu mascota",
+
   // ==========================
   // Estado de la mascota
   // ==========================

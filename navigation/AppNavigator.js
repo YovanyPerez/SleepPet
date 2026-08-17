@@ -5,12 +5,10 @@ import {
 import {
   createNativeStackNavigator,
 } from "@react-navigation/native-stack";
-import {
-  View,
-  ActivityIndicator,
-} from "react-native";
 
 import { AppContext } from "../context/AppContext";
+import { getTranslations } from "../services/TranslationService";
+import LoadingScreen from "../components/LoadingScreen";
 
 import HomeScreen from "../screens/HomeScreen";
 import SleepModeScreen from "../screens/SleepModeScreen";
@@ -40,25 +38,15 @@ export default function AppNavigator() {
 
     achievementPopup,
 
+    language,
+
   } = useContext(AppContext);
+
+  const t = getTranslations(language);
 
   if (loading) {
 
-    return (
-
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-
-        <ActivityIndicator size="large" />
-
-      </View>
-
-    );
+    return <LoadingScreen tagline={t.splashTagline} />;
 
   }
 

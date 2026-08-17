@@ -19,6 +19,8 @@ export default {
 
   player: "Player",
 
+  splashTagline: "Sleep better, take care of your pet",
+
   // ==========================
   // Pet Mood
   // ==========================
