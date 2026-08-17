@@ -356,6 +356,7 @@ export default {
   pet_dog: "Perro",
   pet_panda: "Panda",
   pet_fox: "Zorro",
+  pet_seal: "Foca",
   pet_penguin: "Pingüino",
   pet_frog: "Rana",
   pet_bear: "Oso",

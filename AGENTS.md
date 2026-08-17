@@ -54,6 +54,7 @@ Read the exact versioned Expo docs at https://docs.expo.dev/versions/v54.0.0/ be
 - Level: `addXP` accumulates 100 XP per level.
 - Pet mood: derived from sleep score (happy ≥90, normal ≥75, sleepy ≥60, sad).
 - Pets: `PETS` catalog in `services/PetService.js` (cat is default/0; dog 100 … dragon 3000). Only pets with `available: true` can be bought; buying checks `canBuyPet`.
+- Mascotas auto-detectadas por imágenes: `constants/PetImages.js` construye `PET_IMAGES` con `require.context` sobre `assets/pets/` (requiere `unstable_allowRequireContext` en `metro.config.js`; cat/dog tienen `require` estático como base segura). Exporta `AVAILABLE_PETS` (ids con los 4 moods `happy/normal/sleepy/sad`), y `PetService.js` deriva `pet.available` de ahí. Añadir una mascota = solo subir `assets/pets/<id>/{happy,normal,sleepy,sad}.png` y recompilar; borrar la carpeta la vuelve a "Próximamente".
 
 ### Storage (AsyncStorage keys)
 - `sleep_pet_data` — profile + economy + settings (coins, streak, petMood, petHappiness, lastHappinessUpdate, userName, userAge, goalHours, goalType, selectedPet, ownedPets, language, level, xp).
