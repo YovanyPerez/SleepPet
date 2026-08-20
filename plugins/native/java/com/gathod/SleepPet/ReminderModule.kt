@@ -27,10 +27,19 @@ class ReminderModule(
         const val KEY_CHANNEL_DESC = "channelDescription"
         const val KEY_TITLE = "title"
         const val KEY_CONTENT = "content"
+        const val KEY_FOLLOWUP_TITLE = "followupTitle"
+        const val KEY_FOLLOWUP_CONTENT = "followupContent"
+        const val KEY_SLEEP_ACTIVE = "sleepActive"
+        const val KEY_FOLLOWUP_COUNT = "followupCount"
+        const val KEY_FOLLOWUP_MAX = "followupMax"
 
         const val CHANNEL_ID = "sleep_reminder_channel"
         const val NOTIFICATION_ID = 2001
         const val REQUEST_CODE = 2002
+        const val FOLLOWUP_REQUEST_CODE = 2003
+        const val ACTION_FOLLOWUP = "com.gathod.SleepPet.FOLLOWUP"
+        const val FOLLOWUP_INTERVAL_MS = 15 * 60 * 1000L
+        const val DEFAULT_FOLLOWUP_MAX = 4
 
         fun buildPendingIntent(context: Context): PendingIntent {
             val alarmIntent = Intent(
@@ -40,6 +49,22 @@ class ReminderModule(
             return PendingIntent.getBroadcast(
                 context,
                 REQUEST_CODE,
+                alarmIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                    PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        fun buildFollowupPendingIntent(context: Context): PendingIntent {
+            val alarmIntent = Intent(
+                context,
+                ReminderReceiver::class.java
+            ).apply {
+                action = ACTION_FOLLOWUP
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                FOLLOWUP_REQUEST_CODE,
                 alarmIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or
                     PendingIntent.FLAG_IMMUTABLE
@@ -100,6 +125,64 @@ class ReminderModule(
                 )
 
             }
+
+            // Reset followup counter al programar el diario
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putInt(KEY_FOLLOWUP_COUNT, 0).apply()
+        }
+
+        fun scheduleFollowup(
+            context: Context,
+            delayMs: Long = FOLLOWUP_INTERVAL_MS
+        ) {
+            val alarmManager = context.getSystemService(
+                Context.ALARM_SERVICE
+            ) as AlarmManager
+
+            val pendingIntent = buildFollowupPendingIntent(context)
+
+            val triggerAt = System.currentTimeMillis() + delayMs
+
+            val canUseExact =
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                    alarmManager.canScheduleExactAlarms()
+
+            if (canUseExact) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerAt,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerAt,
+                        pendingIntent
+                    )
+                }
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerAt,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerAt,
+                        pendingIntent
+                    )
+                }
+            }
+        }
+
+        fun cancelFollowups(context: Context) {
+            val alarmManager = context.getSystemService(
+                Context.ALARM_SERVICE
+            ) as AlarmManager
+            alarmManager.cancel(buildFollowupPendingIntent(context))
         }
     }
 
@@ -112,7 +195,9 @@ class ReminderModule(
         channelName: String,
         channelDescription: String,
         title: String,
-        content: String
+        content: String,
+        followupTitle: String?,
+        followupContent: String?
     ) {
         val prefs = reactContext.getSharedPreferences(
             PREFS,
@@ -126,11 +211,29 @@ class ReminderModule(
             .putString(KEY_CHANNEL_DESC, channelDescription)
             .putString(KEY_TITLE, title)
             .putString(KEY_CONTENT, content)
+            .putString(KEY_FOLLOWUP_TITLE, followupTitle ?: title)
+            .putString(KEY_FOLLOWUP_CONTENT, followupContent ?: content)
+            .putInt(KEY_FOLLOWUP_COUNT, 0)
+            .putInt(KEY_FOLLOWUP_MAX, DEFAULT_FOLLOWUP_MAX)
             .apply()
 
         createChannel(channelName, channelDescription)
 
+        cancelFollowups(reactContext)
+
         scheduleAlarmClock(reactContext, hour, minute)
+    }
+
+    @ReactMethod
+    fun setSleepActive(active: Boolean) {
+        val prefs = reactContext.getSharedPreferences(
+            PREFS,
+            Context.MODE_PRIVATE
+        )
+        prefs.edit().putBoolean(KEY_SLEEP_ACTIVE, active).apply()
+        if (active) {
+            cancelFollowups(reactContext)
+        }
     }
 
     @ReactMethod
@@ -167,6 +270,7 @@ class ReminderModule(
         ) as AlarmManager
 
         alarmManager.cancel(buildPendingIntent(reactContext))
+        cancelFollowups(reactContext)
 
         reactContext.getSharedPreferences(
             PREFS,

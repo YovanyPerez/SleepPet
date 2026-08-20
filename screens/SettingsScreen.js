@@ -250,7 +250,9 @@ export default function SettingsScreen({ navigation }) {
         t.reminderChannel,
         t.reminderChannelDescription,
         t.reminderTitle,
-        t.reminderContent
+        t.reminderContent,
+        t.reminderFollowUpTitle,
+        t.reminderFollowUpContent
       );
     } else {
       cancelReminder();
@@ -274,7 +276,9 @@ export default function SettingsScreen({ navigation }) {
         t.reminderChannel,
         t.reminderChannelDescription,
         t.reminderTitle,
-        t.reminderContent
+        t.reminderContent,
+        t.reminderFollowUpTitle,
+        t.reminderFollowUpContent
       );
     } else {
       cancelReminder();

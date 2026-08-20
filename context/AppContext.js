@@ -35,6 +35,7 @@ import {
 
 import {
   scheduleReminder,
+  setSleepActive,
 } from "../services/ReminderService";
 
 import {
@@ -265,6 +266,10 @@ export function AppProvider({ children }) {
           t.notificationUnlocks
         );
 
+        setSleepActive(true);
+
+      } else {
+        setSleepActive(false);
       }
 
       // ===========================
@@ -421,7 +426,11 @@ export function AppProvider({ children }) {
 
           t.reminderTitle,
 
-          t.reminderContent
+          t.reminderContent,
+
+          t.reminderFollowUpTitle,
+
+          t.reminderFollowUpContent
 
         );
 
@@ -506,6 +515,18 @@ export function AppProvider({ children }) {
     sleepSessionStarted,
     unlockCount,
   ]);
+
+  // ===========================
+  // Sincronizar estado de sueño con recordatorios
+  // ===========================
+
+  useEffect(() => {
+
+    if (loading) return;
+
+    setSleepActive(sleepSessionStarted);
+
+  }, [loading, sleepSessionStarted]);
 
 
 

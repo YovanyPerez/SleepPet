@@ -471,6 +471,8 @@ export default {
   reminderChannelDescription: "Daily bedtime reminder",
   reminderTitle: "🌙 Time to sleep",
   reminderContent: "It's time to go to bed. Your pet is waiting!",
+  reminderFollowUpTitle: "🌙 Still awake?",
+  reminderFollowUpContent: "You've been awake 15 min — your pet is waiting to sleep",
 
   // ==========================
   // Night wake-ups

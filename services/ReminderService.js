@@ -8,7 +8,9 @@ export function scheduleReminder(
   channelName,
   channelDescription,
   title,
-  content
+  content,
+  followUpTitle,
+  followUpContent
 ) {
   ReminderModule?.schedule(
     hour,
@@ -16,12 +18,18 @@ export function scheduleReminder(
     channelName,
     channelDescription,
     title,
-    content
+    content,
+    followUpTitle ?? title,
+    followUpContent ?? content
   );
 }
 
 export function cancelReminder() {
   ReminderModule?.cancel();
+}
+
+export function setSleepActive(active) {
+  ReminderModule?.setSleepActive?.(active);
 }
 
 export function canScheduleExact() {

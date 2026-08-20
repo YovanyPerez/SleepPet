@@ -20,6 +20,76 @@ class ReminderReceiver : BroadcastReceiver() {
             Context.MODE_PRIVATE
         )
 
+        val isFollowup = intent.action == ReminderModule.ACTION_FOLLOWUP
+
+        if (isFollowup) {
+            // Si ya está durmiendo, cancelar cadena y re-agendar diario
+            if (prefs.getBoolean(ReminderModule.KEY_SLEEP_ACTIVE, false)) {
+                ReminderModule.cancelFollowups(context)
+                if (prefs.contains(ReminderModule.KEY_HOUR)) {
+                    val hour = prefs.getInt(ReminderModule.KEY_HOUR, 22)
+                    val minute = prefs.getInt(ReminderModule.KEY_MINUTE, 30)
+                    ReminderModule.scheduleAlarmClock(context, hour, minute)
+                }
+                return
+            }
+
+            val count = prefs.getInt(ReminderModule.KEY_FOLLOWUP_COUNT, 0)
+            val max = prefs.getInt(ReminderModule.KEY_FOLLOWUP_MAX, ReminderModule.DEFAULT_FOLLOWUP_MAX)
+
+            if (count >= max) {
+                // Tope alcanzado: re-agenda diario y para
+                ReminderModule.cancelFollowups(context)
+                if (prefs.contains(ReminderModule.KEY_HOUR)) {
+                    val hour = prefs.getInt(ReminderModule.KEY_HOUR, 22)
+                    val minute = prefs.getInt(ReminderModule.KEY_MINUTE, 30)
+                    ReminderModule.scheduleAlarmClock(context, hour, minute)
+                }
+                return
+            }
+
+            // Mostrar notificación followup con texto diferenciado
+            showNotification(context, prefs, isFollowup = true)
+
+            // Incrementar contador y agendar siguiente
+            prefs.edit().putInt(ReminderModule.KEY_FOLLOWUP_COUNT, count + 1).apply()
+            ReminderModule.scheduleFollowup(context)
+            return
+        }
+
+        // Alarma diaria inicial
+        if (prefs.getBoolean(ReminderModule.KEY_SLEEP_ACTIVE, false)) {
+            // Ya durmiendo antes de la hora: no molestar, re-agendar mañana
+            if (prefs.contains(ReminderModule.KEY_HOUR)) {
+                val hour = prefs.getInt(ReminderModule.KEY_HOUR, 22)
+                val minute = prefs.getInt(ReminderModule.KEY_MINUTE, 30)
+                ReminderModule.scheduleAlarmClock(context, hour, minute)
+            }
+            return
+        }
+
+        showNotification(context, prefs)
+
+        // Inicia cadena de followups cada 15 min
+        prefs.edit().putInt(ReminderModule.KEY_FOLLOWUP_COUNT, 1).apply()
+        val max = prefs.getInt(ReminderModule.KEY_FOLLOWUP_MAX, ReminderModule.DEFAULT_FOLLOWUP_MAX)
+        if (1 < max) {
+            ReminderModule.scheduleFollowup(context)
+        } else {
+            // Si max es 1, no hay followups: re-agendar diario
+            if (prefs.contains(ReminderModule.KEY_HOUR)) {
+                val hour = prefs.getInt(ReminderModule.KEY_HOUR, 22)
+                val minute = prefs.getInt(ReminderModule.KEY_MINUTE, 30)
+                ReminderModule.scheduleAlarmClock(context, hour, minute)
+            }
+        }
+    }
+
+    private fun showNotification(
+        context: Context,
+        prefs: android.content.SharedPreferences,
+        isFollowup: Boolean = false
+    ) {
         val channelName = prefs.getString(
             ReminderModule.KEY_CHANNEL_NAME,
             "SleepPet"
@@ -30,15 +100,29 @@ class ReminderReceiver : BroadcastReceiver() {
             ""
         ) ?: ""
 
-        val title = prefs.getString(
-            ReminderModule.KEY_TITLE,
-            "🌙 SleepPet"
-        ) ?: "🌙 SleepPet"
+        val title = if (isFollowup) {
+            prefs.getString(
+                ReminderModule.KEY_FOLLOWUP_TITLE,
+                prefs.getString(ReminderModule.KEY_TITLE, "🌙 SleepPet") ?: "🌙 SleepPet"
+            ) ?: "🌙 SleepPet"
+        } else {
+            prefs.getString(
+                ReminderModule.KEY_TITLE,
+                "🌙 SleepPet"
+            ) ?: "🌙 SleepPet"
+        }
 
-        val content = prefs.getString(
-            ReminderModule.KEY_CONTENT,
-            ""
-        ) ?: ""
+        val content = if (isFollowup) {
+            prefs.getString(
+                ReminderModule.KEY_FOLLOWUP_CONTENT,
+                prefs.getString(ReminderModule.KEY_CONTENT, "") ?: ""
+            ) ?: ""
+        } else {
+            prefs.getString(
+                ReminderModule.KEY_CONTENT,
+                ""
+            ) ?: ""
+        }
 
         createChannel(context, channelName, channelDescription)
 
@@ -78,13 +162,6 @@ class ReminderReceiver : BroadcastReceiver() {
             ReminderModule.NOTIFICATION_ID,
             notification
         )
-
-        // Re-agenda la siguiente dosis diaria a la misma hora
-        if (prefs.contains(ReminderModule.KEY_HOUR)) {
-            val hour = prefs.getInt(ReminderModule.KEY_HOUR, 22)
-            val minute = prefs.getInt(ReminderModule.KEY_MINUTE, 30)
-            ReminderModule.scheduleAlarmClock(context, hour, minute)
-        }
     }
 
     private fun createChannel(

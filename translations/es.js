@@ -472,6 +472,8 @@ export default {
   reminderChannelDescription: "Recordatorio diario para ir a dormir",
   reminderTitle: "🌙 Hora de dormir",
   reminderContent: "Es hora de ir a dormir. ¡Tu mascota te espera!",
+  reminderFollowUpTitle: "🌙 Sigues despierto?",
+  reminderFollowUpContent: "Llevas 15 min despierto — tu mascota te espera para dormir",
 
   // ==========================
   // Despertares nocturnos

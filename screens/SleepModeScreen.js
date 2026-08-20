@@ -56,6 +56,10 @@ import {
   getNotificationStatus,
 } from "../services/NotificationService";
 
+import {
+  setSleepActive,
+} from "../services/ReminderService";
+
 import NightBackground from "../components/NightBackground";
 import GlowMoon from "../components/GlowMoon";
 import AppText from "../components/AppText";
@@ -275,6 +279,8 @@ export default function SleepModeScreen({ navigation }) {
 
     setSleepSessionStarted(true);
 
+    setSleepActive(true);
+
     setUnlockCount(0);
 
     setUnlockTimes([]);
@@ -329,6 +335,8 @@ export default function SleepModeScreen({ navigation }) {
     stopTimer();
 
     stopNotification();
+
+    setSleepActive(false);
 
     setSleepSessionStarted(false);
 
