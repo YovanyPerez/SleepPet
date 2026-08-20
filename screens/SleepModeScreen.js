@@ -60,6 +60,11 @@ import {
   setSleepActive,
 } from "../services/ReminderService";
 
+import {
+  isAccessibilityEnabled,
+  openAccessibilitySettings,
+} from "../services/AccessibilityListener";
+
 import NightBackground from "../components/NightBackground";
 import GlowMoon from "../components/GlowMoon";
 import AppText from "../components/AppText";
@@ -200,6 +205,34 @@ export default function SleepModeScreen({ navigation }) {
   }
 
   async function handleStartSleep() {
+
+    // Bloqueo: requiere servicio de accesibilidad para contar desbloqueos
+    try {
+      const enabled = await isAccessibilityEnabled();
+      if (!enabled) {
+        Alert.alert(
+          t.accessibilityRequiredTitle,
+          t.accessibilityRequiredMessage,
+          [
+            {
+              text: t.cancel,
+              style: "cancel",
+            },
+            {
+              text: t.openAccessibility,
+              onPress: () => {
+                openAccessibilitySettings();
+              },
+            },
+          ]
+        );
+        addLog("Accesibilidad no activa — sesión bloqueada");
+        return;
+      }
+    } catch (e) {
+      // Si falla el check, se continúa pero se loguea
+      addLog(`Error check accesibilidad: ${e?.message ?? e}`);
+    }
 
     if (Platform.OS === "android") {
       try {

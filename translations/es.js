@@ -431,6 +431,11 @@ export default {
   activityPermissionMessage:
     "SleepPet necesita el permiso de actividad física para mostrar el tiempo y los desbloqueos de tu sesión en la notificación.",
 
+  accessibilityRequiredTitle: "Activa la accesibilidad",
+  accessibilityRequiredMessage:
+    "SleepPet necesita el servicio de accesibilidad para contar desbloqueos. Actívalo en Ajustes → Accesibilidad → SleepPet para iniciar la sesión.",
+  openAccessibility: "Abrir accesibilidad",
+
   notifOn: "Notif. activadas",
   notifOff: "Notif. bloqueadas",
   serviceOn: "Servicio activo",

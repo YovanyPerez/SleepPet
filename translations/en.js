@@ -430,6 +430,11 @@ export default {
   activityPermissionMessage:
     "SleepPet needs the physical activity permission to show your session time and unlocks in the notification.",
 
+  accessibilityRequiredTitle: "Enable accessibility",
+  accessibilityRequiredMessage:
+    "SleepPet needs the accessibility service to count unlocks. Enable it in Settings → Accessibility → SleepPet to start the session.",
+  openAccessibility: "Open accessibility",
+
   notifOn: "Notifs on",
   notifOff: "Notifs blocked",
   serviceOn: "Service running",

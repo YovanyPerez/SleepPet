@@ -27,3 +27,14 @@ export function stopAccessibilityListener() {
   }
 
 }
+
+export function isAccessibilityEnabled() {
+  if (AccessibilityModule?.isAccessibilityEnabled) {
+    return AccessibilityModule.isAccessibilityEnabled();
+  }
+  return Promise.resolve(false);
+}
+
+export function openAccessibilitySettings() {
+  AccessibilityModule?.openAccessibilitySettings?.();
+}
