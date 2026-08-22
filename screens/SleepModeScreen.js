@@ -20,6 +20,8 @@ import {
   finishSleepSession,
   getCurrentSleepSession,
 } from "../services/SleepService";
+import { getHeartRateRecommendation } from "../services/HeartRateRecommendService";
+import AppIcon from "../components/AppIcon";
 
 import {
   getXPFromQuality,
@@ -147,9 +149,17 @@ export default function SleepModeScreen({ navigation }) {
 
     goalHours,
 
+    preSleepBpm,
+    setPreSleepBpm,
+
+    bpmConfidence,
+    setBpmConfidence,
+
   } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  const recommendation = getHeartRateRecommendation(preSleepBpm, t);
 
   const [notificationStatus, setNotificationStatus] =
     useState(null);
@@ -165,6 +175,43 @@ export default function SleepModeScreen({ navigation }) {
       useNativeDriver: true,
     }).start();
   }, [appear]);
+
+  // recibir bpm desde PPGMeasure
+  useEffect(() => {
+    const params = navigation.getState?.()?.routes?.find((r) => r.name === "SleepMode")?.params;
+    const bpmParam = params?.preSleepBpm;
+    const confParam = params?.bpmConfidence;
+    if (bpmParam !== undefined) {
+      if (bpmParam) {
+        setPreSleepBpm(bpmParam);
+        setBpmConfidence(confParam ?? null);
+        addLog(`Pulso pre-sueno: ${bpmParam} lpm`);
+      } else {
+        setPreSleepBpm(null);
+        setBpmConfidence(null);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const unsub = navigation.addListener("focus", () => {
+      const state = navigation.getState();
+      const route = state.routes.find((r) => r.name === "SleepMode");
+      const p = route?.params;
+      if (p && "preSleepBpm" in p) {
+        if (p.preSleepBpm) {
+          setPreSleepBpm(p.preSleepBpm);
+          setBpmConfidence(p.bpmConfidence ?? null);
+        } else if (p.preSleepBpm === null) {
+          setPreSleepBpm(null);
+          setBpmConfidence(null);
+        }
+        // limpiar param para no re-aplicar
+        navigation.setParams({ preSleepBpm: undefined, bpmConfidence: undefined });
+      }
+    });
+    return unsub;
+  }, [navigation, setPreSleepBpm, setBpmConfidence]);
 
   function addLog(line) {
     const time = new Date().toLocaleTimeString();
@@ -318,7 +365,7 @@ export default function SleepModeScreen({ navigation }) {
 
     setUnlockTimes([]);
 
-    await startSleep();
+    await startSleep({ preSleepBpm, bpmConfidence });
 
     const current = await getCurrentSleepSession();
 
@@ -446,6 +493,14 @@ export default function SleepModeScreen({ navigation }) {
 
       unlockTimes,
 
+      preSleepBpm: result.preSleepBpm ?? preSleepBpm ?? null,
+
+      bpmConfidence: result.bpmConfidence ?? bpmConfidence ?? null,
+
+      bpmCapturedAt: result.bpmCapturedAt ?? null,
+
+      bpmSource: result.preSleepBpm ? "camera_ppg" : null,
+
       levelUp: levelData.levelUp,
 
       previousLevel: level,
@@ -558,6 +613,10 @@ export default function SleepModeScreen({ navigation }) {
     setUnlockCount(0);
 
     setUnlockTimes([]);
+
+    setPreSleepBpm(null);
+
+    setBpmConfidence(null);
 
     navigation.navigate("Results");
 
@@ -703,6 +762,47 @@ export default function SleepModeScreen({ navigation }) {
               </AppText>
 
             </View>
+
+            {/* PPG pre-sueno card - solo cuando no esta corriendo */}
+            {!running && (
+              <View style={[styles.glassCard, { marginTop: 16, paddingVertical: 18 }]}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardIconCircle}>
+                    <AppIcon name="heartPulse" size={22} color={NIGHT.end} />
+                  </View>
+                  <AppText style={styles.cardTitle}>{t.ppgTitle}</AppText>
+                </View>
+                {preSleepBpm ? (
+                  <>
+                    <AppText style={[styles.cardValue, { fontSize: 32 }]}>{preSleepBpm} {t.ppgBpmUnit}</AppText>
+                    <AppText style={styles.cardHint}>{t.ppgPulseCaptured} • {t.ppgConfidence} {Math.round((bpmConfidence ?? 0) * 100)}%</AppText>
+                    {recommendation && (
+                      <View style={{ marginTop: 12, backgroundColor: "rgba(255,255,255,0.85)", borderRadius: 16, padding: 12, width: "100%" }}>
+                        <AppText style={{ color: recommendation.color, fontFamily: "Nunito_800ExtraBold", fontSize: 13 }}>{recommendation.title}</AppText>
+                        <AppText style={{ color: "#4A3F8F", fontFamily: "Nunito_400Regular", fontSize: 12, marginTop: 4 }}>{recommendation.message}</AppText>
+                      </View>
+                    )}
+                    <View style={{ flexDirection: "row", gap: 10, marginTop: 14, width: "100%" }}>
+                      <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12, backgroundColor: "rgba(94,96,206,0.12)", borderWidth: 1, borderColor: NIGHT.end }]} onPress={() => navigation.navigate("PPGMeasure")}>
+                        <AppText style={[styles.mainButtonTitle, { color: NIGHT.end, fontSize: 14, marginTop: 0 }]}>{t.ppgRetry.toUpperCase()}</AppText>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12 }]} onPress={() => { setPreSleepBpm(null); setBpmConfidence(null); }}>
+                        <AppText style={[styles.mainButtonTitle, { fontSize: 14, marginTop: 0 }]}>{t.ppgSkip.toUpperCase()}</AppText>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <AppText style={[styles.cardHint, { textAlign: "center" }]}>{t.ppgPreSleepCardDesc}</AppText>
+                    <AppText style={[styles.cardHint, { fontSize: 11, marginTop: 6, textAlign: "center", opacity: 0.7 }]}>{t.ppgDisclaimer}</AppText>
+                    <TouchableOpacity style={[styles.mainButton, { marginTop: 14, paddingVertical: 12, width: "100%" }]} onPress={() => navigation.navigate("PPGMeasure")}>
+                      <AppIcon name="heartPulse" size={20} color="#FFFFFF" />
+                      <AppText style={[styles.mainButtonTitle, { fontSize: 14, marginTop: 4 }]}>{t.ppgStart.toUpperCase()}</AppText>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            )}
 
             {/* Botón principal */}
 

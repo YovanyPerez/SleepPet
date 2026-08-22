@@ -223,6 +223,22 @@ export default function ResultsScreen({ navigation }) {
 
             </View>
 
+            <View style={styles.metricCard}>
+
+              <View style={styles.metricIcon}>
+                <AppIcon name="heartPulse" size={20} color="#FF8FAB" />
+              </View>
+
+              <AppText style={styles.metricLabel}>
+                {t.ppgBpm}
+              </AppText>
+
+              <AppText style={styles.metricValue}>
+                {lastSleepSession.preSleepBpm ? `${lastSleepSession.preSleepBpm} ${t.ppgBpmUnit}` : t.ppgNoBpm}
+              </AppText>
+
+            </View>
+
             {/* Recompensas */}
 
             <View style={styles.rewardRow}>

@@ -4,9 +4,11 @@ import {
   clearCurrentSleep,
 } from "../storage/CurrentSleepStorage";
 
-export async function startSleepSession() {
+export async function startSleepSession(options = {}) {
 
   const startTime = new Date().toISOString();
+
+  const { preSleepBpm = null, bpmConfidence = null } = options || {};
 
   await saveCurrentSleep({
 
@@ -17,6 +19,12 @@ export async function startSleepSession() {
     unlockCount: 0,
 
     unlockTimes: [],
+
+    preSleepBpm,
+
+    bpmConfidence,
+
+    bpmCapturedAt: preSleepBpm ? Date.now() : null,
 
   });
 
@@ -64,6 +72,12 @@ export async function finishSleepSession() {
     seconds: Math.floor(duration),
 
     hours: Number((duration / 3600).toFixed(2)),
+
+    preSleepBpm: current.preSleepBpm ?? null,
+
+    bpmConfidence: current.bpmConfidence ?? null,
+
+    bpmCapturedAt: current.bpmCapturedAt ?? null,
 
   };
 

@@ -83,6 +83,15 @@ export default function SleepCard({ session }) {
 
       </View>
 
+      {session.preSleepBpm && (
+        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,143,171,0.16)", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6, marginTop: 10, alignSelf: "flex-start" }}>
+          <AppIcon name="heartPulse" size={14} color="#FF8FAB" />
+          <AppText style={{ color: "#FF8FAB", fontSize: 12, fontFamily: "Nunito_700Bold", marginLeft: 6 }}>
+            {session.preSleepBpm} {t.ppgBpmUnit}
+          </AppText>
+        </View>
+      )}
+
       <View style={styles.divider} />
 
       {/* Métricas */}

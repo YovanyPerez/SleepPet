@@ -25,6 +25,7 @@ import EditProfileScreen from "../screens/EditProfileScreen";
 import AchievementsScreen from "../screens/AchievementsScreen";
 import AchievementPopup from "../components/AchievementPopup";
 import AboutScreen from "../screens/AboutScreen";
+import PPGMeasureScreen from "../screens/PPGMeasureScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -133,6 +134,11 @@ export default function AppNavigator() {
           <Stack.Screen
             name="About"
             component={AboutScreen}
+          />
+
+          <Stack.Screen
+            name="PPGMeasure"
+            component={PPGMeasureScreen}
           />
 
         </Stack.Navigator>

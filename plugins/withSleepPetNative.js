@@ -13,6 +13,7 @@ const PERMISSIONS = [
   "android.permission.ACTIVITY_RECOGNITION",
   "android.permission.QUERY_ALL_PACKAGES",
   "android.permission.SCHEDULE_EXACT_ALARM",
+  "android.permission.CAMERA",
 ];
 
 const PACKAGE_ADDS = [

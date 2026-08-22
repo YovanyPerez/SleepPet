@@ -39,6 +39,8 @@ const ICONS = {
   cloud: { family: "mci", name: "cloud" },
   flash: { family: "io", name: "flash" },
   warning: { family: "io", name: "warning" },
+  heartPulse: { family: "mci", name: "heart-pulse" },
+  heart: { family: "io", name: "heart" },
 };
 
 export default function AppIcon({

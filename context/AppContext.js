@@ -169,6 +169,10 @@ export function AppProvider({ children }) {
     setUnlockTimes,
   ] = useState([]);
 
+  const [preSleepBpm, setPreSleepBpm] = useState(null);
+
+  const [bpmConfidence, setBpmConfidence] = useState(null);
+
   // ===========================
   // Cargar datos
   // ===========================
@@ -218,6 +222,10 @@ export function AppProvider({ children }) {
 
         setXp(data.xp ?? 0);
 
+        setPreSleepBpm(data.preSleepBpm ?? null);
+
+        setBpmConfidence(data.bpmConfidence ?? null);
+
       }
 
       const achievements =
@@ -255,6 +263,10 @@ export function AppProvider({ children }) {
         setUnlockTimes(
           currentSleep.unlockTimes ?? []
         );
+
+        setPreSleepBpm(currentSleep.preSleepBpm ?? null);
+
+        setBpmConfidence(currentSleep.bpmConfidence ?? null);
 
         startNotification(
           currentSleep.startTime,
@@ -354,6 +366,10 @@ export function AppProvider({ children }) {
 
       xp,
 
+      preSleepBpm,
+
+      bpmConfidence,
+
     });
 
     saveUnlockedAchievements(
@@ -392,9 +408,13 @@ export function AppProvider({ children }) {
 
     level,
 
-    xp,
+      xp,
 
-    unlockedAchievements,
+      unlockedAchievements,
+
+      preSleepBpm,
+
+      bpmConfidence,
 
   ]);
 
@@ -641,6 +661,12 @@ export function AppProvider({ children }) {
 
     unlockTimes,
     setUnlockTimes,
+
+    preSleepBpm,
+    setPreSleepBpm,
+
+    bpmConfidence,
+    setBpmConfidence,
 
   };
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "SleepPet",
     "slug": "SleepPet",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,14 +22,28 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.gathod.SleepPet",
-      "versionCode": 4
+      "versionCode": 5
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "./plugins/withSleepPetNative",
-      "expo-font"
+      "expo-font",
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Permite medir tu pulso antes de dormir (fotopletismografia con la camara trasera y flash)"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
