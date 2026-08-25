@@ -65,6 +65,18 @@ export default function HomeScreen({ navigation }) {
         ? t[pet.nameKey]
         : "Michi";
 
+  // Badge dinámico según el estado de la última sesión
+  const MOOD_BADGES = {
+    happy: { label: t.excellentSleep, text: "#2E7D32", bg: "#E8F5E9" },
+    normal: { label: t.goodSleep, text: "#2E7D32", bg: "#E8F5E9" },
+    sleepy: { label: t.needMoreRest, text: "#B45309", bg: "#FEF3C7" },
+    sad: { label: t.trySleepingLonger, text: "#B91C1C", bg: "#FEE2E2" },
+  };
+
+  const moodBadge = lastSleepSession
+    ? MOOD_BADGES[lastSleepSession.mood] || MOOD_BADGES.normal
+    : null;
+
   function greeting() {
 
     const hour = new Date().getHours();
@@ -264,17 +276,31 @@ export default function HomeScreen({ navigation }) {
               {t.lastNight}
             </AppText>
 
-            <View style={styles.badge}>
-              <AppIcon
-                name="check"
-                size={12}
-                color="#2E7D32"
-                style={styles.badgeIcon}
-              />
-              <AppText style={styles.badgeText}>
-                {t.goodSleep}
-              </AppText>
-            </View>
+            {
+              moodBadge && (
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: moodBadge.bg },
+                  ]}
+                >
+                  <AppIcon
+                    name="check"
+                    size={12}
+                    color={moodBadge.text}
+                    style={styles.badgeIcon}
+                  />
+                  <AppText
+                    style={[
+                      styles.badgeText,
+                      { color: moodBadge.text },
+                    ]}
+                  >
+                    {moodBadge.label}
+                  </AppText>
+                </View>
+              )
+            }
 
           </View>
 

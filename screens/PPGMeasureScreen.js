@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef, useCallback } from "react";
 import {
   View,
   TouchableOpacity,
-  Alert,
   PermissionsAndroid,
   Platform,
   Linking,
@@ -27,13 +26,17 @@ import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import styles from "./styles/PPGMeasureScreen.styles";
 import usePPG from "../hooks/usePPG";
-import { getPPGErrorMessage } from "../services/PPGService";
 import { getHeartRateRecommendation } from "../services/HeartRateRecommendService";
 
 const RING_IDLE = "#C9B8E8";
 const RING_DEAD = "#EF476F";
 const RING_NOFINGER = "#FFB703";
 const RING_OK = "#4CAF50";
+
+// Sesgo de exposicion PPG: 0=neutral, +1/-1=±1 EV. Ajusta hasta que avg con dedo+flash quede >100 sin saturar 255.
+// Actualmente 1 para corregir avg 82-91 -> >100; rollback a 0 si con 1 satura 255 constante (requiere rebuild APK release).
+const EXPOSURE_BIAS = 1;
+// const EXPOSURE_BIAS = 0; // rollback rapido: 0 = neutral (alternar 0/1 sin plan nuevo, solo rebuild)
 
 export default function PPGMeasureScreen({ navigation }) {
   const { language } = useContext(AppContext);
@@ -43,30 +46,63 @@ export default function PPGMeasureScreen({ navigation }) {
   const [legacyPermission, setLegacyPermission] = useState(null);
 
   const {
+    phase,
     measuring,
-    progress,
     bpm,
     confidence,
-    error,
     liveBpm,
     beatMs,
     stats,
     procError,
     waitingFinger,
+    stabilityMs,
+    attemptedOnce,
     start,
     stop,
     reset,
     frameProcessor,
     getSpark,
-    duration,
-  } = usePPG({ duration: 15, fps: 30 });
+  } = usePPG({ fps: 30 });
 
   // Pipeline de camara encendido mientras mide O espera el dedo
   const ppgActive = measuring || waitingFinger;
 
   const [recommendation, setRecommendation] = useState(null);
-  const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(null);
+
+  // Torch explicito: solo se enciende al armar, cleanupPPG es lo unico que lo apaga
+  const [torchOn, setTorchOn] = useState(false);
+  // Invalida re-arms/callbacks pendientes tras abandonar la pantalla
+  const leavingRef = useRef(false);
+
+  // Cleanup unico del flujo PPG: apaga torch, detiene medicion/timers/FP
+  const cleanupPPG = useCallback(() => {
+    leavingRef.current = true;
+    setTorchOn(false);
+    stop();
+  }, [stop]);
+
+  // Apagar torch al confirmar (pantalla sigue visible para el resultado)
+  useEffect(() => {
+    if (phase === "confirmed") {
+      setTorchOn(false);
+    }
+  }, [phase]);
+
+  // Red de seguridad: Android Back, replace o cualquier remove
+  useEffect(() => {
+    const unsub = navigation.addListener("beforeRemove", () => {
+      cleanupPPG();
+    });
+    return unsub;
+  }, [navigation, cleanupPPG]);
+
+  // Cleanup final al desmontar (backstop)
+  useEffect(() => {
+    return () => {
+      setTorchOn(false);
+    };
+  }, []);
 
   // Log de diagnostico (visible en adb logcat -s ReactNativeJS)
   useEffect(() => {
@@ -78,6 +114,34 @@ export default function PPGMeasureScreen({ navigation }) {
   }, [device]);
 
   const flashOk = device ? device.hasFlash === true : false;
+
+  // Exposicion fija para PPG: VisionCamera 4.7.3 solo expone `exposure` como bias EV
+  // (no hay AE lock real). raw = neutral + EXPOSURE_BIAS evita saturacion y reduce saltos.
+  // Prueba con 0; si avg sigue <80 sube a +1 hasta avg>100 sin llegar a 255 constante.
+  let exposureValue = 0;
+  if (device && device.minExposure != null && device.maxExposure != null) {
+    const neutral = Math.round((device.minExposure + device.maxExposure) / 2);
+    const raw = neutral + EXPOSURE_BIAS;
+    exposureValue = Math.max(device.minExposure, Math.min(device.maxExposure, raw));
+  }
+
+  const permissionOk = hasPermission || legacyPermission;
+
+  // Auto-armar al montar cuando permiso y device esten listos (sin boton Iniciar)
+  // A1: depende de device — evita torch="on" contra sesion aun no inicializada (causaba flash apagado 1ª entrada)
+  useEffect(() => {
+    if (device && permissionOk && phase === "idle" && !leavingRef.current) {
+      start();
+      setTorchOn(true);
+    }
+  }, [device, permissionOk, phase, start]);
+
+  // Reintento torch si device llega tarde y ya estamos en pipeline activo
+  useEffect(() => {
+    if (device && permissionOk && ppgActive && !torchOn && !leavingRef.current) {
+      setTorchOn(true);
+    }
+  }, [device, permissionOk, ppgActive, torchOn]);
 
   useEffect(() => {
     (async () => {
@@ -142,40 +206,57 @@ export default function PPGMeasureScreen({ navigation }) {
     else ringColor = RING_OK;
   }
 
-  const permissionOk = hasPermission || legacyPermission;
-
-  function handleStart() {
-    if (!permissionOk) {
-      Alert.alert(t.ppgCameraPermissionTitle, t.ppgCameraPermissionMessage, [
-        { text: t.cancel, style: "cancel" },
-        { text: t.openSettings, onPress: () => Linking.openSettings() },
-      ]);
-      return;
-    }
-    reset();
-    setCameraReady(true);
-    start();
-  }
-
   function handleRetry() {
+    leavingRef.current = false;
     reset();
     setRecommendation(null);
     start();
+    setTorchOn(true);
   }
 
   function handleUseResult() {
-    stop();
-    navigation.navigate("SleepMode", { preSleepBpm: bpm, bpmConfidence: confidence });
+    cleanupPPG();
+    navigation.replace("SleepMode", {
+      preSleepBpm: bpm,
+      bpmConfidence: confidence,
+    });
   }
 
   function handleSkip() {
-    stop();
-    navigation.navigate("SleepMode", { preSleepBpm: null });
+    cleanupPPG();
+    navigation.replace("SleepMode", { preSleepBpm: null });
   }
 
-  const progressPct = Math.round(progress * duration);
-  const errorMessage = error ? getPPGErrorMessage(error, t) : null;
-  const displayBpm = liveBpm ?? "--";
+  // Nunca mostrar un BPM viejo fuera de medicion/resultado
+  const displayBpm = bpm ?? liveBpm ?? "--";
+
+  // Etiqueta de estado segun fase
+  let statusLabel;
+  switch (phase) {
+    case "waiting":
+      statusLabel = attemptedOnce ? t.ppgFingerLost : t.ppgWaitingFinger;
+      break;
+    case "preparing":
+      statusLabel = t.ppgFingerDetected;
+      break;
+    case "measuring":
+      statusLabel = t.ppgLive;
+      break;
+    case "confirmed":
+      statusLabel = t.ppgSuccess;
+      break;
+    default:
+      statusLabel = t.ppgDetecting;
+  }
+
+  // Progreso de estabilidad (barra 0..3s)
+  const stabilityPct = Math.min(1, stabilityMs / 3000);
+  const stabilityText =
+    phase === "measuring" && liveBpm
+      ? stabilityMs > 0
+        ? t.ppgStableProgress.replace("{{sec}}", (stabilityMs / 1000).toFixed(1))
+        : t.ppgSearching
+      : "";
 
   // Sparkline normalizado
   const spark = getSpark();
@@ -194,7 +275,7 @@ export default function PPGMeasureScreen({ navigation }) {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity onPress={() => { stop(); navigation.goBack(); }} style={styles.backButton}>
+          <TouchableOpacity onPress={() => { cleanupPPG(); navigation.replace("SleepMode"); }} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
@@ -209,9 +290,11 @@ export default function PPGMeasureScreen({ navigation }) {
                   style={styles.circleCam}
                   device={device}
                   isActive={true}
-                  torch={ppgActive ? "on" : "off"}
+                  torch={torchOn ? "on" : "off"}
                   frameProcessor={ppgActive ? frameProcessor : undefined}
                   pixelFormat="yuv"
+                  exposure={exposureValue}
+                  lowLightBoost={false}
                   onError={(e) => {
                     const msg = e?.nativeEvent?.message ?? String(e);
                     console.log("VisionCamera error:", msg);
@@ -231,9 +314,9 @@ export default function PPGMeasureScreen({ navigation }) {
             )}
           </View>
 
-          {/* Pulso en vivo */}
+          {/* Estado + pulso en vivo */}
           <AppText style={styles.liveLabel}>
-            {waitingFinger ? t.ppgFingerLost : measuring ? t.ppgLive : t.ppgDetecting}
+            {statusLabel}
           </AppText>
           <AppText style={styles.liveBpm}>{displayBpm}</AppText>
           <AppText style={styles.liveUnit}>{t.ppgBpmUnit}</AppText>
@@ -252,28 +335,31 @@ export default function PPGMeasureScreen({ navigation }) {
               ))}
           </View>
 
-          {/* Progreso */}
+          {/* Estabilidad */}
           <View style={styles.progressCard}>
             <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+              <View style={[styles.progressBarFill, { width: `${stabilityPct * 100}%` }]} />
             </View>
             <AppText style={styles.progressText}>
-              {waitingFinger
-                ? "0s / 15s"
+              {phase === "confirmed"
+                ? t.ppgSuccess
                 : measuring
-                ? `${progressPct}s / ${duration}s`
-                : bpm
-                ? `${t.ppgSuccess}`
-                : t.ppgNoBpm}
+                ? t.ppgKeepStill
+                : t.ppgDetecting}
             </AppText>
+            {stabilityText ? (
+              <AppText style={styles.debugText}>{stabilityText}</AppText>
+            ) : null}
             {ppgActive && !procError && (
               <AppText style={styles.debugText}>
-                {stats.count} · {stats.avg != null ? Math.round(stats.avg) : "--"}
+                {stats.count} · avg {stats.avg != null ? Math.round(stats.avg) : "--"} · textura {stats.spatialStd != null ? stats.spatialStd.toFixed(1) : "--"}
+                {measuring && liveBpm
+                  ? ` · estable ${Math.min(stabilityMs, 3000)}/3000ms`
+                  : ""}
               </AppText>
             )}
             {cameraError && <AppText style={styles.errorText}>cam: {cameraError}</AppText>}
             {procError && <AppText style={styles.errorText}>{procError}</AppText>}
-            {errorMessage && <AppText style={styles.errorText}>{errorMessage}</AppText>}
             {!flashOk && device && (
               <AppText style={styles.errorText}>{t.ppgNoFlash}</AppText>
             )}
@@ -297,19 +383,6 @@ export default function PPGMeasureScreen({ navigation }) {
 
           {/* Botones exclusivos por estado */}
           <View style={styles.buttonRow}>
-            {!ppgActive && !bpm && !error && (
-              <>
-                <TouchableOpacity style={styles.secondaryButton} onPress={handleSkip}>
-                  <AppText style={styles.secondaryText}>{t.ppgSkip}</AppText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.primaryButton, !permissionOk && styles.disabledButton]}
-                  onPress={handleStart}
-                >
-                  <AppText style={styles.primaryText}>{t.ppgStart}</AppText>
-                </TouchableOpacity>
-              </>
-            )}
             {ppgActive && (
               <TouchableOpacity style={styles.secondaryButtonWide} onPress={handleSkip}>
                 <AppText style={styles.secondaryText}>{t.cancel}</AppText>
@@ -322,16 +395,6 @@ export default function PPGMeasureScreen({ navigation }) {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.primaryButton} onPress={handleUseResult}>
                   <AppText style={styles.primaryText}>{t.continue}</AppText>
-                </TouchableOpacity>
-              </>
-            )}
-            {!ppgActive && !bpm && error && (
-              <>
-                <TouchableOpacity style={styles.secondaryButton} onPress={handleSkip}>
-                  <AppText style={styles.secondaryText}>{t.ppgSkip}</AppText>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.primaryButton} onPress={handleRetry}>
-                  <AppText style={styles.primaryText}>{t.ppgRetry}</AppText>
                 </TouchableOpacity>
               </>
             )}

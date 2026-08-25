@@ -1,194 +1,257 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+﻿import { useState, useRef, useCallback, useEffect } from "react";
 import { useFrameProcessor } from "react-native-vision-camera";
 import { Worklets } from "react-native-worklets-core";
 import { calculateBPM } from "../services/PPGService";
 
-const DEFAULT_DURATION = 15;
 const DEFAULT_FPS = 30;
 
-// Umbrales de deteccion de dedo (luminancia Y 0-255)
+// Deteccion de dedo (luminancia Y 0-255) + textura intra-frame
 const FINGER_MIN = 80;
-const BAD_STREAK = Math.round(DEFAULT_FPS * 0.5); // ~0.5s fuera -> cancelar toma
-const GOOD_STREAK = DEFAULT_FPS; // ~1s dentro -> auto-iniciar
+const SPATIAL_STD_MAX = 18; // textura: dedo+flash uniforme (5-12) vs habitacion (25-50). Tunable arriba igual que EXPOSURE_BIAS / HAMPEL_K
+const BAD_STREAK = Math.round(DEFAULT_FPS * 0.5); // ~0.5s fuera -> descartar toma
+const GOOD_STREAK = DEFAULT_FPS; // ~1s dentro -> dedo confirmado
 
-export default function usePPG({ duration = DEFAULT_DURATION, fps = DEFAULT_FPS } = {}) {
-  const [measuring, setMeasuring] = useState(false);
-  const [progress, setProgress] = useState(0);
+// Confirmacion por estabilidad (sin limite de tiempo)
+const STABILITY_DURATION_MS = 3000;
+const BPM_STABILITY_TOLERANCE = 5;
+const MIN_CONFIDENCE_FOR_CONFIRM = 0.6;
+const MIN_STABLE_READINGS = 5;
+const PREPARING_MS = 350;
+
+// Cap del buffer (la ventana de calculo usa los ultimos 10s)
+const MAX_BUFFER_SECONDS = 30;
+
+// Fases: idle | waiting | preparing | measuring | confirmed
+
+export default function usePPG({ fps = DEFAULT_FPS } = {}) {
+  const [phase, setPhaseState] = useState("idle");
   const [bpm, setBpm] = useState(null);
   const [confidence, setConfidence] = useState(0);
-  const [error, setError] = useState(null);
 
   // Estadisticas en vivo
-  const [stats, setStats] = useState({ count: 0, avg: null });
+  const [stats, setStats] = useState({ count: 0, avg: null, spatialStd: null });
   const [procError, setProcError] = useState(null);
-  // Pulso en vivo (estimacion con ventana deslizante)
+  // Pulso vivo (ventana deslizante) + ms acumulados de cadena estable
   const [liveBpm, setLiveBpm] = useState(null);
   const [beatMs, setBeatMs] = useState(800);
-  // Esperando que el usuario vuelva a colocar el dedo
-  const [waitingFinger, setWaitingFinger] = useState(false);
+  const [stabilityMs, setStabilityMs] = useState(0);
+  // True una vez que se ha iniciado alguna toma (para texto "nueva medicion")
+  const [attemptedOnce, setAttemptedOnce] = useState(false);
 
   const bufferRef = useRef([]);
-  const startRef = useRef(null);
   const timerRef = useRef(null);
-  // activo = midiendo O esperando dedo (pipeline de muestras encendido)
-  const activeRef = useRef(false);
-  const measuringRef = useRef(false);
-  const waitingRef = useRef(false);
+  const prepTimerRef = useRef(null);
+  const phaseRef = useRef("idle");
   const sampleCounterRef = useRef(0);
   const lastAvgRef = useRef(null);
+  const lastSpatialStdRef = useRef(null);
   const tickRef = useRef(0);
   const liveHistoryRef = useRef([]);
+  const stableChainRef = useRef([]);
   const badStreakRef = useRef(0);
   const goodStreakRef = useRef(0);
-  // referencia estable a startTake para auto-reinicio desde addSample
   const startTakeRef = useRef(null);
+
+  const setPhaseSafe = useCallback((p) => {
+    phaseRef.current = p;
+    setPhaseState(p);
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (prepTimerRef.current) {
+      clearTimeout(prepTimerRef.current);
+      prepTimerRef.current = null;
+    }
+  }, []);
 
   const resetCounters = useCallback(() => {
     bufferRef.current = [];
     sampleCounterRef.current = 0;
     lastAvgRef.current = null;
+    lastSpatialStdRef.current = null;
     tickRef.current = 0;
     liveHistoryRef.current = [];
+    stableChainRef.current = [];
     badStreakRef.current = 0;
     goodStreakRef.current = 0;
+    setLiveBpm(null);
+    setStabilityMs(0);
+    setBeatMs(800);
   }, []);
 
-  const reset = useCallback(() => {
+  // Armar: entrar en espera del dedo (sin timer). Idempotente.
+  const start = useCallback(() => {
+    const p = phaseRef.current;
+    if (
+      p === "waiting" ||
+      p === "preparing" ||
+      p === "measuring"
+    ) {
+      return;
+    }
+    stopTimer();
     resetCounters();
-    setProgress(0);
     setBpm(null);
     setConfidence(0);
-    setError(null);
-    setStats({ count: 0, avg: null });
-    setProcError(null);
-    setLiveBpm(null);
-    setBeatMs(800);
-    setMeasuring(false);
-    setWaitingFinger(false);
-    measuringRef.current = false;
-    waitingRef.current = false;
-    activeRef.current = false;
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, [resetCounters]);
+    console.log("PPG: waiting for finger");
+    setPhaseSafe("waiting");
+  }, [resetCounters, setPhaseSafe, stopTimer]);
 
-  // Toma completa desde cero
-  const startTake = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    resetCounters();
-    setProgress(0);
-    setBpm(null);
-    setConfidence(0);
-    setError(null);
-    setLiveBpm(null);
-    setBeatMs(800);
-    setMeasuring(true);
-    setWaitingFinger(false);
-    measuringRef.current = true;
-    waitingRef.current = false;
-    activeRef.current = true;
-    startRef.current = Date.now();
+  const finalizeResult = useCallback(
+    (confirmedBpm, confirmedConfidence) => {
+      stopTimer();
+      setBpm(confirmedBpm);
+      setConfidence(confirmedConfidence);
+      setBeatMs(Math.round(Math.min(1500, Math.max(350, 60000 / confirmedBpm)) / 25) * 25);
+      setPhaseSafe("confirmed");
+    },
+    [setPhaseSafe, stopTimer]
+  );
+
+  // Loop de medicion (solo corre en fase measuring; sin timeout)
+  const startTickLoop = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      const elapsed = (Date.now() - startRef.current) / 1000;
-      const p = Math.min(1, elapsed / duration);
-      setProgress(p);
       tickRef.current += 1;
 
-      // Estadisticas en vivo (10Hz)
       setStats({
         count: sampleCounterRef.current,
         avg: lastAvgRef.current,
+        spatialStd: lastSpatialStdRef.current,
       });
 
-      // Pulso en vivo cada ~500ms con ventana de 10s
+      // Lectura viva cada ~500ms con ventana de 10s
       if (
         tickRef.current % 5 === 0 &&
         bufferRef.current.length >= fps * 6
       ) {
         const tail = bufferRef.current.slice(-fps * 10);
         const result = calculateBPM(tail, fps);
-        if (result.bpm && result.confidence >= 0.5) {
+
+        if (result.bpm && result.confidence >= MIN_CONFIDENCE_FOR_CONFIRM) {
+          // Numero visible: mediana de las ultimas 3 validas
           liveHistoryRef.current.push(result.bpm);
           if (liveHistoryRef.current.length > 3) {
-            liveHistoryRef.current.shift();
+            liveHistoryRef.current.splice(0, liveHistoryRef.current.length - 3);
           }
-          const sorted = [...liveHistoryRef.current].sort((a, b) => a - b);
-          const median = sorted[Math.floor(sorted.length / 2)];
-          setLiveBpm(median);
-          setBeatMs(
-            Math.round(
-              Math.min(1500, Math.max(350, 60000 / median)) / 25
-            ) * 25
-          );
-        }
-      }
+          const sortedHist = [...liveHistoryRef.current].sort((a, b) => a - b);
+          const medianHist = sortedHist[Math.floor(sortedHist.length / 2)];
+          setLiveBpm(medianHist);
+          setBeatMs(Math.round(Math.min(1500, Math.max(350, 60000 / medianHist)) / 25) * 25);
 
-      if (elapsed >= duration) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-        let result = calculateBPM(bufferRef.current, fps);
-        // Fallback: senal inestable en ventana larga -> intentar ultimos 10s
-        if (
-          !result.bpm &&
-          ["unstable", "low_confidence", "no_peaks"].includes(result.error) &&
-          bufferRef.current.length >= fps * 10
-        ) {
-          const tailResult = calculateBPM(
-            bufferRef.current.slice(-fps * 10),
-            fps
-          );
-          if (tailResult.bpm) {
-            result = { ...tailResult };
+          // Cadena contigua de estabilidad
+          const chain = stableChainRef.current;
+          const anchor = chain[0];
+          const last = chain[chain.length - 1];
+          if (
+            !last ||
+            (Math.abs(result.bpm - last.bpm) <= BPM_STABILITY_TOLERANCE &&
+              Math.abs(result.bpm - anchor.bpm) <= BPM_STABILITY_TOLERANCE)
+          ) {
+            chain.push({ bpm: result.bpm, conf: result.confidence, t: Date.now() });
+          } else {
+            stableChainRef.current = [
+              { bpm: result.bpm, conf: result.confidence, t: Date.now() },
+            ];
+          }
+
+          const ch = stableChainRef.current;
+          if (ch.length > 1) {
+            setStabilityMs(
+              Math.min(STABILITY_DURATION_MS, ch[ch.length - 1].t - ch[0].t)
+            );
+          }
+
+          if (
+            ch.length >= MIN_STABLE_READINGS &&
+            ch[ch.length - 1].t - ch[0].t >= STABILITY_DURATION_MS
+          ) {
+            const bpms = ch.map((x) => x.bpm).sort((a, b) => a - b);
+            const confs = ch.map((x) => x.conf).sort((a, b) => a - b);
+            const medianBpm = bpms[Math.floor(bpms.length / 2)];
+            const medianConf = confs[Math.floor(confs.length / 2)];
+            console.log("PPG: BPM confirmed = " + medianBpm + " confidence = " + medianConf.toFixed(2));
+            finalizeResult(medianBpm, medianConf);
+            return;
+          }
+        } else {
+          // Lectura invalida rompe la cadena (dedo presente, seguir midiendo)
+          if (stableChainRef.current.length) {
+            stableChainRef.current = [];
+            setStabilityMs(0);
           }
         }
-        if (result.bpm) {
-          setBpm(result.bpm);
-          setConfidence(result.confidence);
-          setError(null);
-          setBeatMs(Math.round(Math.min(1500, Math.max(350, 60000 / result.bpm)) / 25) * 25);
-        } else {
-          setError(result.error);
-          setConfidence(result.confidence || 0);
+
+        if (tickRef.current % 10 === 0 && result) {
+          console.log(
+            "PPG: live BPM = " +
+              (result.bpm ?? "-") +
+              " confidence = " +
+              (result.confidence != null ? Number(result.confidence).toFixed(2) : "-") +
+              " filteredStd = " +
+              (result.filteredStd != null ? Number(result.filteredStd).toFixed(2) : "-") +
+              " err = " +
+              (result.error ?? "null")
+          );
         }
-        setMeasuring(false);
-        measuringRef.current = false;
-        activeRef.current = false;
       }
     }, 100);
-  }, [duration, fps, resetCounters]);
+  }, [fps, finalizeResult]);
+
+  // Toma nueva desde cero (dedo ya confirmado)
+  const startTake = useCallback(() => {
+    const p = phaseRef.current;
+    if (p !== "preparing" && p !== "waiting") return;
+    resetCounters();
+    setBpm(null);
+    setConfidence(0);
+    setAttemptedOnce(true);
+    console.log("PPG: measurement started");
+    setPhaseSafe("measuring");
+    startTickLoop();
+  }, [resetCounters, setPhaseSafe, startTickLoop]);
 
   startTakeRef.current = startTake;
 
-  // Entrar en estado de espera: dedo perdido -> cancelar toma actual
-  const enterWaiting = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+  // Dedo perdido durante la toma: descartar todo y volver a esperar dedo
+  const discardToWaiting = useCallback(() => {
+    if (phaseRef.current !== "measuring") return;
+    stopTimer();
     resetCounters();
-    setProgress(0);
-    setLiveBpm(null);
-    setWaitingFinger(true);
-    measuringRef.current = false;
-    waitingRef.current = true;
-    activeRef.current = true; // seguir muestreando para detectar el regreso
-    badStreakRef.current = 0;
-    goodStreakRef.current = 0;
-  }, [resetCounters]);
+    setBpm(null);
+    setConfidence(0);
+    console.log("PPG: finger lost — discarded");
+    setPhaseSafe("waiting");
+  }, [resetCounters, setPhaseSafe, stopTimer]);
 
   const addSample = useCallback(
-    (redMean) => {
-      if (!activeRef.current) return;
+    (redMean, spatialStd = 0) => {
+      const currentPhase = phaseRef.current;
+      if (
+        currentPhase !== "waiting" &&
+        currentPhase !== "preparing" &&
+        currentPhase !== "measuring"
+      ) {
+        return;
+      }
 
       sampleCounterRef.current += 1;
       lastAvgRef.current = redMean;
+      lastSpatialStdRef.current = spatialStd;
 
-      const ok = redMean >= FINGER_MIN;
+      // Gate de seguridad: brillo Y uniformidad intra-frame
+      const ok = redMean >= FINGER_MIN && spatialStd <= SPATIAL_STD_MAX;
+
+      // Log temporal para calibrar SPATIAL_STD_MAX (ver adb logcat -s ReactNativeJS)
+      if (sampleCounterRef.current % 30 === 0) {
+        console.log(
+          `PPG frame avg=${redMean.toFixed(1)} spatialStd=${spatialStd.toFixed(1)} ok=${ok} phase=${currentPhase}`
+        );
+      }
 
       if (ok) {
         goodStreakRef.current += 1;
@@ -198,32 +261,56 @@ export default function usePPG({ duration = DEFAULT_DURATION, fps = DEFAULT_FPS 
         goodStreakRef.current = 0;
       }
 
-      if (measuringRef.current) {
-        bufferRef.current.push(redMean);
-        const maxLen = duration * fps + 10;
-        if (bufferRef.current.length > maxLen) {
-          bufferRef.current.shift();
-        }
-        // Dedo perdido durante la toma -> reiniciar esperando
-        if (!ok && badStreakRef.current >= BAD_STREAK) {
-          enterWaiting();
-        }
-      } else if (waitingRef.current) {
-        // Dedo de vuelta estable -> nueva toma automatica
-        if (ok && goodStreakRef.current >= GOOD_STREAK) {
-          startTakeRef.current?.();
-        }
+      switch (currentPhase) {
+        case "waiting":
+          if (ok && goodStreakRef.current >= GOOD_STREAK) {
+            console.log("PPG: finger detected");
+            setPhaseSafe("preparing");
+            prepTimerRef.current = setTimeout(() => {
+              prepTimerRef.current = null;
+              startTakeRef.current?.();
+            }, PREPARING_MS);
+          }
+          break;
+
+        case "preparing":
+          // Si el dedo se va antes de arrancar, cancelar la preparacion
+          if (!ok && badStreakRef.current >= BAD_STREAK) {
+            if (prepTimerRef.current) {
+              clearTimeout(prepTimerRef.current);
+              prepTimerRef.current = null;
+            }
+            resetCounters();
+            setPhaseSafe("waiting");
+          }
+          break;
+
+        case "measuring":
+          if (ok) {
+            bufferRef.current.push(redMean);
+            const maxLen = fps * MAX_BUFFER_SECONDS + 10;
+            if (bufferRef.current.length > maxLen) {
+              bufferRef.current.shift();
+            }
+          }
+          if (!ok && badStreakRef.current >= BAD_STREAK) {
+            discardToWaiting();
+          }
+          break;
+
+        default:
+          break;
       }
     },
-    [duration, fps, enterWaiting]
+    [fps, discardToWaiting, resetCounters, setPhaseSafe]
   );
 
   const addSampleWorkletRef = useRef(addSample);
   addSampleWorkletRef.current = addSample;
 
   const jsAdd = useRef(
-    Worklets.createRunOnJS((value) => {
-      addSampleWorkletRef.current(value);
+    Worklets.createRunOnJS((avg, spatialStd) => {
+      addSampleWorkletRef.current(avg, spatialStd);
     })
   ).current;
 
@@ -237,20 +324,26 @@ export default function usePPG({ duration = DEFAULT_DURATION, fps = DEFAULT_FPS 
     (frame) => {
       "worklet";
       try {
-        // Plano Y del frame YUV: luminancia ≈ senal roja bajo flash+dedo
+        // Plano Y del frame YUV: luminancia aprox senal roja bajo flash+dedo
         const buffer = new Uint8Array(frame.toArrayBuffer());
         const wh = frame.width * frame.height;
-        // Muestrear ~4k puntos del plano Y
+        // Muestrear ~4k puntos del plano Y — mismo sampleo para avg y varianza espacial
         const step = Math.max(1, Math.floor(wh / 4096));
         let sum = 0;
+        let sumSq = 0;
         let count = 0;
         for (let i = 0; i < wh; i += step) {
-          sum += buffer[i];
+          const v = buffer[i];
+          sum += v;
+          sumSq += v * v;
           count += 1;
         }
-        jsAdd(sum / count);
+        const avg = sum / count;
+        const variance = sumSq / count - avg * avg;
+        const spatialStd = Math.sqrt(variance > 0 ? variance : 0);
+        jsAdd(avg, spatialStd);
       } catch (e) {
-        jsProcError(`frame: ${e?.message ?? e}`);
+        jsProcError("frame: " + (e?.message ?? e));
       }
     },
     [jsAdd, jsProcError]
@@ -271,45 +364,50 @@ export default function usePPG({ duration = DEFAULT_DURATION, fps = DEFAULT_FPS 
   }, []);
 
   const stop = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setMeasuring(false);
-    setWaitingFinger(false);
-    measuringRef.current = false;
-    waitingRef.current = false;
-    activeRef.current = false;
-  }, []);
+    stopTimer();
+    phaseRef.current = "idle";
+    setPhaseState("idle");
+  }, [stopTimer]);
 
-  // Cleanup al desmontar (evita timer huerfano si el usuario sale midiendo/esperando)
+  const reset = useCallback(() => {
+    stopTimer();
+    resetCounters();
+    setBpm(null);
+    setConfidence(0);
+    setStats({ count: 0, avg: null, spatialStd: null });
+    setProcError(null);
+    setAttemptedOnce(false);
+    phaseRef.current = "idle";
+    setPhaseState("idle");
+  }, [resetCounters, stopTimer]);
+
+  // Cleanup al desmontar
   useEffect(
     () => () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (prepTimerRef.current) clearTimeout(prepTimerRef.current);
     },
     []
   );
 
   return {
-    measuring,
-    progress,
+    phase,
+    // Compatibilidad con la UI existente
+    measuring: phase === "measuring",
+    waitingFinger: phase === "waiting" || phase === "preparing",
     bpm,
     confidence,
-    error,
     liveBpm,
     beatMs,
     stats,
     procError,
-    waitingFinger,
-    start: startTake,
+    stabilityMs,
+    attemptedOnce,
+    start,
     stop,
     reset,
     frameProcessor,
     getSpark,
-    duration,
     fps,
   };
 }

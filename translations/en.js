@@ -498,7 +498,7 @@ export default {
   ppgRetry: "Retry",
   ppgSkip: "Skip",
   ppgStart: "Measure pulse",
-  ppgSuccess: "Pulse captured!",
+  ppgSuccess: "Pulse confirmed!",
   ppgErrorNoFinger: "No finger detected. Cover the whole lens.",
   ppgErrorLowLight: "Low signal. Press a bit firmer and avoid moving.",
   ppgErrorTooShort: "Measurement too short. Keep finger 15s.",
@@ -524,7 +524,12 @@ export default {
   ppgNoBpm: "No measurement",
   ppgDetecting: "Detecting signal...",
   ppgLive: "Live pulse",
-  ppgFingerLost: "Finger off — place it back to continue",
+  ppgWaitingFinger: "Waiting for finger...",
+  ppgFingerDetected: "Finger detected",
+  ppgFingerLost: "Place your finger again — new measurement",
+  ppgKeepStill: "Keep your finger still",
+  ppgSearching: "Looking for a stable signal...",
+  ppgStableProgress: "Stable signal {{sec}}s / 3s",
   ppgNoFlash: "Your camera has no flash — measurement may fail",
 
 };

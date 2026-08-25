@@ -48,6 +48,7 @@ import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import { calculatePetHappiness } from "../services/PetHappinessService";
+import { computeStreakUpdate } from "../services/StreakService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
 
@@ -154,6 +155,9 @@ export default function SleepModeScreen({ navigation }) {
 
     bpmConfidence,
     setBpmConfidence,
+
+    lastStreakDateKey,
+    setLastStreakDateKey,
 
   } = useContext(AppContext);
 
@@ -521,15 +525,18 @@ export default function SleepModeScreen({ navigation }) {
 
     setPetMood(reward.mood);
 
-    if (session.hours >= 7) {
+    // Racha diaria (regla B): >=3h cuenta 1x/dia, siestas neutras,
+    // saltarse un dia completo rompe la cadena
+    const streakUpdate = computeStreakUpdate({
+      currentStreak: streak,
+      lastStreakDateKey,
+      sessionEnd: result.end,
+      hoursSlept: session.hours,
+    });
 
-      setStreak(streak + 1);
+    setStreak(streakUpdate.streak);
 
-    } else {
-
-      setStreak(0);
-
-    }
+    setLastStreakDateKey(streakUpdate.lastStreakDateKey);
 
     await saveSleepSession(session);
 
@@ -544,13 +551,7 @@ export default function SleepModeScreen({ navigation }) {
 
         sessions: sleepHistory.length + 1,
 
-        streak:
-
-          session.hours >= 7
-
-            ? streak + 1
-
-            : 0,
+        streak: streakUpdate.streak,
 
         coins:
 
@@ -783,7 +784,7 @@ export default function SleepModeScreen({ navigation }) {
                       </View>
                     )}
                     <View style={{ flexDirection: "row", gap: 10, marginTop: 14, width: "100%" }}>
-                      <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12, backgroundColor: "rgba(94,96,206,0.12)", borderWidth: 1, borderColor: NIGHT.end }]} onPress={() => navigation.navigate("PPGMeasure")}>
+                      <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12, backgroundColor: "rgba(94,96,206,0.12)", borderWidth: 1, borderColor: NIGHT.end }]} onPress={() => navigation.replace("PPGMeasure")}>
                         <AppText style={[styles.mainButtonTitle, { color: NIGHT.end, fontSize: 14, marginTop: 0 }]}>{t.ppgRetry.toUpperCase()}</AppText>
                       </TouchableOpacity>
                       <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12 }]} onPress={() => { setPreSleepBpm(null); setBpmConfidence(null); }}>
@@ -795,7 +796,7 @@ export default function SleepModeScreen({ navigation }) {
                   <>
                     <AppText style={[styles.cardHint, { textAlign: "center" }]}>{t.ppgPreSleepCardDesc}</AppText>
                     <AppText style={[styles.cardHint, { fontSize: 11, marginTop: 6, textAlign: "center", opacity: 0.7 }]}>{t.ppgDisclaimer}</AppText>
-                    <TouchableOpacity style={[styles.mainButton, { marginTop: 14, paddingVertical: 12, width: "100%" }]} onPress={() => navigation.navigate("PPGMeasure")}>
+                    <TouchableOpacity style={[styles.mainButton, { marginTop: 14, paddingVertical: 12, width: "100%" }]} onPress={() => navigation.replace("PPGMeasure")}>
                       <AppIcon name="heartPulse" size={20} color="#FFFFFF" />
                       <AppText style={[styles.mainButtonTitle, { fontSize: 14, marginTop: 4 }]}>{t.ppgStart.toUpperCase()}</AppText>
                     </TouchableOpacity>

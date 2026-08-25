@@ -173,6 +173,8 @@ export function AppProvider({ children }) {
 
   const [bpmConfidence, setBpmConfidence] = useState(null);
 
+  const [lastStreakDateKey, setLastStreakDateKey] = useState(null);
+
   // ===========================
   // Cargar datos
   // ===========================
@@ -226,6 +228,8 @@ export function AppProvider({ children }) {
 
         setBpmConfidence(data.bpmConfidence ?? null);
 
+        setLastStreakDateKey(data.lastStreakDateKey ?? null);
+
       }
 
       const achievements =
@@ -239,6 +243,11 @@ export function AppProvider({ children }) {
         await getSleepHistory();
 
       setSleepHistory(history);
+
+      // La ultima sesion guardada sobrevive reinicios (history[0] = mas nueva)
+      setLastSleepSession(history?.[0] ?? null);
+
+      setLastSleepHours(history?.[0]?.hours ?? 0);
 
       const currentSleep =
         await getCurrentSleepSession();
@@ -370,6 +379,8 @@ export function AppProvider({ children }) {
 
       bpmConfidence,
 
+      lastStreakDateKey,
+
     });
 
     saveUnlockedAchievements(
@@ -415,6 +426,8 @@ export function AppProvider({ children }) {
       preSleepBpm,
 
       bpmConfidence,
+
+      lastStreakDateKey,
 
   ]);
 
@@ -667,6 +680,9 @@ export function AppProvider({ children }) {
 
     bpmConfidence,
     setBpmConfidence,
+
+    lastStreakDateKey,
+    setLastStreakDateKey,
 
   };
 

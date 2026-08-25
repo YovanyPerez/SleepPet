@@ -188,6 +188,8 @@ export default function SettingsScreen({ navigation }) {
     setLastSleepHours,
     setLastSleepSession,
 
+    setLastStreakDateKey,
+
   } = useContext(AppContext);
 
   const t = getTranslations(language);
@@ -345,6 +347,8 @@ export default function SettingsScreen({ navigation }) {
 
             setLastSleepHours(0);
             setLastSleepSession(null);
+
+            setLastStreakDateKey(null);
 
             Alert.alert(
 

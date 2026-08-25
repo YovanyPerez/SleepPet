@@ -499,7 +499,7 @@ export default {
   ppgRetry: "Reintentar",
   ppgSkip: "Omitir",
   ppgStart: "Medir pulso",
-  ppgSuccess: "¡Pulso capturado!",
+  ppgSuccess: "¡Pulso confirmado!",
   ppgErrorNoFinger: "No detectamos tu dedo. Cubre toda la lente.",
   ppgErrorLowLight: "Señal baja. Presiona un poco más firme y evita moverte.",
   ppgErrorTooShort: "Medición muy corta. Mantén el dedo 15s.",
@@ -525,7 +525,12 @@ export default {
   ppgNoBpm: "Sin medición",
   ppgDetecting: "Detectando señal...",
   ppgLive: "Pulso en vivo",
-  ppgFingerLost: "Dedo fuera — colócalo de nuevo para continuar",
+  ppgWaitingFinger: "Esperando dedo...",
+  ppgFingerDetected: "Dedo detectado",
+  ppgFingerLost: "Coloca nuevamente tu dedo — nueva medición",
+  ppgKeepStill: "Mantén tu dedo quieto",
+  ppgSearching: "Buscando una señal estable...",
+  ppgStableProgress: "Señal estable {{sec}}s / 3s",
   ppgNoFlash: "Tu cámara no tiene flash — la medición puede fallar",
 
 };
