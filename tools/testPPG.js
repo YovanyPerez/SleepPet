@@ -51,7 +51,7 @@ function runCase({ bpm, ...opts }) {
   const ok = res.bpm != null && Math.abs(res.bpm - bpm) <= 3;
   const status = ok ? "OK" : "FAIL";
   console.log(
-    `${status} | esperado ${String(bpm).padStart(3)} lpm | obtenido ${String(res.bpm ?? "-").padStart(3)} | conf=${(res.confidence ?? 0).toFixed(2)} | err=${res.error ?? "null"} | picos=${res.peaks ?? "-"} | opts=${JSON.stringify(opts)}`
+    `${status} | esperado ${String(bpm).padStart(3)} lpm | obtenido ${String(res.bpm ?? "-").padStart(3)} | conf=${(res.confidence ?? 0).toFixed(2)} | esp=${res.spectralBpm != null ? String(res.spectralBpm).padStart(5) : "    -"} delta=${res.spectralDelta != null ? res.spectralDelta.toFixed(1).padStart(4) : "   -"} | err=${res.error ?? "null"} | picos=${res.peaks ?? "-"} | opts=${JSON.stringify(opts)}`
   );
   return ok;
 }

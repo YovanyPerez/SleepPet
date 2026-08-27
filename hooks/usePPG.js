@@ -192,6 +192,10 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
               (result.bpm ?? "-") +
               " confidence = " +
               (result.confidence != null ? Number(result.confidence).toFixed(2) : "-") +
+              " spectralBpm = " +
+              (result.spectralBpm != null ? Number(result.spectralBpm).toFixed(1) : "-") +
+              " delta = " +
+              (result.spectralDelta != null ? Number(result.spectralDelta).toFixed(1) : "-") +
               " filteredStd = " +
               (result.filteredStd != null ? Number(result.filteredStd).toFixed(2) : "-") +
               " err = " +

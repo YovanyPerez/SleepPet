@@ -1,5 +1,5 @@
 // Fotopletismografia por camara: senal roja -> BPM
-// Logica: pasa-banda Butterworth 2º orden 0.7-4Hz (42-240 bpm) + peak detection
+// Logica: pasa-banda Butterworth 2º orden 0.7-4Hz (42-240 bpm) + peak detection + verificador espectral
 //
 // Filtro: Butterworth pasa-banda 2º orden forward-only (cascada HP 0.7Hz + LP 4Hz)
 //   Diseno bilineal (RBJ cookbook) con fs=fps, Q=0.7071 (Butterworth):
@@ -15,6 +15,11 @@
 // Outliers RR (paso 3): Hampel con MAD
 //   mediana = median(intervals), MAD = median(|v - mediana|), sigma = 1.4826*MAD
 //   Retiene solo intervalos con |v-mediana| <= HAMPEL_K * sigma (HAMPEL_K tunable, default 2.5)
+//
+// Verificador espectral (paso 4): DFT directa 0.7-4Hz paso 0.05Hz sobre la misma senal
+// filtrada. Compara bpm temporal vs pico espectral: delta<=5 -> bono +0.05 (min 1),
+// delta>5 -> pena *0.65 sin descarte (el umbral 0.60 de usePPG ya veta el resto).
+// Para independencia se descartan los primeros 2s del transitorio del Butterworth.
 
 // Umbral Hampel tunable (paso 3)
 const HAMPEL_K = 2.5;
@@ -22,6 +27,15 @@ const HAMPEL_K = 2.5;
 // Amplitud pulsatil minima (gate pared lisa) — std de señal filtrada (luma) minima para pulso real
 // Dedo tipico 1.5-2.0, pared lisa 0.4-0.6, dedo frio/debil 0.9-1.3 zona gris. Tunable arriba igual que HAMPEL_K / EXPOSURE_BIAS
 const PULSATILE_MIN_STD = 1.0;
+
+// Verificador espectral — tunables (mismo patron que HAMPEL_K / PULSATILE_MIN_STD)
+const SPECTRAL_FMIN = 0.7;
+const SPECTRAL_FMAX = 4.0;
+const SPECTRAL_STEP = 0.05;
+const SPECTRAL_SKIP_SEC = 2;
+const SPECTRAL_AGREE_BPM = 5;
+const SPECTRAL_BONUS = 0.05;
+const SPECTRAL_PENALTY_MULT = 0.65;
 
 function mean(arr) {
   if (!arr.length) return 0;
@@ -109,6 +123,57 @@ function hampelFilter(intervals) {
   const out = intervals.filter((v) => Math.abs(v - med) <= thr);
   // Si filtra demasiado, conservar original para no dejar ventana vacia
   return out.length >= 2 ? out : intervals;
+}
+
+export function estimateSpectralBPM(filtered, fps) {
+  if (!filtered || filtered.length < Math.round(fps * 5)) return { bpm: null, freq: null };
+  const fs = fps || 30;
+  const skip = Math.round(SPECTRAL_SKIP_SEC * fs);
+  const start = filtered.length > skip + 30 ? skip : 0;
+  const n = filtered.length - start;
+  if (n < 20) return { bpm: null, freq: null };
+  const twoPiDivFs = (2 * Math.PI) / fs;
+  let bestFreq = null;
+  let bestMag = -1;
+  let bestIdx = -1;
+  const mags = [];
+  const freqs = [];
+  let idx = 0;
+  for (let f = SPECTRAL_FMIN; f <= SPECTRAL_FMAX + 1e-9; f += SPECTRAL_STEP) {
+    let re = 0;
+    let im = 0;
+    const w = twoPiDivFs * f;
+    for (let i = 0; i < n; i++) {
+      const v = filtered[start + i];
+      const angle = w * i;
+      re += v * Math.cos(angle);
+      im += v * Math.sin(angle);
+    }
+    const mag = Math.sqrt(re * re + im * im);
+    mags.push(mag);
+    freqs.push(f);
+    if (mag > bestMag) {
+      bestMag = mag;
+      bestFreq = f;
+      bestIdx = idx;
+    }
+    idx++;
+  }
+  if (bestFreq == null || bestMag <= 1e-9) return { bpm: null, freq: null };
+  // Refino parabolico sobre magnitudes vecinas (misma clamp que picos)
+  if (bestIdx > 0 && bestIdx < mags.length - 1) {
+    const y0 = mags[bestIdx];
+    const y1 = mags[bestIdx - 1];
+    const y2 = mags[bestIdx + 1];
+    const denom = y1 - 2 * y0 + y2;
+    if (denom !== 0) {
+      let p = 0.5 * (y1 - y2) / denom;
+      if (p > 0.5) p = 0.5;
+      else if (p < -0.5) p = -0.5;
+      bestFreq += p * SPECTRAL_STEP;
+    }
+  }
+  return { bpm: bestFreq * 60, freq: bestFreq };
 }
 
 function findPeaks(signal, fps) {
@@ -234,7 +299,21 @@ export function calculateBPM(redMeans, fps) {
     return { bpm: null, confidence, error: "low_confidence", filteredStd: Number(filteredStd.toFixed(3)) };
   }
 
-  return { bpm, confidence, error: null, peaks: peaks.length, filteredStd: Number(filteredStd.toFixed(3)) };
+  // Verificador espectral (dominio frecuencia) — cross-validacion independiente
+  // Posicionado DESPUES de los gates para no mover su calibracion.
+  const spectral = estimateSpectralBPM(filtered, fps);
+  let finalConfidence = confidence;
+  let spectralBpm = spectral.bpm != null ? Number(spectral.bpm.toFixed(1)) : null;
+  let spectralDelta = spectral.bpm != null ? Math.abs(bpm - spectral.bpm) : null;
+  if (spectral.bpm != null) {
+    if (spectralDelta <= SPECTRAL_AGREE_BPM) {
+      finalConfidence = Math.min(1, confidence + SPECTRAL_BONUS);
+    } else {
+      finalConfidence = confidence * SPECTRAL_PENALTY_MULT;
+    }
+  }
+
+  return { bpm, confidence: finalConfidence, error: null, peaks: peaks.length, filteredStd: Number(filteredStd.toFixed(3)), spectralBpm, spectralDelta: spectralDelta != null ? Number(spectralDelta.toFixed(1)) : null };
 }
 
 export function getPPGErrorMessage(error, t) {
