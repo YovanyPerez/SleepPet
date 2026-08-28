@@ -85,6 +85,7 @@ Efectos en `AppContext`:
 | `sleep_pet_achievements` | ids desbloqueados | `AchievementStorage.js` |
 | `sleep_reminder_settings` | `{enabled, hour, minute}` | `ReminderStorage.js` |
 | SharedPrefs `sleep_reminder` | `sleepActive`, `followupCount/Max`, `followupTitle/Content` | nativo `ReminderModule` |
+| SharedPrefs `sleep_movement` | `{events, lastEpochIdx, score, epochs[]}` del detector nativo | nativo `SleepForegroundService` |
 
 Racha: `StreakService.computeStreakUpdate` (`STREAK_MIN_HOURS=3`, 1×/día, siestas <3h neutras).
 
@@ -108,8 +109,12 @@ sequenceDiagram
   Note over Ctx,FG: notificación persistente con tiempo + unlockCount
   FG-->>Ctx: tick cada 1s (useSleepSession)
   U->>SM: WAKE UP
-  SM->>Svc: finishSleepSession() -> discarta si <0.5h
-  Svc->>R: calculateSleepRewards (score 100-(goal-h)*10 - unlocks*5) -> coins/XP/streak/logros
+  SM->>Svc: finishSleepSession() -> descarta si <0.5h
+  alt horas < 3 (siesta)
+    Svc->>R: guarda en history (isNap:true) — 0 coins, 0 XP, sin logros, mascota intacta
+  else horas >= 3
+    Svc->>R: calculateSleepRewards (score 100-(goal-h)*10 - unlocks*5) -> coins/XP/streak/logros
+  end
   Ctx->>FG: stopForeground
 ```
 
@@ -118,13 +123,17 @@ sequenceDiagram
 ```mermaid
 graph LR
   A[UnlockAccessibilityService] -->|SCREEN_OFF arma| B
-  B -->|USER_PRESENT / WINDOW_STATE_CHANGED con debounce 2s| C[AccessibilityModule.checkForegroundApp]
-  C -->|PHONE_UNLOCKED| D[AccessibilityListener.js]
-  D --> E[AppContext startAccessibilityListener]
+  B -->|USER_PRESENT: resolver foreground a los 800ms| C{rootInActiveWindow}
+  C -->|SleepPet| X[no cuenta: filtro]
+  C -->|launcher / otra app / ""| D[AccessibilityModule.checkForegroundApp]
+  B -->|WINDOW_STATE_CHANGED app real sin keyguard| D
+  D -->|PHONE_UNLOCKED| E[AccessibilityListener.js]
   E -->|solo si sleepSessionStarted| F[unlockCount++ / unlockTimes[]]
   F --> G[SleepService.updateUnlockState]
   F --> H[NotificationService.updateUnlocks]
 ```
+
+- Decisión única por desbloqueo: `USER_PRESENT` difiere 800ms (`FOREGROUND_CHECK_DELAY_MS`) para que la app de destino tenga su ventana activa; si quedó en SleepPet no cuenta (antes se pasaba `""` y contaba todo). El armado se consume al resolver → navegaciones posteriores con pantalla encendida no cuentan. Debounce 2s + handler limpiado en `onUnbind`/`onDestroy`.
 
 ### 6.3 Fotopletismografía PPG
 
@@ -156,6 +165,30 @@ graph TD
 - `PET_IMAGES` auto-detectadas vía `require.context` en `assets/pets/`; añadir mascota = subir carpeta con 4 moods.
 - `PetService.PETS` deriva `available` de `AVAILABLE_PETS`.
 - `PetHappinessService`: `calculatePetHappiness` (+10/6/2/-12) + `decayPetHappiness` (1/h tras 6h gracia).
+
+### 6.6 Movimiento nocturno (acelerómetro)
+
+```mermaid
+graph TD
+  A[START SLEEP -> startNotification resume=false] --> B[SleepForegroundService]
+  B --> C[SensorManager TYPE_ACCELEROMETER SENSOR_DELAY_NORMAL]
+  C --> D[MovementDetector |mag-g| m/s²]
+  D --> E[Eventos: histéresis 0.60/0.30 + quiet 3s + dur mín 2s + cooldown 5s]
+  D --> F[Epochs 5min anclados a startTime + score = exceso/piso 0.15]
+  E & F --> G[SharedPreferences sleep_movement]
+  G -->|getMovementSummary| H[MovementService.js]
+  H --> I[SleepMode card poll 30s]
+  H --> J[finishSleep: merge a session -> sleep_history + clear]
+  B -->|resume=true AppContext restore| J2[carga prefs y continúa]
+```
+
+- **Fuente única:** el detector vive en `SleepForegroundService.kt` (clase interna `MovementDetector`); sin segundo servicio ni listener `expo-sensors` en JS. Funciona con pantalla apagada.
+- **Señal:** `|sqrt(x²+y²+z²) − STANDARD_GRAVITY|` en m/s², independiente de orientación; dt vía timestamps del sensor (ns, monótono); máquina de eventos sobre `SystemClock.elapsedRealtime()`.
+- **Métricas:** `movementEvents` (total), `movementScore` (promedio ponderado del exceso sobre piso 0.15 m/s² — medida interna de actividad, **no clínica**), `movementEpochs[]` = `{startTime, durationMs, movementScore, movementEvents}` cap 160 (~13h).
+- **Persistencia nativa:** SharedPreferences `sleep_movement` (`{events, lastEpochIdx, score, epochs[]}`) escrita al cerrar cada epoch y en flush terminal (`onDestroy`/stop); sobrevive muerte del proceso. `snapshot()` para JS **no muta estado** (el poll de 30s no fragmenta epochs).
+- **Resume:** `EXTRA_RESUME` en el intent — sesión nueva limpia prefs y arranca de cero; restore de `AppContext.loadData` pasa `resume=true`, el detector recarga prefs y continúa (el epoch parcial en curso al morir el proceso se pierde: <5 min documentado). Restart STICKY con `intent==null` no registra sensor (igual que hoy; la restauración real la hace JS al reabrir la app).
+- **JS:** `services/MovementService.js` (guard + fallback `{events:0,score:0,epochs:[]}` + `movementLevel(score,t)` solo presentación). `finishSleep` lee resumen tras `stopNotification`, lo adjunta a la sesión de `sleep_history` (`movementEvents/movementScore/movementEpochs`) y **limpia siempre** (también si la sesión <0.5h se descarta). Sesiones antiguas sin estos campos siguen funcionando (`?? 0/[]/null` en UI).
+- **UI:** card glass "Movimiento nocturno · N eventos" en SleepMode (poll 30s), metricCard condicional en Results (`12 eventos · Bajo/Medio/Alto`), icono `movement` (MCI walk). Statistics queda con datos listos para gráfica en fase 2. SleepCard sin cambios.
 
 ## 7. Capa nativa
 

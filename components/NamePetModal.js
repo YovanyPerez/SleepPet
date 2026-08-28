@@ -16,8 +16,8 @@ export default function NamePetModal({
   title,
   message,
   placeholder,
-  cancelLabel = "Cancel",
-  confirmLabel = "Save",
+  cancelLabel,
+  confirmLabel,
   onConfirm,
   onCancel,
 }) {

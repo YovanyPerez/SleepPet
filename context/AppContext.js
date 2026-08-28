@@ -284,7 +284,8 @@ export function AppProvider({ children }) {
           t.notificationTitle,
           t.notificationRunning,
           t.notificationTime,
-          t.notificationUnlocks
+          t.notificationUnlocks,
+          true
         );
 
         setSleepActive(true);

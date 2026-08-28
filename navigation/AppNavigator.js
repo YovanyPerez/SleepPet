@@ -39,6 +39,8 @@ export default function AppNavigator() {
 
     achievementPopup,
 
+    setAchievementPopup,
+
     language,
 
   } = useContext(AppContext);
@@ -149,6 +151,13 @@ export default function AppNavigator() {
         visible={achievementPopup.visible}
         title={achievementPopup.title}
         reward={achievementPopup.reward}
+        onHide={() =>
+          setAchievementPopup({
+            visible: false,
+            title: "",
+            reward: 0,
+          })
+        }
       />
 
     </>

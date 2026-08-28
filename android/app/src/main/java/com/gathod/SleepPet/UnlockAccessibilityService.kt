@@ -1,20 +1,27 @@
 package com.gathod.SleepPet
-
 import android.accessibilityservice.AccessibilityService
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 
 class UnlockAccessibilityService : AccessibilityService() {
 
     companion object {
+
         private const val SLEEPPET_PACKAGE = "com.gathod.SleepPet"
         private const val SYSTEM_UI = "com.android.systemui"
         private const val TAG = "UnlockA11y"
         private const val MIN_INTERVAL_MS = 2000L
+
+        // Delay para resolver qué app quedó en primer plano tras USER_PRESENT:
+        // en el instante del desbloqueo la keyguard recién se va y rootInActiveWindow
+        // puede apuntar a la app anterior. Tunable, validar con pruebas reales.
+        private const val FOREGROUND_CHECK_DELAY_MS = 800L
     }
 
     private var lastPackage = ""
@@ -22,6 +29,8 @@ class UnlockAccessibilityService : AccessibilityService() {
     private var armed = false
 
     private var lastCountTime = 0L
+
+    private val handler = Handler(Looper.getMainLooper())
 
     private val screenReceiver = object : BroadcastReceiver() {
 
@@ -41,7 +50,13 @@ class UnlockAccessibilityService : AccessibilityService() {
 
                     Log.d(TAG, "Usuario desbloqueó (USER_PRESENT)")
 
-                    countUnlock()
+                    // Se resuelve el paquete real tras un delay corto y se pasa a
+                    // countUnlock: si el usuario quedó en SleepPet, el filtro de
+                    // checkForegroundApp ya funciona (antes se pasaba "" y contaba siempre).
+                    handler.postDelayed(
+                        { countUnlock(foregroundPackage()) },
+                        FOREGROUND_CHECK_DELAY_MS
+                    )
 
                 }
 
@@ -73,6 +88,8 @@ class UnlockAccessibilityService : AccessibilityService() {
 
         Log.i(TAG, "Servicio desenlazado")
 
+        handler.removeCallbacksAndMessages(null)
+
         try {
 
             unregisterReceiver(screenReceiver)
@@ -88,6 +105,8 @@ class UnlockAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+
+        handler.removeCallbacksAndMessages(null)
 
         try {
 
@@ -123,13 +142,44 @@ class UnlockAccessibilityService : AccessibilityService() {
 
         }
 
+        // Decisión única por desbloqueo: se consume el armado aunque el paquete
+        // sea SleepPet (no cuenta ahora y tampoco cuentan navegaciones posteriores)
         armed = false
 
         lastCountTime = now
 
-        Log.i(TAG, "DESBLOQUEO contado en: $packageName")
+        if (packageName == SLEEPPET_PACKAGE) {
+
+            Log.i(TAG, "Desbloqueo en SleepPet: no se cuenta")
+
+        } else {
+
+            Log.i(TAG, "DESBLOQUEO contado en: $packageName")
+
+        }
 
         AccessibilityModule.checkForegroundApp(packageName)
+
+    }
+
+    /**
+     * Paquete de la ventana activa visible tras el desbloqueo, leído por el
+     * propio servicio de accesibilidad. "" si la transición aún no define
+     * ventana: en ese caso cuenta por defecto (comportamiento conservador).
+     */
+    private fun foregroundPackage(): String {
+
+        return try {
+
+            rootInActiveWindow?.packageName?.toString() ?: ""
+
+        } catch (e: Exception) {
+
+            Log.w(TAG, "No se pudo leer la ventana activa", e)
+
+            ""
+
+        }
 
     }
 

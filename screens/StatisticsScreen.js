@@ -15,6 +15,7 @@ import { AppContext } from "../context/AppContext";
 import {
   getTranslations,
 } from "../services/TranslationService";
+import { movementLevel } from "../services/MovementService";
 
 import StatCard from "../components/StatCard";
 import WeeklyBarChart from "../components/WeeklyBarChart";
@@ -105,6 +106,39 @@ export default function StatisticsScreen({ navigation }) {
     nights > 0
       ? Math.round(score / nights)
       : 0;
+
+  // Promedios de pulso y movimiento: solo sesiones que tienen el dato
+  // (retrocompatible) y sin siestas — son métricas nocturnas
+  const bpmSessions = history.filter(
+    (s) => typeof s.preSleepBpm === "number" && s.preSleepBpm > 0 && !s.isNap
+  );
+
+  const movementSessions = history.filter(
+    (s) => s.movementEvents != null && !s.isNap
+  );
+
+  const avgBpm =
+    bpmSessions.length > 0
+      ? Math.round(
+          bpmSessions.reduce((a, s) => a + s.preSleepBpm, 0) /
+            bpmSessions.length
+        )
+      : null;
+
+  const avgMovementEvents =
+    movementSessions.length > 0
+      ? Math.round(
+          (movementSessions.reduce((a, s) => a + s.movementEvents, 0) /
+            movementSessions.length) *
+            10
+        ) / 10
+      : null;
+
+  const avgMovementScore =
+    movementSessions.length > 0
+      ? movementSessions.reduce((a, s) => a + (s.movementScore ?? 0), 0) /
+        movementSessions.length
+      : null;
 
   const latestSession = history[0];
 
@@ -319,6 +353,30 @@ export default function StatisticsScreen({ navigation }) {
                       value={perfect}
                       sub={t.withoutWakeups}
                     />
+
+                    {
+                      avgBpm != null && (
+                        <StatCard
+                          icon="heartPulse"
+                          iconColor="#FF8FAB"
+                          label={t.statsAvgBpm}
+                          value={avgBpm}
+                          sub={t.statsAvgBpmSub}
+                        />
+                      )
+                    }
+
+                    {
+                      avgMovementEvents != null && (
+                        <StatCard
+                          icon="movement"
+                          iconColor="#C9B8E8"
+                          label={t.movementTitle}
+                          value={avgMovementEvents}
+                          sub={movementLevel(avgMovementScore, t) ?? t.statsPerNight}
+                        />
+                      )
+                    }
 
                   </View>
 

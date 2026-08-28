@@ -293,13 +293,12 @@ export default function SettingsScreen({ navigation }) {
 
       t.resetProgress,
 
-      t.resetConfirmation ||
-        "Are you sure? This action cannot be undone.",
+      t.resetConfirmation,
 
       [
 
         {
-          text: t.cancel || "Cancel",
+          text: t.cancel,
           style: "cancel",
         },
 
@@ -352,15 +351,15 @@ export default function SettingsScreen({ navigation }) {
 
             Alert.alert(
 
-              t.success || "Success",
+              t.success,
 
-              t.progressReset || "Progress has been reset.",
+              t.progressReset,
 
               [
 
                 {
 
-                  text: t.ok || "OK",
+                  text: t.ok,
 
                   onPress: () => {
 

@@ -380,8 +380,6 @@ export default {
 
   progressReset: "Your progress has been reset successfully.",
 
-  resetConfirmation: "Are you sure? This action cannot be undone.",
-
   madeBy: "Made by",
   version: "Version",
   back: "Back",
@@ -403,7 +401,6 @@ export default {
   howOldAreYou: "How old are you?",
   whatsYourGoal: "What's your goal?",
 
-  yourName: "Your name",
   agePlaceholder: "Age",
 
   finish: "Finish",
@@ -531,5 +528,25 @@ export default {
   ppgSearching: "Looking for a stable signal...",
   ppgStableProgress: "Stable signal {{sec}}s / 3s",
   ppgNoFlash: "Your camera has no flash — measurement may fail",
+
+  movementTitle: "Night movement",
+  movementEventsShort: "events",
+  movementNightHint: "Activity detected by the accelerometer",
+  movementLow: "Low",
+  movementMedium: "Medium",
+  movementHigh: "High",
+
+  resultsNapTag: "Nap — no rewards",
+
+  qualityExcellent: "Excellent",
+  qualityGood: "Good",
+  qualityAverage: "Average",
+  qualityPoor: "Poor",
+
+  ok: "OK",
+
+  statsAvgBpm: "Avg pulse",
+  statsAvgBpmSub: "before sleep",
+  statsPerNight: "per night",
 
 };

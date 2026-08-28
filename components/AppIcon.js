@@ -41,6 +41,7 @@ const ICONS = {
   warning: { family: "io", name: "warning" },
   heartPulse: { family: "mci", name: "heart-pulse" },
   heart: { family: "io", name: "heart" },
+  movement: { family: "mci", name: "walk" },
 };
 
 export default function AppIcon({

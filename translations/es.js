@@ -272,8 +272,6 @@ export default {
 
   resetProgress: "Reiniciar progreso",
 
-  resetConfirmation: "¿Estás seguro? Esta acción no se puede deshacer.",
-
   resetError: "Ocurrió un error al reiniciar tu progreso. Inténtalo de nuevo.",
 
   error: "Error",
@@ -404,7 +402,6 @@ export default {
   howOldAreYou: "¿Cuántos años tienes?",
   whatsYourGoal: "¿Cuál es tu objetivo?",
 
-  yourName: "Tu nombre",
   agePlaceholder: "Edad",
 
   finish: "Finalizar",
@@ -532,5 +529,25 @@ export default {
   ppgSearching: "Buscando una señal estable...",
   ppgStableProgress: "Señal estable {{sec}}s / 3s",
   ppgNoFlash: "Tu cámara no tiene flash — la medición puede fallar",
+
+  movementTitle: "Movimiento nocturno",
+  movementEventsShort: "eventos",
+  movementNightHint: "Actividad detectada por el acelerómetro",
+  movementLow: "Bajo",
+  movementMedium: "Medio",
+  movementHigh: "Alto",
+
+  resultsNapTag: "Siesta — sin recompensas",
+
+  qualityExcellent: "Excelente",
+  qualityGood: "Buena",
+  qualityAverage: "Regular",
+  qualityPoor: "Mala",
+
+  ok: "Aceptar",
+
+  statsAvgBpm: "Pulso promedio",
+  statsAvgBpmSub: "antes de dormir",
+  statsPerNight: "por noche",
 
 };

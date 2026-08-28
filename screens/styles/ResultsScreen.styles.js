@@ -90,6 +90,23 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
   },
 
+  napTag: {
+    alignSelf: "center",
+    backgroundColor: "rgba(201,184,232,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(201,184,232,0.35)",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 16,
+  },
+
+  napTagText: {
+    color: "#C9B8E8",
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+  },
+
   rewardRow: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -48,7 +48,7 @@ import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import { calculatePetHappiness } from "../services/PetHappinessService";
-import { computeStreakUpdate } from "../services/StreakService";
+import { computeStreakUpdate, STREAK_MIN_HOURS } from "../services/StreakService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
 
@@ -58,6 +58,11 @@ import {
   openNotificationSettings,
   getNotificationStatus,
 } from "../services/NotificationService";
+
+import {
+  getMovementSummary,
+  clearMovementSummary,
+} from "../services/MovementService";
 
 import {
   setSleepActive,
@@ -138,6 +143,8 @@ export default function SleepModeScreen({ navigation }) {
 
     unlockedAchievements,
     setUnlockedAchievements,
+
+    setAchievementPopup,
 
     sleepSessionStarted,
     setSleepSessionStarted,
@@ -248,6 +255,28 @@ export default function SleepModeScreen({ navigation }) {
     formatTime,
 
   } = useSleepSession();
+
+  // Movimiento nocturno en vivo: el detector corre en el servicio nativo,
+  // aquí solo se consulta el resumen cada 30s para la card (epochs de 5 min)
+  const [movementEvents, setMovementEvents] = useState(0);
+
+  useEffect(() => {
+    if (!running) {
+      setMovementEvents(0);
+      return;
+    }
+    let alive = true;
+    const fetchMovement = async () => {
+      const mv = await getMovementSummary();
+      if (alive) setMovementEvents(mv.events);
+    };
+    fetchMovement();
+    const id = setInterval(fetchMovement, 30000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [running]);
 
   function paddedTime() {
     const parts = formatTime().split(":");
@@ -382,7 +411,8 @@ export default function SleepModeScreen({ navigation }) {
         t.notificationTitle,
         t.notificationRunning,
         t.notificationTime,
-        t.notificationUnlocks
+        t.notificationUnlocks,
+        false
       );
 
       addLog("startNotification llamada");
@@ -424,6 +454,13 @@ export default function SleepModeScreen({ navigation }) {
 
     setSleepSessionStarted(false);
 
+    // Movimiento nocturno: leer el resumen del detector nativo (el servicio
+    // hace flush terminal al detenerse) y limpiarlo SIEMPRE, incluso si la
+    // sesión se descarta por corta, para no mezclar datos entre sesiones.
+    const movement = await getMovementSummary();
+
+    clearMovementSummary();
+
     if (result.hours < MIN_SLEEP_HOURS) {
 
       Alert.alert(t.sleepTooShort);
@@ -431,6 +468,10 @@ export default function SleepModeScreen({ navigation }) {
       return;
 
     }
+
+    // Siesta (<3h, mismo umbral que la racha): se guarda en historial pero
+    // sin recompensas — 0 monedas, 0 XP, sin logros, mascota intacta
+    const isNap = result.hours < STREAK_MIN_HOURS;
 
     const reward = calculateSleepRewards({
 
@@ -442,28 +483,34 @@ export default function SleepModeScreen({ navigation }) {
 
     });
 
-    setPetHappiness(
-      calculatePetHappiness(petHappiness, {
-        score: reward.score,
-        hours: result.hours,
-      })
-    );
+    // La felicidad de la mascota solo cambia con noches completas;
+    // una siesta no la castiga ni la mejora
+    if (!isNap) {
+      setPetHappiness(
+        calculatePetHappiness(petHappiness, {
+          score: reward.score,
+          hours: result.hours,
+        })
+      );
+    }
 
     setLastHappinessUpdate(Date.now());
 
-    const earnedXP = getXPFromQuality(
+    const earnedXP = isNap ? 0 : getXPFromQuality(
       reward.quality
     );
 
-    const levelData = addXP(
+    const levelData = isNap
+      ? { xp, level, levelUp: false }
+      : addXP(
 
-      level,
+        level,
 
-      xp,
+        xp,
 
-      earnedXP
+        earnedXP
 
-    );
+      );
 
     const session = {
 
@@ -481,7 +528,9 @@ export default function SleepModeScreen({ navigation }) {
 
       hours: Number(result.hours.toFixed(2)),
 
-      coins: reward.coins,
+      isNap,
+
+      coins: isNap ? 0 : reward.coins,
 
       mood: reward.mood,
 
@@ -505,6 +554,12 @@ export default function SleepModeScreen({ navigation }) {
 
       bpmSource: result.preSleepBpm ? "camera_ppg" : null,
 
+      movementEvents: movement.events ?? 0,
+
+      movementScore: movement.score ?? 0,
+
+      movementEpochs: movement.epochs ?? [],
+
       levelUp: levelData.levelUp,
 
       previousLevel: level,
@@ -523,7 +578,10 @@ export default function SleepModeScreen({ navigation }) {
 
     setLevel(levelData.level);
 
-    setPetMood(reward.mood);
+    // Una siesta no cambia el estado de ánimo de la mascota
+    if (!isNap) {
+      setPetMood(reward.mood);
+    }
 
     // Racha diaria (regla B): >=3h cuenta 1x/dia, siestas neutras,
     // saltarse un dia completo rompe la cadena
@@ -545,67 +603,73 @@ export default function SleepModeScreen({ navigation }) {
       ...sleepHistory,
     ]);
 
-    const achievementResult = unlockAchievements(
+    // Siestas no cuentan para logros: sin chequeo, sin popup, sin bonus
+    let finalCoins = coins + (isNap ? 0 : reward.coins);
 
-      {
+    if (!isNap) {
 
-        sessions: sleepHistory.length + 1,
+      const achievementResult = unlockAchievements(
 
-        streak: streakUpdate.streak,
+        {
 
-        coins:
+          // Las siestas no avanzan logros de sesiones
+          sessions:
 
-          coins + reward.coins,
+            sleepHistory.filter((s) => !s.isNap).length + 1,
 
-        level:
+          streak: streakUpdate.streak,
 
-          levelData.level,
+          coins:
 
-        pets:
+            coins + reward.coins,
 
-          ownedPets.length,
+          level:
 
-      },
+            levelData.level,
 
-      unlockedAchievements
+          pets:
 
-    );
+            ownedPets.length,
 
-    let finalCoins = coins + reward.coins;
+        },
 
-    if (achievementResult.newAchievements.length > 0) {
-
-      const updatedAchievements = [
-
-        ...unlockedAchievements,
-
-        ...achievementResult.newAchievements,
-
-      ];
-
-      setUnlockedAchievements(
-        updatedAchievements
-      );
-
-      await saveUnlockedAchievements(
-        updatedAchievements
-      );
-
-      finalCoins += achievementResult.rewardCoins;
-
-      Alert.alert(
-
-        `🏆 ${t.achievementUnlocked}`,
-
-        t.achievementReward.replace(
-
-          "{{coins}}",
-
-          achievementResult.rewardCoins
-
-        )
+        unlockedAchievements
 
       );
+
+      if (achievementResult.newAchievements.length > 0) {
+
+        const updatedAchievements = [
+
+          ...unlockedAchievements,
+
+          ...achievementResult.newAchievements,
+
+        ];
+
+        setUnlockedAchievements(
+          updatedAchievements
+        );
+
+        await saveUnlockedAchievements(
+          updatedAchievements
+        );
+
+        finalCoins += achievementResult.rewardCoins;
+
+        // Popup global de logro (overlay del AppNavigator) en lugar de Alert;
+        // nombres traducidos vía t[<key de traducción del logro>]
+        const achievementNames = achievementResult.newAchievements
+          .map((a) => t[a.title] ?? a.title)
+          .join(" · ");
+
+        setAchievementPopup({
+          visible: true,
+          title: achievementNames,
+          reward: achievementResult.rewardCoins,
+        });
+
+      }
 
     }
 
@@ -744,6 +808,32 @@ export default function SleepModeScreen({ navigation }) {
 
               <AppText style={styles.cardHint}>
                 {t.keepPhoneDown}
+              </AppText>
+
+            </View>
+
+            {/* Movimiento nocturno */}
+
+            <View style={styles.glassCard}>
+
+              <View style={styles.cardHeader}>
+
+                <View style={styles.cardIconCircle}>
+                  <AppIcon name="movement" size={22} color={NIGHT.end} />
+                </View>
+
+                <AppText style={styles.cardTitle}>
+                  {t.movementTitle}
+                </AppText>
+
+              </View>
+
+              <AppText style={styles.cardValue}>
+                {movementEvents} {t.movementEventsShort}
+              </AppText>
+
+              <AppText style={styles.cardHint}>
+                {t.movementNightHint}
               </AppText>
 
             </View>

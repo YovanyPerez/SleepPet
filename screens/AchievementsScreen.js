@@ -55,7 +55,8 @@ export default function AchievementsScreen({ navigation }) {
 
   const achievements = checkAchievements({
 
-    sessions: sleepHistory.length,
+    // Las siestas (<3h, session.isNap) no avanzan logros de sesiones
+    sessions: sleepHistory.filter((s) => !s.isNap).length,
 
     streak,
 

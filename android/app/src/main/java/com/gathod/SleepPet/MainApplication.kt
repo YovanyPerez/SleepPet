@@ -29,6 +29,8 @@ class MainApplication : Application(), ReactApplication {
             add(NotificationPackage())
 
             add(AccessibilityPackage())
+
+            add(MovementPackage())
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
             }

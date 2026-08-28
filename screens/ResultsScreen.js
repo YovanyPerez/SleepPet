@@ -22,6 +22,7 @@ import {
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
+import { movementLevel } from "../services/MovementService";
 import styles from "./styles/ResultsScreen.styles";
 
 export default function ResultsScreen({ navigation }) {
@@ -102,6 +103,28 @@ export default function ResultsScreen({ navigation }) {
 
   }
 
+  // La calidad es un enum interno en inglés ("Poor"/"Good"/...);
+  // aquí se traduce solo para display
+  function qualityText() {
+
+    switch (lastSleepSession.quality) {
+
+      case "Excellent":
+        return t.qualityExcellent;
+
+      case "Good":
+        return t.qualityGood;
+
+      case "Average":
+        return t.qualityAverage;
+
+      default:
+        return t.qualityPoor;
+
+    }
+
+  }
+
   return (
 
     <NightBackground moon={false}>
@@ -139,6 +162,16 @@ export default function ResultsScreen({ navigation }) {
 
             </View>
 
+            {/* Siesta: registro sin recompensas */}
+
+            {lastSleepSession.isNap && (
+              <View style={styles.napTag}>
+                <AppText style={styles.napTagText}>
+                  {t.resultsNapTag}
+                </AppText>
+              </View>
+            )}
+
             {/* Métricas */}
 
             <View style={styles.metricCard}>
@@ -168,7 +201,7 @@ export default function ResultsScreen({ navigation }) {
               </AppText>
 
               <AppText style={styles.metricValue}>
-                {lastSleepSession.quality}
+                {qualityText()}
               </AppText>
 
             </View>
@@ -204,6 +237,27 @@ export default function ResultsScreen({ navigation }) {
               </AppText>
 
             </View>
+
+            {lastSleepSession.movementEvents != null && (
+              <View style={styles.metricCard}>
+
+                <View style={styles.metricIcon}>
+                  <AppIcon name="movement" size={20} color="#C9B8E8" />
+                </View>
+
+                <AppText style={styles.metricLabel}>
+                  {t.movementTitle}
+                </AppText>
+
+                <AppText style={styles.metricValue}>
+                  {lastSleepSession.movementEvents} {t.movementEventsShort}
+                  {lastSleepSession.movementScore != null && movementLevel(lastSleepSession.movementScore, t)
+                    ? ` · ${movementLevel(lastSleepSession.movementScore, t)}`
+                    : ""}
+                </AppText>
+
+              </View>
+            )}
 
             <View style={styles.metricCard}>
 

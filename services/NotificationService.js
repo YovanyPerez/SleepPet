@@ -9,7 +9,8 @@ export function startNotification(
   title,
   running,
   time,
-  unlocks
+  unlocks,
+  resumeMovement = false
 ) {
   NotificationModule?.startNotification(
     startTime,
@@ -18,7 +19,8 @@ export function startNotification(
     title,
     running,
     time,
-    unlocks
+    unlocks,
+    resumeMovement
   );
 }
 

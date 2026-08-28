@@ -97,7 +97,8 @@ class NotificationModule(
         notificationTitle: String,
         notificationContent: String,
         timeLabel: String,
-        unlockLabel: String
+        unlockLabel: String,
+        resumeMovement: Boolean
     ) {
         val reactContext = reactApplicationContext
 
@@ -125,6 +126,10 @@ class NotificationModule(
         intent.putExtra(SleepForegroundService.EXTRA_CONTENT, notificationContent)
         intent.putExtra(SleepForegroundService.EXTRA_TIME_LABEL, timeLabel)
         intent.putExtra(SleepForegroundService.EXTRA_UNLOCK_LABEL, unlockLabel)
+        intent.putExtra(
+            SleepForegroundService.EXTRA_RESUME,
+            resumeMovement
+        )
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

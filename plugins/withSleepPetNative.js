@@ -20,6 +20,7 @@ const PACKAGE_ADDS = [
   "add(AccessibilityPackage())",
   "add(NotificationPackage())",
   "add(ReminderPackage())",
+  "add(MovementPackage())",
 ];
 
 function hasPermission(manifest, name) {

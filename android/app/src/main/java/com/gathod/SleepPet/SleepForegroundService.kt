@@ -6,19 +6,35 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import java.util.Collections
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.roundToLong
+import kotlin.math.sqrt
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Mantiene viva la sesión de sueño en segundo plano.
  * Una notificación "ongoing" normal NO conserva el proceso;
  * este foreground service sí, y así el listener de accesibilidad
  * sigue contando los desbloqueos del teléfono.
+ *
+ * Además captura el acelerómetro (TYPE_ACCELEROMETER) durante la sesión
+ * para medir movimiento nocturno: eventos + epochs de 5 min + score.
+ * El procesamiento vive aquí (no en JS) para seguir funcionando con la
+ * pantalla apagada y sin UI de React Native activa.
  */
 class SleepForegroundService : Service() {
 
@@ -33,6 +49,26 @@ class SleepForegroundService : Service() {
         const val EXTRA_CONTENT = "content"
         const val EXTRA_TIME_LABEL = "timeLabel"
         const val EXTRA_UNLOCK_LABEL = "unlockLabel"
+        const val EXTRA_RESUME = "resumeMovement"
+
+        // Persistencia de movimiento (sobrevive muerte del proceso)
+        const val MOVEMENT_PREFS_NAME = "sleep_movement"
+        const val MOVEMENT_PREFS_KEY = "movement_summary"
+
+        // ===========================
+        // Tunables del detector de movimiento (patrón PPG: arriba, documentados)
+        // Unidades reales del sensor: m/s² (SensorManager.STANDARD_GRAVITY = 9.80665).
+        // Valores iniciales razonables, NO clínicamente validados: calibrar con
+        // pruebas reales (teléfono quieto vs movimiento manual).
+        // ===========================
+        const val MOVEMENT_START_THRESHOLD = 0.60f  // |mag-g| (m/s²) por encima -> inicia evento (ruido quieto típico <0.15)
+        const val MOVEMENT_END_THRESHOLD = 0.30f    // histéresis: debajo de esto la actividad se considera terminada
+        const val MOVEMENT_QUIET_MS = 3000L         // silencio continuo para cerrar un evento
+        const val MIN_MOVEMENT_DURATION_MS = 2000L  // evento válido >= 2s (un pico aislado no cuenta)
+        const val MOVEMENT_COOLDOWN_MS = 5000L      // mínimo tiempo entre eventos contados (anti fragmentación)
+        const val MOVEMENT_EPOCH_MS = 300000L       // epoch de 5 min, anclado al startTime de la sesión
+        const val MOVEMENT_NOISE_FLOOR = 0.15f      // piso (m/s²) para el score: se acumula solo el exceso
+        const val MOVEMENT_MAX_EPOCHS = 160         // cap ~13h; los más viejos se descartan
 
         private var instance: SleepForegroundService? = null
 
@@ -66,6 +102,46 @@ class SleepForegroundService : Service() {
                 Intent(context, SleepForegroundService::class.java)
             )
         }
+
+        /**
+         * Resumen de movimiento para JS (MovementModule).
+         * Si el servicio está vivo usa el detector en memoria (snapshot que NO
+         * muta estado, incluye el epoch parcial en curso — evita la carrera con
+         * stopNotification). Si no, lee las SharedPreferences del último flush.
+         */
+        fun movementSnapshot(context: Context): JSONObject {
+            val live = instance?.movementDetector
+            if (live != null) {
+                return live.snapshot()
+            }
+            return try {
+                val raw = context
+                    .getSharedPreferences(MOVEMENT_PREFS_NAME, Context.MODE_PRIVATE)
+                    .getString(MOVEMENT_PREFS_KEY, null)
+                raw?.let { JSONObject(it) }
+                    ?: emptyMovementJson()
+            } catch (e: Exception) {
+                emptyMovementJson()
+            }
+        }
+
+        fun clearMovementSummary(context: Context) {
+            try {
+                context
+                    .getSharedPreferences(MOVEMENT_PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .remove(MOVEMENT_PREFS_KEY)
+                    .apply()
+                Log.i("Movement", "resumen de sesión limpiado")
+            } catch (e: Exception) {
+                recordError("movementClear", e.toString())
+            }
+        }
+
+        private fun emptyMovementJson(): JSONObject = JSONObject()
+            .put("events", 0)
+            .put("score", 0.0)
+            .put("epochs", JSONArray())
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -73,6 +149,8 @@ class SleepForegroundService : Service() {
         override fun run() {
             if (!running) return
             try {
+                // cierre de epochs por tiempo (aunque el sensor no entregue samples)
+                movementDetector?.tick()
                 val manager = getSystemService(
                     Context.NOTIFICATION_SERVICE
                 ) as NotificationManager
@@ -87,6 +165,7 @@ class SleepForegroundService : Service() {
     private var startTime: Long = 0L
     private var unlocks = 0
     private var running = false
+    private var movementDetector: MovementDetector? = null
 
     private var channelName = ""
     private var channelDescription = ""
@@ -119,6 +198,7 @@ class SleepForegroundService : Service() {
         notificationContent = intent.getStringExtra(EXTRA_CONTENT) ?: ""
         timeLabel = intent.getStringExtra(EXTRA_TIME_LABEL) ?: ""
         unlockLabel = intent.getStringExtra(EXTRA_UNLOCK_LABEL) ?: ""
+        val resumeMovement = intent.getBooleanExtra(EXTRA_RESUME, false)
 
         createChannel()
 
@@ -137,17 +217,67 @@ class SleepForegroundService : Service() {
 
         handler.postDelayed(updateRunnable, 1000)
 
+        startMovement(resumeMovement)
+
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         running = false
+        stopMovement()
         instance = null
         handler.removeCallbacksAndMessages(null)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    /**
+     * Registra el acelerómetro solo mientras la sesión está activa.
+     * resume=true  -> restaurar epochs/eventos de SharedPreferences y continuar
+     * resume=false -> sesión nueva: descartar restos anteriores y empezar de cero
+     */
+    private fun startMovement(resume: Boolean) {
+        try {
+            val sensorManager =
+                getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+            val sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            if (sensorManager == null || sensor == null) {
+                Log.w("Movement", "acelerómetro no disponible en este dispositivo")
+                return
+            }
+            if (!resume) {
+                getSharedPreferences(MOVEMENT_PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .remove(MOVEMENT_PREFS_KEY)
+                    .apply()
+            }
+            movementDetector = MovementDetector(startTime, resume)
+            sensorManager.registerListener(
+                movementDetector,
+                sensor,
+                SensorManager.SENSOR_DELAY_NORMAL
+            )
+            Log.i("Movement", "sensor registrado resume=$resume")
+        } catch (e: Exception) {
+            recordError("movementStart", e.toString())
+        }
+    }
+
+    /** Desregistra el listener y hace flush terminal (cierra epoch parcial + prefs). */
+    private fun stopMovement() {
+        val detector = movementDetector
+        movementDetector = null
+        if (detector == null) return
+        try {
+            (getSystemService(Context.SENSOR_SERVICE) as? SensorManager)
+                ?.unregisterListener(detector)
+        } catch (e: Exception) {
+            recordError("movementStop", e.toString())
+        }
+        detector.flush()
+        Log.i("Movement", "sensor desregistrado")
+    }
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -172,7 +302,7 @@ class SleepForegroundService : Service() {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
-        return String.format("%d:%02d:%02d", hours, minutes, seconds)
+        return String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
     }
 
     private fun buildNotification(): Notification {
@@ -190,5 +320,276 @@ class SleepForegroundService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
+    }
+
+    /**
+     * Detector de movimiento nocturno (v1 determinista, sin ML).
+     *
+     * Señal: movimiento = |sqrt(x²+y²+z²) - gravedad| en m/s²
+     * (el acelerómetro entrega m/s² e incluye ~1g de gravedad quieto;
+     * no depende de la orientación del teléfono).
+     *
+     * Eventos: histéresis inicio/fin + duración mínima + cooldown,
+     * sobre reloj monótono (SystemClock.elapsedRealtime) para no verse
+     * afectado por saltos de reloj de pared.
+     *
+     * Epochs: ventanas de 5 min ancladas al startTime de la sesión
+     * (determinista: idx = (ahora - startTime) / EPOCH_MS), resumen por epoch:
+     * {startTime, durationMs, movementScore, movementEvents}.
+     *
+     * Score de epoch: promedio del exceso sobre el piso de ruido (m/s²),
+     * fórmula simple y transparente — NO es una métrica clínica.
+     *
+     * Persistencia: SharedPreferences "sleep_movement" con
+     * {events, lastEpochIdx, epochs:[...]} — escrita al cerrar cada epoch y
+     * en el flush terminal; sobrevive muerte del proceso.
+     */
+    private inner class MovementDetector(
+        private val sessionStartMs: Long,
+        resume: Boolean
+    ) : SensorEventListener {
+
+        // Estado de sesión
+        private var totalEvents = 0
+        private var epochEvents = 0
+        private var epochScoreAccum = 0.0 // suma de max(0, movimiento - piso) * dt (m/s²·s)
+        private var lastClosedIdx = -1L
+        private var lastSampleNs = 0L
+
+        // Estado del evento en curso (reloj monótono)
+        private var inEvent = false
+        private var eventStartMono = 0L
+        private var eventLastActiveMono = 0L
+        private var lastCountedEndMono = 0L
+
+        private val closedEpochs = JSONArray()
+
+        init {
+            if (resume) {
+                try {
+                    val raw = getSharedPreferences(
+                        MOVEMENT_PREFS_NAME,
+                        Context.MODE_PRIVATE
+                    ).getString(MOVEMENT_PREFS_KEY, null)
+                    if (raw != null) {
+                        val saved = JSONObject(raw)
+                        totalEvents = saved.optInt("events", 0)
+                        lastClosedIdx = saved.optLong("lastEpochIdx", -1L)
+                        val arr = saved.optJSONArray("epochs")
+                        if (arr != null) {
+                            for (i in 0 until arr.length()) {
+                                closedEpochs.put(arr.get(i))
+                            }
+                        }
+                        Log.i(
+                            "Movement",
+                            "sesión restaurada eventos=$totalEvents " +
+                                "epochs=${closedEpochs.length()} lastEpochIdx=$lastClosedIdx"
+                        )
+                    }
+                } catch (e: Exception) {
+                    recordError("movementRestore", e.toString())
+                }
+            }
+        }
+
+        override fun onSensorChanged(event: SensorEvent) {
+            if (!running) return
+            try {
+                val nowMono = SystemClock.elapsedRealtime()
+
+                val x = if (event.values.isNotEmpty()) event.values[0] else 0f
+                val y = if (event.values.size > 1) event.values[1] else 0f
+                val z = if (event.values.size > 2) event.values[2] else 0f
+                val magnitude = sqrt(x * x + y * y + z * z)
+                // movimiento = desviación respecto a la gravedad (m/s²), sin importar orientación
+                val movement = abs(magnitude - SensorManager.STANDARD_GRAVITY)
+
+                // dt del sample vía timestamps del sensor (ns, monótono)
+                val dtSec = if (lastSampleNs > 0L) {
+                    (event.timestamp - lastSampleNs).coerceAtLeast(0L) / 1_000_000_000.0
+                } else {
+                    0.0
+                }
+                lastSampleNs = event.timestamp
+                if (dtSec > 1.0) return // hueco anómalo: no contaminar el score
+
+                maybeCloseEpochs(System.currentTimeMillis())
+
+                // score: solo el exceso sobre el piso de ruido
+                val excess = movement - MOVEMENT_NOISE_FLOOR
+                if (excess > 0f) {
+                    epochScoreAccum += excess * dtSec
+                }
+
+                // Máquina de estados del evento
+                if (!inEvent) {
+                    if (movement > MOVEMENT_START_THRESHOLD) {
+                        inEvent = true
+                        eventStartMono = nowMono
+                        eventLastActiveMono = nowMono
+                        Log.i("Movement", "evento iniciado")
+                    }
+                } else {
+                    if (movement > MOVEMENT_END_THRESHOLD) {
+                        eventLastActiveMono = nowMono
+                    } else if (nowMono - eventLastActiveMono >= MOVEMENT_QUIET_MS) {
+                        val durationMs = eventLastActiveMono - eventStartMono
+                        inEvent = false
+                        Log.i(
+                            "Movement",
+                            "evento terminado duracion=${durationMs}ms"
+                        )
+                        val spaced = lastCountedEndMono == 0L ||
+                            (eventStartMono - lastCountedEndMono) >= MOVEMENT_COOLDOWN_MS
+                        if (durationMs >= MIN_MOVEMENT_DURATION_MS && spaced) {
+                            totalEvents += 1
+                            epochEvents += 1
+                            lastCountedEndMono = nowMono
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                recordError("movementSample", e.toString())
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+            // sin uso
+        }
+
+        /** Cierre de epochs por tiempo (tick de 1s del servicio). */
+        fun tick() {
+            maybeCloseEpochs(System.currentTimeMillis())
+        }
+
+        /**
+         * Resumen para JS. NO muta estado: incluye el epoch parcial en curso
+         * como elemento extra de la lista, sin cerrarlo ni escribir prefs
+         * (así el polling cada 30s no fragmenta los epochs).
+         */
+        fun snapshot(): JSONObject {
+            val nowWall = System.currentTimeMillis()
+            val idx = currentEpochIdx(nowWall)
+            val all = JSONArray()
+            for (i in 0 until closedEpochs.length()) {
+                all.put(closedEpochs.get(i))
+            }
+            if (idx > lastClosedIdx) {
+                val startWall = sessionStartMs + idx * MOVEMENT_EPOCH_MS
+                val duration = (nowWall - startWall)
+                    .coerceIn(0L, MOVEMENT_EPOCH_MS)
+                val score = epochScoreFor(duration)
+                all.put(
+                    JSONObject()
+                        .put("startTime", startWall)
+                        .put("durationMs", duration)
+                        .put("movementScore", round3(score))
+                        .put("movementEvents", epochEvents)
+                )
+            }
+            return JSONObject()
+                .put("events", totalEvents)
+                .put("score", round3(weightedScore(all)))
+                .put("epochs", all)
+        }
+
+        /** Flush terminal: cierra el epoch parcial y escribe prefs (onDestroy/stop). */
+        fun flush() {
+            try {
+                val nowWall = System.currentTimeMillis()
+                val idx = currentEpochIdx(nowWall)
+                if (idx > lastClosedIdx) {
+                    val startWall = sessionStartMs + idx * MOVEMENT_EPOCH_MS
+                    val duration = (nowWall - startWall)
+                        .coerceIn(0L, MOVEMENT_EPOCH_MS)
+                    closeEpoch(idx, duration)
+                } else {
+                    writePrefs()
+                }
+                Log.i(
+                    "Movement",
+                    "resumen de sesión eventos=$totalEvents epochs=${closedEpochs.length()}"
+                )
+            } catch (e: Exception) {
+                recordError("movementFlush", e.toString())
+            }
+        }
+
+        private fun currentEpochIdx(nowWallMs: Long): Long {
+            val elapsed = nowWallMs - sessionStartMs
+            return if (elapsed <= 0) 0L else elapsed / MOVEMENT_EPOCH_MS
+        }
+
+        private fun maybeCloseEpochs(nowWallMs: Long) {
+            val idx = currentEpochIdx(nowWallMs)
+            // cerrar epochs completos que quedaron atrás (normalmente 0 iteraciones)
+            while (idx > lastClosedIdx + 1) {
+                closeEpoch(lastClosedIdx + 1, MOVEMENT_EPOCH_MS)
+            }
+        }
+
+        private fun closeEpoch(idx: Long, durationMs: Long) {
+            val startWall = sessionStartMs + idx * MOVEMENT_EPOCH_MS
+            val score = epochScoreFor(durationMs)
+            val obj = JSONObject()
+                .put("startTime", startWall)
+                .put("durationMs", durationMs)
+                .put("movementScore", round3(score))
+                .put("movementEvents", epochEvents)
+            closedEpochs.put(obj)
+            if (closedEpochs.length() > MOVEMENT_MAX_EPOCHS) {
+                closedEpochs.remove(0)
+            }
+            Log.i(
+                "Movement",
+                "epoch completado eventos=$epochEvents " +
+                    "score=${String.format(Locale.US, "%.3f", score)} idx=$idx"
+            )
+            epochEvents = 0
+            epochScoreAccum = 0.0
+            lastClosedIdx = idx
+            writePrefs()
+        }
+
+        private fun epochScoreFor(durationMs: Long): Double {
+            return if (durationMs > 0) {
+                epochScoreAccum / (durationMs / 1000.0)
+            } else {
+                0.0
+            }
+        }
+
+        private fun weightedScore(epochs: JSONArray): Double {
+            var weighted = 0.0
+            var totalMs = 0L
+            for (i in 0 until epochs.length()) {
+                val e = epochs.getJSONObject(i)
+                val d = e.optLong("durationMs", 0L)
+                weighted += e.optDouble("movementScore", 0.0) * d
+                totalMs += d
+            }
+            return if (totalMs > 0) weighted / totalMs else 0.0
+        }
+
+        private fun round3(value: Double): Double {
+            return (value * 1000).roundToLong() / 1000.0
+        }
+
+        private fun writePrefs() {
+            try {
+                val json = JSONObject()
+                    .put("events", totalEvents)
+                    .put("lastEpochIdx", lastClosedIdx)
+                    .put("score", round3(weightedScore(closedEpochs)))
+                    .put("epochs", closedEpochs)
+                getSharedPreferences(MOVEMENT_PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(MOVEMENT_PREFS_KEY, json.toString())
+                    .apply()
+            } catch (e: Exception) {
+                recordError("movementWrite", e.toString())
+            }
+        }
     }
 }
