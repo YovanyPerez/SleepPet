@@ -171,10 +171,10 @@ graph TD
 ```mermaid
 graph TD
   A[START SLEEP -> startNotification resume=false] --> B[SleepForegroundService]
-  B --> C[SensorManager TYPE_ACCELEROMETER SENSOR_DELAY_NORMAL]
+  B --> C[SensorManager TYPE_ACCELEROMETER SENSOR_DELAY_GAME ~50Hz]
   C --> D[MovementDetector |mag-g| m/s²]
-  D --> E[Eventos: histéresis 0.60/0.30 + quiet 3s + dur mín 2s + cooldown 5s]
-  D --> F[Epochs 5min anclados a startTime + score = exceso/piso 0.15]
+  D --> E[Eventos: histéresis 0.32/0.15 + quiet 2s + dur mín 1.2s + cooldown 3s]
+  D --> F[Epochs 5min anclados a startTime + score = exceso/piso 0.10]
   E & F --> G[SharedPreferences sleep_movement]
   G -->|getMovementSummary| H[MovementService.js]
   H --> I[SleepMode card poll 30s]
@@ -183,7 +183,7 @@ graph TD
 ```
 
 - **Fuente única:** el detector vive en `SleepForegroundService.kt` (clase interna `MovementDetector`); sin segundo servicio ni listener `expo-sensors` en JS. Funciona con pantalla apagada.
-- **Señal:** `|sqrt(x²+y²+z²) − STANDARD_GRAVITY|` en m/s², independiente de orientación; dt vía timestamps del sensor (ns, monótono); máquina de eventos sobre `SystemClock.elapsedRealtime()`.
+- **Señal:** `|sqrt(x²+y²+z²) − STANDARD_GRAVITY|` en m/s², independiente de orientación; dt vía timestamps del sensor (ns, monótono); máquina de eventos sobre `SystemClock.elapsedRealtime()`. Umbrales calibrados para teléfono sobre la cama (giros suaves 0.25-0.45 m/s²); el tick de 1s loguea el **pico máximo por minuto** (`Movement: pico del minuto: X.XX`, minutos quietos <0.10-0.15) para recalibrar con la colocación real.
 - **Métricas:** `movementEvents` (total), `movementScore` (promedio ponderado del exceso sobre piso 0.15 m/s² — medida interna de actividad, **no clínica**), `movementEpochs[]` = `{startTime, durationMs, movementScore, movementEvents}` cap 160 (~13h).
 - **Persistencia nativa:** SharedPreferences `sleep_movement` (`{events, lastEpochIdx, score, epochs[]}`) escrita al cerrar cada epoch y en flush terminal (`onDestroy`/stop); sobrevive muerte del proceso. `snapshot()` para JS **no muta estado** (el poll de 30s no fragmenta epochs).
 - **Resume:** `EXTRA_RESUME` en el intent — sesión nueva limpia prefs y arranca de cero; restore de `AppContext.loadData` pasa `resume=true`, el detector recarga prefs y continúa (el epoch parcial en curso al morir el proceso se pierde: <5 min documentado). Restart STICKY con `intent==null` no registra sensor (igual que hoy; la restauración real la hace JS al reabrir la app).

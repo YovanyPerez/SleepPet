@@ -58,16 +58,17 @@ class SleepForegroundService : Service() {
         // ===========================
         // Tunables del detector de movimiento (patrón PPG: arriba, documentados)
         // Unidades reales del sensor: m/s² (SensorManager.STANDARD_GRAVITY = 9.80665).
-        // Valores iniciales razonables, NO clínicamente validados: calibrar con
-        // pruebas reales (teléfono quieto vs movimiento manual).
+        // Valores calibrados para teléfono sobre la cama (giros suaves del cuerpo
+        // generan 0.25-0.45); NO clínicamente validados: recalibrar con pruebas reales
+        // usando el log "pico del minuto".
         // ===========================
-        const val MOVEMENT_START_THRESHOLD = 0.60f  // |mag-g| (m/s²) por encima -> inicia evento (ruido quieto típico <0.15)
-        const val MOVEMENT_END_THRESHOLD = 0.30f    // histéresis: debajo de esto la actividad se considera terminada
-        const val MOVEMENT_QUIET_MS = 3000L         // silencio continuo para cerrar un evento
-        const val MIN_MOVEMENT_DURATION_MS = 2000L  // evento válido >= 2s (un pico aislado no cuenta)
-        const val MOVEMENT_COOLDOWN_MS = 5000L      // mínimo tiempo entre eventos contados (anti fragmentación)
+        const val MOVEMENT_START_THRESHOLD = 0.32f  // |mag-g| (m/s²) por encima -> inicia evento (antes 0.60: no captaba giros de cama)
+        const val MOVEMENT_END_THRESHOLD = 0.15f    // histéresis: debajo de esto la actividad se considera terminada
+        const val MOVEMENT_QUIET_MS = 2000L         // silencio continuo para cerrar un evento
+        const val MIN_MOVEMENT_DURATION_MS = 1200L  // evento válido >= 1.2s (cuenta voltereos breves)
+        const val MOVEMENT_COOLDOWN_MS = 3000L      // mínimo tiempo entre eventos contados (anti fragmentación)
         const val MOVEMENT_EPOCH_MS = 300000L       // epoch de 5 min, anclado al startTime de la sesión
-        const val MOVEMENT_NOISE_FLOOR = 0.15f      // piso (m/s²) para el score: se acumula solo el exceso
+        const val MOVEMENT_NOISE_FLOOR = 0.10f      // piso (m/s²) para el score: se acumula solo el exceso
         const val MOVEMENT_MAX_EPOCHS = 160         // cap ~13h; los más viejos se descartan
 
         private var instance: SleepForegroundService? = null
@@ -256,7 +257,10 @@ class SleepForegroundService : Service() {
             sensorManager.registerListener(
                 movementDetector,
                 sensor,
-                SensorManager.SENSOR_DELAY_NORMAL
+                // GAME (~50Hz) en vez de NORMAL (~5Hz): a 5Hz la rampa de un giro
+                // breve cae entre samples y el pico real no se ve. Coste de batería
+                // despreciable frente a la pantalla apagada.
+                SensorManager.SENSOR_DELAY_GAME
             )
             Log.i("Movement", "sensor registrado resume=$resume")
         } catch (e: Exception) {
@@ -362,6 +366,10 @@ class SleepForegroundService : Service() {
         private var eventLastActiveMono = 0L
         private var lastCountedEndMono = 0L
 
+        // Pico máximo por minuto (calibración de umbrales con el log)
+        private var minutePeak = 0f
+        private var lastMinuteIdx = -1L
+
         private val closedEpochs = JSONArray()
 
         init {
@@ -404,6 +412,10 @@ class SleepForegroundService : Service() {
                 val magnitude = sqrt(x * x + y * y + z * z)
                 // movimiento = desviación respecto a la gravedad (m/s²), sin importar orientación
                 val movement = abs(magnitude - SensorManager.STANDARD_GRAVITY)
+
+                if (movement > minutePeak) {
+                    minutePeak = movement
+                }
 
                 // dt del sample vía timestamps del sensor (ns, monótono)
                 val dtSec = if (lastSampleNs > 0L) {
@@ -458,9 +470,24 @@ class SleepForegroundService : Service() {
             // sin uso
         }
 
-        /** Cierre de epochs por tiempo (tick de 1s del servicio). */
+        /** Cierre de epochs por tiempo (tick de 1s del servicio) + log de calibración. */
         fun tick() {
-            maybeCloseEpochs(System.currentTimeMillis())
+            val nowMs = System.currentTimeMillis()
+
+            // Pico máximo del minuto anterior: sirve para calibrar los umbrales
+            // con la cama/colocación real (minutos quietos deberían dar <0.10-0.15)
+            val minuteIdx = (nowMs - sessionStartMs) / 60000L
+            if (lastMinuteIdx >= 0 && minuteIdx > lastMinuteIdx) {
+                Log.i(
+                    "Movement",
+                    "pico del minuto: " +
+                        String.format(Locale.US, "%.2f", minutePeak)
+                )
+                minutePeak = 0f
+            }
+            lastMinuteIdx = minuteIdx
+
+            maybeCloseEpochs(nowMs)
         }
 
         /**
