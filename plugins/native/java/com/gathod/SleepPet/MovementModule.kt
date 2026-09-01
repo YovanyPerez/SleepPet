@@ -41,10 +41,28 @@ class MovementModule(
                     }
                 )
             }
+            // Fase A Smart Sleep: ventanas 30s
+            val smartOut = WritableNativeArray()
+            val smartWindows: JSONArray = json.optJSONArray("smartWindows") ?: JSONArray()
+            for (i in 0 until smartWindows.length()) {
+                val w = smartWindows.getJSONObject(i)
+                smartOut.pushMap(
+                    WritableNativeMap().apply {
+                        putDouble("startTime", w.optDouble("startTime", 0.0))
+                        putDouble("durationMs", w.optDouble("durationMs", 0.0))
+                        putDouble("avgMovement", w.optDouble("avgMovement", 0.0))
+                        putDouble("maxMovement", w.optDouble("maxMovement", 0.0))
+                        putDouble("avgExcess", w.optDouble("avgExcess", 0.0))
+                        putInt("samples", w.optInt("samples", 0))
+                    }
+                )
+            }
             val map = WritableNativeMap().apply {
                 putInt("events", json.optInt("events", 0))
                 putDouble("score", json.optDouble("score", 0.0))
                 putArray("epochs", epochsOut)
+                putArray("smartWindows", smartOut)
+                putInt("smartWindowMs", json.optInt("smartWindowMs", 30000))
             }
             promise.resolve(map)
         } catch (e: Exception) {

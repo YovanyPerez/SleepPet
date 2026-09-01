@@ -3,13 +3,15 @@ import { NativeModules } from "react-native";
 const { MovementModule } = NativeModules;
 
 // Fallback seguro si el módulo nativo no está (build viejo o módulo no registrado)
-const EMPTY_SUMMARY = { events: 0, score: 0, epochs: [] };
+const EMPTY_SUMMARY = { events: 0, score: 0, epochs: [], smartWindows: [], smartWindowMs: 30000 };
 
 function normalizeSummary(raw) {
   return {
     events: typeof raw?.events === "number" ? raw.events : 0,
     score: typeof raw?.score === "number" ? raw.score : 0,
     epochs: Array.isArray(raw?.epochs) ? raw.epochs : [],
+    smartWindows: Array.isArray(raw?.smartWindows) ? raw.smartWindows : [],
+    smartWindowMs: typeof raw?.smartWindowMs === "number" ? raw.smartWindowMs : 30000,
   };
 }
 

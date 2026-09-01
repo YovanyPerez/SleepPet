@@ -71,6 +71,11 @@ class SleepForegroundService : Service() {
         const val MOVEMENT_NOISE_FLOOR = 0.10f      // piso (m/s²) para el score: se acumula solo el exceso
         const val MOVEMENT_MAX_EPOCHS = 160         // cap ~13h; los más viejos se descartan
 
+        // Fase A Smart Sleep: ventanas de 30s (Fase 2) — observable sin mic ni reglas,
+        // paralelas a los epochs de 5 min (estos últimos se mantienen intactos).
+        const val SMART_WINDOW_MS = 30000L            // ventana configurable 30s
+        const val SMART_MAX_WINDOWS = 960             // cap ~8h (960*30s)
+
         private var instance: SleepForegroundService? = null
 
         private val errorLog = Collections.synchronizedList(
@@ -143,6 +148,8 @@ class SleepForegroundService : Service() {
             .put("events", 0)
             .put("score", 0.0)
             .put("epochs", JSONArray())
+            .put("smartWindows", JSONArray())
+            .put("smartWindowMs", SMART_WINDOW_MS)
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -360,6 +367,14 @@ class SleepForegroundService : Service() {
         private var lastClosedIdx = -1L
         private var lastSampleNs = 0L
 
+        // Fase A Smart Sleep: ventanas 30s
+        private var lastClosedSmartIdx = -1L
+        private var smartWindowSum = 0.0   // suma de movement (m/s²) sin piso, para avg
+        private var smartWindowMax = 0f
+        private var smartWindowSamples = 0
+        private var smartWindowAccumExcess = 0.0 // suma exceso sobre piso * dt, para avgExcess
+        private val closedSmartWindows = JSONArray()
+
         // Estado del evento en curso (reloj monótono)
         private var inEvent = false
         private var eventStartMono = 0L
@@ -389,10 +404,19 @@ class SleepForegroundService : Service() {
                                 closedEpochs.put(arr.get(i))
                             }
                         }
+                        // Fase A Smart Sleep
+                        lastClosedSmartIdx = saved.optLong("lastSmartWindowIdx", -1L)
+                        val sArr = saved.optJSONArray("smartWindows")
+                        if (sArr != null) {
+                            for (i in 0 until sArr.length()) {
+                                closedSmartWindows.put(sArr.get(i))
+                            }
+                        }
                         Log.i(
                             "Movement",
                             "sesión restaurada eventos=$totalEvents " +
-                                "epochs=${closedEpochs.length()} lastEpochIdx=$lastClosedIdx"
+                                "epochs=${closedEpochs.length()} lastEpochIdx=$lastClosedIdx " +
+                                "smartWindows=${closedSmartWindows.length()} lastSmartIdx=$lastClosedSmartIdx"
                         )
                     }
                 } catch (e: Exception) {
@@ -426,7 +450,18 @@ class SleepForegroundService : Service() {
                 lastSampleNs = event.timestamp
                 if (dtSec > 1.0) return // hueco anómalo: no contaminar el score
 
-                maybeCloseEpochs(System.currentTimeMillis())
+                val nowWallForWindow = System.currentTimeMillis()
+                maybeCloseEpochs(nowWallForWindow)
+                maybeCloseSmartWindows(nowWallForWindow)
+
+                // Fase A Smart Sleep: acumulo para ventana 30s
+                smartWindowSum += movement
+                smartWindowSamples += 1
+                if (movement > smartWindowMax) smartWindowMax = movement
+                val excessSmart = movement - MOVEMENT_NOISE_FLOOR
+                if (excessSmart > 0f) {
+                    smartWindowAccumExcess += excessSmart * dtSec
+                }
 
                 // score: solo el exceso sobre el piso de ruido
                 val excess = movement - MOVEMENT_NOISE_FLOOR
@@ -488,12 +523,14 @@ class SleepForegroundService : Service() {
             lastMinuteIdx = minuteIdx
 
             maybeCloseEpochs(nowMs)
+            maybeCloseSmartWindows(nowMs)
         }
 
         /**
          * Resumen para JS. NO muta estado: incluye el epoch parcial en curso
          * como elemento extra de la lista, sin cerrarlo ni escribir prefs
          * (así el polling cada 30s no fragmenta los epochs).
+         * Fase A añade smartWindows 30s con la misma semántica no-mutante.
          */
         fun snapshot(): JSONObject {
             val nowWall = System.currentTimeMillis()
@@ -515,28 +552,62 @@ class SleepForegroundService : Service() {
                         .put("movementEvents", epochEvents)
                 )
             }
+            // Smart windows 30s — snapshot no-mutante
+            val sIdx = currentSmartIdx(nowWall)
+            val smartAll = JSONArray()
+            for (i in 0 until closedSmartWindows.length()) {
+                smartAll.put(closedSmartWindows.get(i))
+            }
+            if (sIdx > lastClosedSmartIdx) {
+                val sStart = sessionStartMs + sIdx * SMART_WINDOW_MS
+                val sDuration = (nowWall - sStart).coerceIn(0L, SMART_WINDOW_MS)
+                val avg = if (smartWindowSamples > 0) smartWindowSum / smartWindowSamples else 0.0
+                val avgExcess = if (sDuration > 0) smartWindowAccumExcess / (sDuration / 1000.0) else 0.0
+                smartAll.put(
+                    JSONObject()
+                        .put("startTime", sStart)
+                        .put("durationMs", sDuration)
+                        .put("avgMovement", round3(avg))
+                        .put("maxMovement", round3(smartWindowMax.toDouble()))
+                        .put("avgExcess", round3(avgExcess))
+                        .put("samples", smartWindowSamples)
+                )
+            }
             return JSONObject()
                 .put("events", totalEvents)
                 .put("score", round3(weightedScore(all)))
                 .put("epochs", all)
+                .put("smartWindows", smartAll)
+                .put("smartWindowMs", SMART_WINDOW_MS)
         }
 
         /** Flush terminal: cierra el epoch parcial y escribe prefs (onDestroy/stop). */
         fun flush() {
             try {
                 val nowWall = System.currentTimeMillis()
+                var didWrite = false
                 val idx = currentEpochIdx(nowWall)
                 if (idx > lastClosedIdx) {
                     val startWall = sessionStartMs + idx * MOVEMENT_EPOCH_MS
                     val duration = (nowWall - startWall)
                         .coerceIn(0L, MOVEMENT_EPOCH_MS)
                     closeEpoch(idx, duration)
-                } else {
+                    didWrite = true
+                }
+                val sIdx = currentSmartIdx(nowWall)
+                if (sIdx > lastClosedSmartIdx) {
+                    val sStart = sessionStartMs + sIdx * SMART_WINDOW_MS
+                    val sDuration = (nowWall - sStart).coerceIn(0L, SMART_WINDOW_MS)
+                    closeSmartWindow(sIdx, sDuration)
+                    didWrite = true
+                }
+                if (!didWrite) {
                     writePrefs()
                 }
                 Log.i(
                     "Movement",
-                    "resumen de sesión eventos=$totalEvents epochs=${closedEpochs.length()}"
+                    "resumen de sesión eventos=$totalEvents epochs=${closedEpochs.length()} " +
+                        "smartWindows=${closedSmartWindows.length()}"
                 )
             } catch (e: Exception) {
                 recordError("movementFlush", e.toString())
@@ -554,6 +625,54 @@ class SleepForegroundService : Service() {
             while (idx > lastClosedIdx + 1) {
                 closeEpoch(lastClosedIdx + 1, MOVEMENT_EPOCH_MS)
             }
+        }
+
+        private fun currentSmartIdx(nowWallMs: Long): Long {
+            val elapsed = nowWallMs - sessionStartMs
+            return if (elapsed <= 0) 0L else elapsed / SMART_WINDOW_MS
+        }
+
+        private fun maybeCloseSmartWindows(nowWallMs: Long) {
+            val idx = currentSmartIdx(nowWallMs)
+            while (idx > lastClosedSmartIdx + 1) {
+                closeSmartWindow(lastClosedSmartIdx + 1, SMART_WINDOW_MS)
+            }
+        }
+
+        private fun closeSmartWindow(idx: Long, durationMs: Long) {
+            val startWall = sessionStartMs + idx * SMART_WINDOW_MS
+            val avg = if (smartWindowSamples > 0) smartWindowSum / smartWindowSamples else 0.0
+            val avgExcess = if (durationMs > 0) smartWindowAccumExcess / (durationMs / 1000.0) else 0.0
+            val obj = JSONObject()
+                .put("startTime", startWall)
+                .put("durationMs", durationMs)
+                .put("avgMovement", round3(avg))
+                .put("maxMovement", round3(smartWindowMax.toDouble()))
+                .put("avgExcess", round3(avgExcess))
+                .put("samples", smartWindowSamples)
+            closedSmartWindows.put(obj)
+            if (closedSmartWindows.length() > SMART_MAX_WINDOWS) {
+                closedSmartWindows.remove(0)
+            }
+            // Clasificación temporal para log: LOW <0.10, MED <0.25, HIGH >=0.25 (calibración Fase A)
+            val level = when {
+                avg < 0.10 -> "LOW"
+                avg < 0.25 -> "MED"
+                else -> "HIGH"
+            }
+            Log.i(
+                "SmartSleep",
+                "ventana 30s #$idx avg=${String.format(Locale.US, "%.3f", avg)} " +
+                    "max=${String.format(Locale.US, "%.3f", smartWindowMax)} " +
+                    "avgExcess=${String.format(Locale.US, "%.3f", avgExcess)} " +
+                    "samples=$smartWindowSamples $level"
+            )
+            smartWindowSum = 0.0
+            smartWindowMax = 0f
+            smartWindowSamples = 0
+            smartWindowAccumExcess = 0.0
+            lastClosedSmartIdx = idx
+            writePrefs()
         }
 
         private fun closeEpoch(idx: Long, durationMs: Long) {
@@ -610,6 +729,9 @@ class SleepForegroundService : Service() {
                     .put("lastEpochIdx", lastClosedIdx)
                     .put("score", round3(weightedScore(closedEpochs)))
                     .put("epochs", closedEpochs)
+                    .put("smartWindows", closedSmartWindows)
+                    .put("lastSmartWindowIdx", lastClosedSmartIdx)
+                    .put("smartWindowMs", SMART_WINDOW_MS)
                 getSharedPreferences(MOVEMENT_PREFS_NAME, Context.MODE_PRIVATE)
                     .edit()
                     .putString(MOVEMENT_PREFS_KEY, json.toString())

@@ -259,16 +259,24 @@ export default function SleepModeScreen({ navigation }) {
   // Movimiento nocturno en vivo: el detector corre en el servicio nativo,
   // aquí solo se consulta el resumen cada 30s para la card (epochs de 5 min)
   const [movementEvents, setMovementEvents] = useState(0);
+  // Fase A Smart Sleep: ventanas 30s (debug temporal para validar logcat)
+  const [smartWindows, setSmartWindows] = useState([]);
+  const [smartWindowMs, setSmartWindowMs] = useState(30000);
 
   useEffect(() => {
     if (!running) {
       setMovementEvents(0);
+      setSmartWindows([]);
       return;
     }
     let alive = true;
     const fetchMovement = async () => {
       const mv = await getMovementSummary();
-      if (alive) setMovementEvents(mv.events);
+      if (alive) {
+        setMovementEvents(mv.events);
+        setSmartWindows(Array.isArray(mv.smartWindows) ? mv.smartWindows : []);
+        if (typeof mv.smartWindowMs === "number") setSmartWindowMs(mv.smartWindowMs);
+      }
     };
     fetchMovement();
     const id = setInterval(fetchMovement, 30000);
@@ -560,6 +568,11 @@ export default function SleepModeScreen({ navigation }) {
 
       movementEpochs: movement.epochs ?? [],
 
+      // Fase A Smart Sleep: ventanas 30s (sin mic, sin reglas) — guardado para debug/validación
+      smartWindows: movement.smartWindows ?? [],
+
+      smartWindowMs: movement.smartWindowMs ?? 30000,
+
       levelUp: levelData.levelUp,
 
       previousLevel: level,
@@ -837,6 +850,50 @@ export default function SleepModeScreen({ navigation }) {
               </AppText>
 
             </View>
+
+            {/* Fase A Smart Sleep debug — temporal solo para validar logcat, sin mic ni reglas */}
+            {running && (
+              <View style={[styles.glassCard, { borderStyle: "dashed", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardIconCircle, { backgroundColor: "rgba(255,209,102,0.18)" }]}>
+                    <AppIcon name="night" size={22} color={NIGHT.yellow} />
+                  </View>
+                  <AppText style={styles.cardTitle}>Smart Sleep (Fase A)</AppText>
+                  <View style={{ marginLeft: 8, backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
+                    <AppText style={{ color: "rgba(255,255,255,0.85)", fontSize: 10, fontFamily: "Nunito_700Bold" }}>DEBUG</AppText>
+                  </View>
+                </View>
+                {(() => {
+                  const n = smartWindows.length;
+                  const last = n > 0 ? smartWindows[n - 1] : null;
+                  const avg = last ? last.avgMovement : 0;
+                  const max = last ? last.maxMovement : 0;
+                  const level = avg < 0.10 ? "LOW" : avg < 0.25 ? "MED" : "HIGH";
+                  const levelColor = level === "LOW" ? "#8FA3FF" : level === "MED" ? "#FFD166" : "#FF8FAB";
+                  return (
+                    <>
+                      <AppText style={styles.cardValue}>
+                        {n} ventanas · {Math.round(smartWindowMs / 1000)}s
+                      </AppText>
+                      <AppText style={styles.cardHint}>
+                        {n > 0 ? `última avg ${avg.toFixed(3)} · max ${max.toFixed(2)} · ${level}` : "esperando primera ventana 30s…"}
+                      </AppText>
+                      {n > 0 && (
+                        <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: levelColor }} />
+                          <AppText style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, fontFamily: "Nunito_600SemiBold" }}>
+                            {level === "LOW" ? "quieto" : level === "MED" ? "movimiento leve" : "movimiento alto"} · ver logcat SmartSleep
+                          </AppText>
+                        </View>
+                      )}
+                      <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Nunito_400Regular", marginTop: 6, textAlign: "center" }}>
+                        Estimación por movimiento · no médica · Fase A sin mic
+                      </AppText>
+                    </>
+                  );
+                })()}
+              </View>
+            )}
 
             {/* Mensaje motivacional */}
 
