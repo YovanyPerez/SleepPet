@@ -178,6 +178,28 @@ class SleepForegroundService : Service() {
     private var running = false
     private var movementDetector: MovementDetector? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var sensorManagerRef: SensorManager? = null
+    private var accelerometerSensor: Sensor? = null
+
+    // KeepAlive para Doze: re-registra sensor cada 2 min para evitar silencio 0 samples visto 21:42
+    private val sensorKeepAliveRunnable = object : Runnable {
+        override fun run() {
+            if (!running) return
+            try {
+                val detector = movementDetector
+                val sm = sensorManagerRef
+                val sensor = accelerometerSensor
+                if (detector != null && sm != null && sensor != null) {
+                    sm.unregisterListener(detector)
+                    sm.registerListener(detector, sensor, SensorManager.SENSOR_DELAY_GAME)
+                    Log.i("SmartSleep", "sensor keepAlive re-registrado")
+                }
+            } catch (e: Exception) {
+                recordError("sensorKeepAlive", e.toString())
+            }
+            handler.postDelayed(this, 120000)
+        }
+    }
 
     private var channelName = ""
     private var channelDescription = ""
@@ -242,6 +264,7 @@ class SleepForegroundService : Service() {
         }
 
         handler.postDelayed(updateRunnable, 1000)
+        handler.postDelayed(sensorKeepAliveRunnable, 120000)
 
         startMovement(resumeMovement)
 
@@ -252,12 +275,15 @@ class SleepForegroundService : Service() {
         super.onDestroy()
         running = false
         stopMovement()
+        handler.removeCallbacks(sensorKeepAliveRunnable)
         try {
             wakeLock?.let { if (it.isHeld) it.release() }
         } catch (e: Exception) {
             recordError("wakeLockRelease", e.toString())
         }
         wakeLock = null
+        sensorManagerRef = null
+        accelerometerSensor = null
         instance = null
         handler.removeCallbacksAndMessages(null)
     }
@@ -284,6 +310,8 @@ class SleepForegroundService : Service() {
                     .remove(MOVEMENT_PREFS_KEY)
                     .apply()
             }
+            sensorManagerRef = sensorManager
+            accelerometerSensor = sensor
             movementDetector = MovementDetector(startTime, resume)
             sensorManager.registerListener(
                 movementDetector,
