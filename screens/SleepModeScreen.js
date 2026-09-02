@@ -868,7 +868,7 @@ export default function SleepModeScreen({ navigation }) {
                   const last = n > 0 ? smartWindows[n - 1] : null;
                   const avg = last ? last.avgMovement : 0;
                   const max = last ? last.maxMovement : 0;
-                  const level = avg < 0.10 ? "LOW" : avg < 0.25 ? "MED" : "HIGH";
+                  const level = avg < 0.93 ? "LOW" : avg < 1.02 ? "MED" : "HIGH";
                   const levelColor = level === "LOW" ? "#8FA3FF" : level === "MED" ? "#FFD166" : "#FF8FAB";
                   return (
                     <>

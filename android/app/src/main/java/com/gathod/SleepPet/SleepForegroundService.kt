@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -64,6 +65,8 @@ class SleepForegroundService : Service() {
         // ===========================
         const val MOVEMENT_START_THRESHOLD = 0.32f  // |mag-g| (m/s²) por encima -> inicia evento (antes 0.60: no captaba giros de cama)
         const val MOVEMENT_END_THRESHOLD = 0.15f    // histéresis: debajo de esto la actividad se considera terminada
+        // NOTA calibración dispositivo rsmzu8mztspndyj7: baseline quieto ~0.88-0.94 (no 0.07) visto 21:06-21:07 HIGH constante + evento nunca cierra
+        // → este dispositivo reporta ~0.9 offset. Para Fase A se mantienen umbrales, pero SmartSleep LEVEL se recalibra abajo.
         const val MOVEMENT_QUIET_MS = 2000L         // silencio continuo para cerrar un evento
         const val MIN_MOVEMENT_DURATION_MS = 1200L  // evento válido >= 1.2s (cuenta voltereos breves)
         const val MOVEMENT_COOLDOWN_MS = 3000L      // mínimo tiempo entre eventos contados (anti fragmentación)
@@ -174,6 +177,7 @@ class SleepForegroundService : Service() {
     private var unlocks = 0
     private var running = false
     private var movementDetector: MovementDetector? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     private var channelName = ""
     private var channelDescription = ""
@@ -223,6 +227,20 @@ class SleepForegroundService : Service() {
 
         running = true
 
+        // Fase A Smart Sleep: partial wake lock para que el acelerómetro
+        // siga entregando muestras con pantalla apagada/Doze (TYPE_ACCELEROMETER
+        // no es wake-up). Sin esto el sensor se silencia ~8 min tras screen off
+        // (visto 21:08 0 samples).
+        try {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SleepPet:SmartSleep")
+            wakeLock?.setReferenceCounted(false)
+            wakeLock?.acquire(12 * 60 * 60 * 1000L) // max 12h, release en onDestroy
+            Log.i("SmartSleep", "wakeLock adquirido")
+        } catch (e: Exception) {
+            recordError("wakeLock", e.toString())
+        }
+
         handler.postDelayed(updateRunnable, 1000)
 
         startMovement(resumeMovement)
@@ -234,6 +252,12 @@ class SleepForegroundService : Service() {
         super.onDestroy()
         running = false
         stopMovement()
+        try {
+            wakeLock?.let { if (it.isHeld) it.release() }
+        } catch (e: Exception) {
+            recordError("wakeLockRelease", e.toString())
+        }
+        wakeLock = null
         instance = null
         handler.removeCallbacksAndMessages(null)
     }
@@ -654,10 +678,12 @@ class SleepForegroundService : Service() {
             if (closedSmartWindows.length() > SMART_MAX_WINDOWS) {
                 closedSmartWindows.remove(0)
             }
-            // Clasificación temporal para log: LOW <0.10, MED <0.25, HIGH >=0.25 (calibración Fase A)
+            // Clasificación temporal para log Fase A recalibrada para rsmzu8mztspndyj7:
+            // baseline quieto ~0.88-0.94 visto 21:06-21:07 (antes 0.07 en otro dispositivo)
+            // Umbrales provisionales LOW<0.93 MED<1.02 HIGH>=1.02 — recalibración manual Fase A
             val level = when {
-                avg < 0.10 -> "LOW"
-                avg < 0.25 -> "MED"
+                avg < 0.93 -> "LOW"
+                avg < 1.02 -> "MED"
                 else -> "HIGH"
             }
             Log.i(

@@ -14,6 +14,7 @@ const PERMISSIONS = [
   "android.permission.QUERY_ALL_PACKAGES",
   "android.permission.SCHEDULE_EXACT_ALARM",
   "android.permission.CAMERA",
+  "android.permission.WAKE_LOCK",
 ];
 
 const PACKAGE_ADDS = [
