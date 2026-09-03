@@ -24,6 +24,7 @@ const PACKAGE_ADDS = [
   "add(NotificationPackage())",
   "add(ReminderPackage())",
   "add(MovementPackage())",
+  "add(SmartAlarmPackage())",
 ];
 
 function hasPermission(manifest, name) {

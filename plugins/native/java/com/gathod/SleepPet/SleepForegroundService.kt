@@ -98,6 +98,10 @@ class SleepForegroundService : Service() {
         const val SMART_AUDIO_RMS_THRESHOLD = 0.015f
         const val SMART_LIGHT_AVG_THRESHOLD = 0.90f
 
+        // Fase C: SmartAlarm ventana favorable
+        const val SMART_ALARM_PREFS_NAME = "smart_alarm"
+        const val SMART_ALARM_KEY = "smart_alarm_config"
+
         private var instance: SleepForegroundService? = null
 
         private val errorLog = Collections.synchronizedList(
@@ -172,6 +176,57 @@ class SleepForegroundService : Service() {
             .put("epochs", JSONArray())
             .put("smartWindows", JSONArray())
             .put("smartWindowMs", SMART_WINDOW_MS)
+
+        fun setSmartAlarmConfig(context: Context, enabled: Boolean, hour: Int, minute: Int, windowMin: Int) {
+            try {
+                context.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("enabled", enabled)
+                    .putInt("hour", hour)
+                    .putInt("minute", minute)
+                    .putInt("windowMin", windowMin)
+                    .apply()
+                Log.i("SmartAlarm", "config guardada enabled=$enabled ${hour}:${minute} window ${windowMin}m")
+            } catch (e: Exception) {
+                recordError("smartAlarmSet", e.toString())
+            }
+        }
+
+        fun getSmartAlarmConfig(context: Context): JSONObject {
+            return try {
+                val prefs = context.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
+                JSONObject()
+                    .put("enabled", prefs.getBoolean("enabled", false))
+                    .put("hour", prefs.getInt("hour", 7))
+                    .put("minute", prefs.getInt("minute", 0))
+                    .put("windowMin", prefs.getInt("windowMin", 30))
+            } catch (e: Exception) {
+                JSONObject().put("enabled", false).put("hour", 7).put("minute", 0).put("windowMin", 30)
+            }
+        }
+
+        fun isInSmartAlarmWindow(context: Context, nowMs: Long): Boolean {
+            return try {
+                val prefs = context.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
+                if (!prefs.getBoolean("enabled", false)) return false
+                val hour = prefs.getInt("hour", 7)
+                val minute = prefs.getInt("minute", 0)
+                val windowMin = prefs.getInt("windowMin", 30)
+                val cal = java.util.Calendar.getInstance()
+                cal.timeInMillis = nowMs
+                val target = java.util.Calendar.getInstance()
+                target.timeInMillis = nowMs
+                target.set(java.util.Calendar.HOUR_OF_DAY, hour)
+                target.set(java.util.Calendar.MINUTE, minute)
+                target.set(java.util.Calendar.SECOND, 0)
+                target.set(java.util.Calendar.MILLISECOND, 0)
+                if (target.timeInMillis <= nowMs) return false
+                val windowStart = target.timeInMillis - windowMin * 60 * 1000L
+                nowMs in windowStart..target.timeInMillis
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -939,6 +994,17 @@ class SleepForegroundService : Service() {
                 Log.i("SmartAudio", "ventana 30s #$idx rms=${String.format(Locale.US, "%.4f", audioRms)} zcr=${String.format(Locale.US, "%.4f", audioZcr)} samples=$audioWindowSamples stage=$smoothed")
             } else {
                 Log.i("SmartAudio", "ventana 30s #$idx NO_AUDIO stage=$smoothed")
+            }
+            // Fase C: SmartAlarm ventana favorable
+            try {
+                if (isInSmartAlarmWindow(this@SleepForegroundService, startWall) && smoothed == "LIGHT" && confidence >= 0.6) {
+                    Log.i("SmartAlarm", "momento favorable LIGHT en ventana SmartAlarm idx=$idx conf=${String.format(Locale.US, "%.2f", confidence)}")
+                    // TODO Fase C: disparar alarma progresiva (sonido suave → vibración). Por ahora solo log.
+                } else if (isInSmartAlarmWindow(this@SleepForegroundService, startWall)) {
+                    Log.i("SmartAlarm", "en ventana SmartAlarm pero stage=$smoothed conf=${String.format(Locale.US, "%.2f", confidence)} no favorable")
+                }
+            } catch (e: Exception) {
+                recordError("smartAlarmCheck", e.toString())
             }
             smartWindowSum = 0.0
             smartWindowMax = 0f
