@@ -140,6 +140,17 @@ export default function StatisticsScreen({ navigation }) {
         movementSessions.length
       : null;
 
+  // Fase C Smart Sleep: sesiones con estimatedStages (ventanas 30s WAKE/LIGHT/DEEP)
+  const smartSessions = history.filter(
+    (s) => s.estimatedStages && typeof s.estimatedStages.wake === "number" && !s.isNap
+  );
+  let avgWake = null, avgLight = null, avgDeep = null;
+  if (smartSessions.length > 0) {
+    avgWake = Math.round(smartSessions.reduce((a, s) => a + (s.estimatedStages.wake ?? 0), 0) / smartSessions.length);
+    avgLight = Math.round(smartSessions.reduce((a, s) => a + (s.estimatedStages.light ?? 0), 0) / smartSessions.length);
+    avgDeep = Math.round(smartSessions.reduce((a, s) => a + (s.estimatedStages.deep ?? 0), 0) / smartSessions.length);
+  }
+
   const latestSession = history[0];
 
   const latestSessionHasChart =
@@ -378,7 +389,60 @@ export default function StatisticsScreen({ navigation }) {
                       )
                     }
 
+                    {
+                      smartSessions.length > 0 && (
+                        <>
+                          <StatCard
+                            icon="night"
+                            iconColor="#8FA3FF"
+                            label={(t.smartSleepDeep ?? "Sueño profundo*")}
+                            value={`${avgDeep} min`}
+                            sub={(t.smartSleepAvgSub ?? "*estimado")}
+                          />
+                          <StatCard
+                            icon="night"
+                            iconColor="#FFD166"
+                            label={(t.smartSleepLight ?? "Sueño ligero*")}
+                            value={`${avgLight} min`}
+                            sub={(t.smartSleepAvgSub ?? "*estimado")}
+                          />
+                          <StatCard
+                            icon="movement"
+                            iconColor="#FF8FAB"
+                            label={(t.smartSleepWake ?? "Despierto*")}
+                            value={`${avgWake} min`}
+                            sub={(t.smartSleepAvgSub ?? "*estimado")}
+                          />
+                        </>
+                      )
+                    }
+
                   </View>
+
+                  {/* Hipnograma estimado última noche */}
+                  {latestSession?.smartWindows?.length > 0 && (
+                    <View style={{ marginTop: 16 }}>
+                      <SectionHeader icon="night" title={t.smartSleepHipnogram ?? "Hipnograma estimado*"} />
+                      <View style={{ backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}>
+                        <View style={{ flexDirection: "row", height: 60, alignItems: "flex-end", gap: 2 }}>
+                          {latestSession.smartWindows.slice(-48).map((w, idx) => {
+                            const stage = w.stage ?? "LIGHT";
+                            const h = stage === "DEEP" ? 18 : stage === "LIGHT" ? 36 : 60;
+                            const col = stage === "DEEP" ? "#8FA3FF" : stage === "LIGHT" ? "#FFD166" : "#FF8FAB";
+                            return <View key={idx} style={{ flex: 1, height: h, backgroundColor: col, borderRadius: 2, opacity: 0.85 }} />;
+                          })}
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 6 }}>
+                          <AppText style={{ color: "#FF8FAB", fontSize: 10, fontFamily: "Nunito_600SemiBold" }}>WAKE</AppText>
+                          <AppText style={{ color: "#FFD166", fontSize: 10, fontFamily: "Nunito_600SemiBold" }}>LIGHT</AppText>
+                          <AppText style={{ color: "#8FA3FF", fontSize: 10, fontFamily: "Nunito_600SemiBold" }}>DEEP</AppText>
+                        </View>
+                        <AppText style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, textAlign: "center", marginTop: 4 }}>
+                          {t.smartSleepDisclaimerSmall ?? "*Estimación por reglas movimiento+audio, no diagnóstico médico"}
+                        </AppText>
+                      </View>
+                    </View>
+                  )}
 
                   {/* Motivación */}
 

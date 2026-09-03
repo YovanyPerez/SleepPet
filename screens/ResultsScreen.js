@@ -293,6 +293,25 @@ export default function ResultsScreen({ navigation }) {
 
             </View>
 
+            {lastSleepSession.estimatedStages && (
+              <View style={styles.metricCard}>
+                <View style={styles.metricIcon}>
+                  <AppIcon name="night" size={20} color="#8FA3FF" />
+                </View>
+                <AppText style={styles.metricLabel}>
+                  {(t.smartSleepHipnogram ?? "Sueño estimado*")}
+                </AppText>
+                <AppText style={styles.metricValue}>
+                  {`${lastSleepSession.estimatedStages.deep ?? 0}m ${t.smartSleepDeep ?? "prof."} · ${lastSleepSession.estimatedStages.light ?? 0}m ${t.smartSleepLight ?? "lig."} · ${lastSleepSession.estimatedStages.wake ?? 0}m ${t.smartSleepWake ?? "desp."}`}
+                </AppText>
+              </View>
+            )}
+            {lastSleepSession.estimatedStages && (
+              <AppText style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, textAlign: "center", marginTop: -8, marginBottom: 8 }}>
+                {t.smartSleepDisclaimerSmall ?? "*Estimación por reglas movimiento+audio, no diagnóstico médico"}
+              </AppText>
+            )}
+
             {/* Recompensas */}
 
             <View style={styles.rewardRow}>

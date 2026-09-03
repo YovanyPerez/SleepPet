@@ -481,6 +481,21 @@ export default {
   reminderFollowUpTitle: "🌙 Sigues despierto?",
   reminderFollowUpContent: "Llevas 15 min despierto — tu mascota te espera para dormir",
 
+  smartAlarmTitle: "Smart Alarm",
+  smartAlarmDesc: "Despertar en fase ligera dentro de ventana",
+  smartAlarmWindowHint: "Ventana favorable",
+  smartAlarmWindowDesc: "Si tu sueño está en fase ligera entre {{start}} y {{end}}, SmartAlarm intentará despertarte en momento favorable.",
+  smartAlarmDisclaimer: "*Estimación por reglas, no diagnóstico médico. Siempre suena a la hora objetivo si no hay momento favorable.",
+  smartAlarmNoWindow: "Sin ventana favorable esta noche",
+  smartAlarmFavorable: "Momento favorable detectado",
+
+  smartSleepDeep: "Sueño profundo*",
+  smartSleepLight: "Sueño ligero*",
+  smartSleepWake: "Despierto*",
+  smartSleepAvgSub: "*estimado",
+  smartSleepHipnogram: "Hipnograma estimado*",
+  smartSleepDisclaimerSmall: "*Estimación por reglas movimiento+audio, no diagnóstico médico",
+
   // ==========================
   // Despertares nocturnos
   // ==========================

@@ -592,10 +592,30 @@ export default function SleepModeScreen({ navigation }) {
 
       movementEpochs: movement.epochs ?? [],
 
-      // Fase A Smart Sleep: ventanas 30s (sin mic, sin reglas) — guardado para debug/validación
+      // Fase C Smart Sleep: ventanas 30s con stage WAKE/LIGHT/DEEP + audio
       smartWindows: movement.smartWindows ?? [],
 
       smartWindowMs: movement.smartWindowMs ?? 30000,
+
+      // Resumen estimado por stage (no médico, para historial/estadísticas)
+      estimatedStages: (() => {
+        const wins = movement.smartWindows ?? [];
+        let wake = 0, light = 0, deep = 0;
+        for (const w of wins) {
+          const s = w.stage ?? "LIGHT";
+          if (s === "WAKE") wake++;
+          else if (s === "DEEP") deep++;
+          else light++;
+        }
+        const toMin = (n) => Math.round((n * (movement.smartWindowMs ?? 30000)) / 60000);
+        return {
+          wake: toMin(wake),
+          light: toMin(light),
+          deep: toMin(deep),
+          totalWindows: wins.length,
+          hasAudio: wins.some((w) => w.hasAudio),
+        };
+      })(),
 
       levelUp: levelData.levelUp,
 

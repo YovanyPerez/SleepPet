@@ -480,6 +480,21 @@ export default {
   reminderFollowUpTitle: "🌙 Still awake?",
   reminderFollowUpContent: "You've been awake 15 min — your pet is waiting to sleep",
 
+  smartAlarmTitle: "Smart Alarm",
+  smartAlarmDesc: "Wake in light phase within window",
+  smartAlarmWindowHint: "Favorable window",
+  smartAlarmWindowDesc: "If light sleep between {{start}} and {{end}}, SmartAlarm tries to wake you at a favorable moment.",
+  smartAlarmDisclaimer: "*Rule-based estimation, not medical diagnosis. Always rings at target time if no favorable moment.",
+  smartAlarmNoWindow: "No favorable window tonight",
+  smartAlarmFavorable: "Favorable moment detected",
+
+  smartSleepDeep: "Deep sleep*",
+  smartSleepLight: "Light sleep*",
+  smartSleepWake: "Awake*",
+  smartSleepAvgSub: "*estimated",
+  smartSleepHipnogram: "Estimated hypnogram*",
+  smartSleepDisclaimerSmall: "*Rule-based estimation movement+audio, not medical diagnosis",
+
   // ==========================
   // Night wake-ups
   // ==========================

@@ -41,6 +41,13 @@ import {
   canScheduleExact,
   openExactAlarmSettings,
 } from "../services/ReminderService";
+import {
+  getSmartAlarmSettings,
+  saveSmartAlarmSettings,
+} from "../storage/SmartAlarmStorage";
+import {
+  setSmartAlarmConfig,
+} from "../services/SmartAlarmService";
 
 import NightBackground from "../components/NightBackground";
 import Card from "../components/Card";
@@ -218,11 +225,29 @@ export default function SettingsScreen({ navigation }) {
     minute: 30,
   });
 
+  const [smartAlarm, setSmartAlarm] = useState({
+    enabled: false,
+    hour: 7,
+    minute: 0,
+    windowMin: 30,
+  });
+  const smartAlarmRef = useRef({
+    enabled: false,
+    hour: 7,
+    minute: 0,
+    windowMin: 30,
+  });
+
   useEffect(() => {
     (async () => {
       const settings = await getReminderSettings();
       reminderRef.current = settings;
       setReminder(settings);
+      const smart = await getSmartAlarmSettings();
+      smartAlarmRef.current = smart;
+      setSmartAlarm(smart);
+      // sincroniza a nativo (SharedPreferences smart_alarm)
+      setSmartAlarmConfig(smart).catch(() => {});
     })();
   }, []);
 
@@ -285,6 +310,25 @@ export default function SettingsScreen({ navigation }) {
     } else {
       cancelReminder();
     }
+  }
+
+  function applySmartAlarm(next) {
+    smartAlarmRef.current = next;
+    setSmartAlarm(next);
+    saveSmartAlarmSettings(next);
+    setSmartAlarmConfig(next).catch(() => {});
+  }
+
+  function stepSmartTime(field, direction) {
+    const prev = smartAlarmRef.current;
+    const next =
+      field === "hour"
+        ? { ...prev, hour: wrapValue(prev.hour, direction, 0, 23) }
+        : { ...prev, minute: wrapValue(prev.minute, direction, 0, 59) };
+    smartAlarmRef.current = next;
+    setSmartAlarm(next);
+    saveSmartAlarmSettings(next);
+    setSmartAlarmConfig(next).catch(() => {});
   }
 
   function resetProgress() {
@@ -623,6 +667,81 @@ export default function SettingsScreen({ navigation }) {
                 )
               }
 
+            </Card>
+
+            {/* Smart Alarm */}
+            <Card style={styles.card}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.iconCircle}>
+                  <AppIcon name="night" size={20} color={NIGHT.end} />
+                </View>
+                <View style={styles.cardHeaderText}>
+                  <AppText style={styles.cardTitle}>
+                    {t.smartAlarmTitle ?? "Smart Alarm"}
+                  </AppText>
+                  <AppText style={styles.cardDesc}>
+                    {t.smartAlarmDesc ?? "Despertar en fase ligera dentro de ventana"}
+                  </AppText>
+                </View>
+                <Switch
+                  value={smartAlarm.enabled}
+                  onValueChange={(value) =>
+                    applySmartAlarm({
+                      ...smartAlarm,
+                      enabled: value,
+                    })
+                  }
+                  trackColor={{
+                    true: NIGHT.end,
+                    false: "#D0D0D0",
+                  }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+              {smartAlarm.enabled && (
+                <>
+                  <TimeSelector
+                    hour={smartAlarm.hour}
+                    minute={smartAlarm.minute}
+                    hourLabel={t.reminderHour}
+                    minuteLabel={t.reminderMinute}
+                    onStep={stepSmartTime}
+                  />
+                  <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                    {[15, 30, 45].map((w) => (
+                      <TouchableOpacity
+                        key={w}
+                        style={[
+                          styles.languageButton,
+                          { flex: 1, paddingVertical: 10 },
+                          smartAlarm.windowMin === w && styles.selectedButton,
+                        ]}
+                        onPress={() => applySmartAlarm({ ...smartAlarm, windowMin: w })}
+                      >
+                        <AppText
+                          style={[
+                            styles.buttonText,
+                            smartAlarm.windowMin === w && styles.buttonTextSelected,
+                          ]}
+                        >
+                          {w} min
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <View style={styles.motivationalBox}>
+                    <AppText style={styles.motivationalTitle}>
+                      {t.smartAlarmWindowHint ?? "Ventana favorable"}
+                    </AppText>
+                    <AppText style={styles.motivationalMessage}>
+                      {(t.smartAlarmWindowDesc ?? "Si tu sueño está en fase ligera entre {{start}} y {{end}}, SmartAlarm intentará despertarte en momento favorable.").replace("{{start}}", `${String((smartAlarm.hour*60+smartAlarm.minute - smartAlarm.windowMin + 1440)%1440 /60|0).padStart(2,"0")}:${String((smartAlarm.hour*60+smartAlarm.minute - smartAlarm.windowMin)%60).padStart(2,"0")}`).replace("{{end}}", `${String(smartAlarm.hour).padStart(2,"0")}:${String(smartAlarm.minute).padStart(2,"0")}`)}
+                    </AppText>
+                  </View>
+                  <AppText style={{ color: "rgba(0,0,0,0.45)", fontSize: 11, marginTop: 8, textAlign: "center" }}>
+                    {t.smartAlarmDisclaimer ?? "*Estimación por reglas, no diagnóstico médico. Amanecer siempre a la hora objetivo si no hay momento favorable."}
+                  </AppText>
+                </>
+              )}
             </Card>
 
             {/* Reiniciar progreso */}
