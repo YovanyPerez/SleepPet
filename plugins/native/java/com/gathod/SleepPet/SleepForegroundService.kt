@@ -659,6 +659,7 @@ class SleepForegroundService : Service() {
             }
         }
 
+        @Synchronized
         override fun onSensorChanged(event: SensorEvent) {
             if (!running) return
             try {
@@ -744,6 +745,7 @@ class SleepForegroundService : Service() {
          * Calcula RMS y ZCR por ventana, descarta PCM tras features.
          * Sincronizada con maybeCloseSmartWindows (mismo idx 30s).
          */
+        @Synchronized
         fun addAudioChunk(chunk: ShortArray) {
             if (!running) return
             try {
@@ -773,6 +775,7 @@ class SleepForegroundService : Service() {
         }
 
         /** Cierre de epochs por tiempo (tick de 1s del servicio) + log de calibración. */
+        @Synchronized
         fun tick() {
             val nowMs = System.currentTimeMillis()
 
@@ -799,6 +802,7 @@ class SleepForegroundService : Service() {
          * (así el polling cada 30s no fragmenta los epochs).
          * Fase A añade smartWindows 30s con la misma semántica no-mutante.
          */
+        @Synchronized
         fun snapshot(): JSONObject {
             val nowWall = System.currentTimeMillis()
             val idx = currentEpochIdx(nowWall)
@@ -870,6 +874,7 @@ class SleepForegroundService : Service() {
         }
 
         /** Flush terminal: cierra el epoch parcial y escribe prefs (onDestroy/stop). */
+        @Synchronized
         fun flush() {
             try {
                 val nowWall = System.currentTimeMillis()
@@ -907,6 +912,7 @@ class SleepForegroundService : Service() {
             return if (elapsed <= 0) 0L else elapsed / MOVEMENT_EPOCH_MS
         }
 
+        @Synchronized
         private fun maybeCloseEpochs(nowWallMs: Long) {
             val idx = currentEpochIdx(nowWallMs)
             // cerrar epochs completos que quedaron atrás (normalmente 0 iteraciones)
@@ -920,6 +926,7 @@ class SleepForegroundService : Service() {
             return if (elapsed <= 0) 0L else elapsed / SMART_WINDOW_MS
         }
 
+        @Synchronized
         private fun maybeCloseSmartWindows(nowWallMs: Long) {
             val idx = currentSmartIdx(nowWallMs)
             while (idx > lastClosedSmartIdx + 1) {
@@ -927,6 +934,7 @@ class SleepForegroundService : Service() {
             }
         }
 
+        @Synchronized
         private fun closeSmartWindow(idx: Long, durationMs: Long) {
             val startWall = sessionStartMs + idx * SMART_WINDOW_MS
             val avg = if (smartWindowSamples > 0) smartWindowSum / smartWindowSamples else 0.0
