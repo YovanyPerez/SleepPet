@@ -14,6 +14,11 @@ class SmartAlarmModule(reactContext: ReactApplicationContext) : ReactContextBase
     fun setConfig(enabled: Boolean, hour: Int, minute: Int, windowMin: Int, promise: Promise) {
         try {
             SleepForegroundService.setSmartAlarmConfig(reactApplicationContext, enabled, hour, minute, windowMin)
+            if (enabled) {
+                SmartAlarmScheduler.scheduleExact(reactApplicationContext, hour, minute, windowMin)
+            } else {
+                SmartAlarmScheduler.cancel(reactApplicationContext)
+            }
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e("SmartAlarm", "setConfig error ${e.message}")
@@ -35,5 +40,38 @@ class SmartAlarmModule(reactContext: ReactApplicationContext) : ReactContextBase
         } catch (e: Exception) {
             promise.reject("smartalarm_error", e.message)
         }
+    }
+
+    @ReactMethod
+    fun getLastInfo(promise: Promise) {
+        try {
+            val prefs = reactApplicationContext.getSharedPreferences(
+                SleepForegroundService.SMART_ALARM_PREFS_NAME,
+                android.content.Context.MODE_PRIVATE
+            )
+            val map = com.facebook.react.bridge.WritableNativeMap().apply {
+                putDouble("lastTriggerMs", prefs.getLong("lastTriggerMs", 0L).toDouble())
+                putDouble("lastFavorableMs", prefs.getLong("lastFavorableMs", 0L).toDouble())
+            }
+            promise.resolve(map)
+        } catch (e: Exception) {
+            promise.reject("smartalarm_error", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun stopAlarm() {
+        try {
+            SmartAlarmScheduler.cancelEscalations(reactApplicationContext)
+            SmartAlarmPlayer.stop()
+            val manager = reactApplicationContext.getSystemService(
+                android.content.Context.NOTIFICATION_SERVICE
+            ) as android.app.NotificationManager
+            manager.cancel(3001)
+            reactApplicationContext.getSharedPreferences(
+                SleepForegroundService.SMART_ALARM_PREFS_NAME,
+                android.content.Context.MODE_PRIVATE
+            ).edit().putBoolean("stopped", true).apply()
+        } catch (_: Exception) {}
     }
 }

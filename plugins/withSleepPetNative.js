@@ -17,6 +17,8 @@ const PERMISSIONS = [
   "android.permission.CAMERA",
   "android.permission.WAKE_LOCK",
   "android.permission.RECORD_AUDIO",
+  "android.permission.RECEIVE_BOOT_COMPLETED",
+  "android.permission.VIBRATE",
 ];
 
 const PACKAGE_ADDS = [
@@ -153,6 +155,41 @@ module.exports = function withSleepPetNative(config) {
           "android:name": ".ReminderReceiver",
           "android:exported": "false",
         },
+      });
+    }
+
+    if (
+      !hasElement(
+        application.receiver,
+        ".SmartAlarmReceiver"
+      )
+    ) {
+      application.receiver.push({
+        $: {
+          "android:name": ".SmartAlarmReceiver",
+          "android:exported": "false",
+        },
+      });
+    }
+
+    if (
+      !hasElement(
+        application.receiver,
+        ".BootReceiver"
+      )
+    ) {
+      application.receiver.push({
+        $: {
+          "android:name": ".BootReceiver",
+          "android:exported": "true",
+        },
+        "intent-filter": [
+          {
+            action: [
+              { $: { "android:name": "android.intent.action.BOOT_COMPLETED" } },
+            ],
+          },
+        ],
       });
     }
 

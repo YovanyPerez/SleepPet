@@ -15,7 +15,6 @@ import { AppContext } from "../context/AppContext";
 import {
   getTranslations,
 } from "../services/TranslationService";
-import { movementLevel } from "../services/MovementService";
 
 import StatCard from "../components/StatCard";
 import WeeklyBarChart from "../components/WeeklyBarChart";
@@ -113,31 +112,12 @@ export default function StatisticsScreen({ navigation }) {
     (s) => typeof s.preSleepBpm === "number" && s.preSleepBpm > 0 && !s.isNap
   );
 
-  const movementSessions = history.filter(
-    (s) => s.movementEvents != null && !s.isNap
-  );
-
   const avgBpm =
     bpmSessions.length > 0
       ? Math.round(
           bpmSessions.reduce((a, s) => a + s.preSleepBpm, 0) /
             bpmSessions.length
         )
-      : null;
-
-  const avgMovementEvents =
-    movementSessions.length > 0
-      ? Math.round(
-          (movementSessions.reduce((a, s) => a + s.movementEvents, 0) /
-            movementSessions.length) *
-            10
-        ) / 10
-      : null;
-
-  const avgMovementScore =
-    movementSessions.length > 0
-      ? movementSessions.reduce((a, s) => a + (s.movementScore ?? 0), 0) /
-        movementSessions.length
       : null;
 
   // Fase C Smart Sleep: sesiones con estimatedStages (ventanas 30s WAKE/LIGHT/DEEP)
@@ -377,17 +357,7 @@ export default function StatisticsScreen({ navigation }) {
                       )
                     }
 
-                    {
-                      avgMovementEvents != null && (
-                        <StatCard
-                          icon="movement"
-                          iconColor="#C9B8E8"
-                          label={t.movementTitle}
-                          value={avgMovementEvents}
-                          sub={movementLevel(avgMovementScore, t) ?? t.statsPerNight}
-                        />
-                      )
-                    }
+                    {/* Movimiento nocturno legacy oculto (Fase D): lo reemplazan profundo/ligero/despierto* + hipnograma */}
 
                     {
                       smartSessions.length > 0 && (

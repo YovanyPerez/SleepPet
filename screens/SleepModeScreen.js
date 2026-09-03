@@ -617,6 +617,35 @@ export default function SleepModeScreen({ navigation }) {
         };
       })(),
 
+      // Fase D: info SmartAlarm (disparo favorable vs target obligatorio)
+      smartAlarm: await (async () => {
+        try {
+          const { getSmartAlarmConfig, getSmartAlarmLastInfo } = await import("../services/SmartAlarmService");
+          const cfg = await getSmartAlarmConfig();
+          const info = await getSmartAlarmLastInfo();
+          const startMs = result.start.getTime();
+          const endMs = result.end.getTime();
+          const favorableFired =
+            typeof info.lastFavorableMs === "number" &&
+            info.lastFavorableMs >= startMs &&
+            info.lastFavorableMs <= endMs;
+          const targetFired =
+            typeof info.lastTriggerMs === "number" &&
+            info.lastTriggerMs >= startMs &&
+            info.lastTriggerMs <= endMs;
+          return {
+            used: !!(cfg?.enabled),
+            favorableFound: favorableFired,
+            triggeredAt: targetFired ? info.lastTriggerMs : (favorableFired ? info.lastFavorableMs : null),
+            targetHour: cfg?.hour ?? null,
+            targetMinute: cfg?.minute ?? null,
+            windowMin: cfg?.windowMin ?? null,
+          };
+        } catch (e) {
+          return { used: false, favorableFound: false, triggeredAt: null };
+        }
+      })(),
+
       levelUp: levelData.levelUp,
 
       previousLevel: level,
@@ -869,32 +898,8 @@ export default function SleepModeScreen({ navigation }) {
 
             </View>
 
-            {/* Movimiento nocturno */}
-
-            <View style={styles.glassCard}>
-
-              <View style={styles.cardHeader}>
-
-                <View style={styles.cardIconCircle}>
-                  <AppIcon name="movement" size={22} color={NIGHT.end} />
-                </View>
-
-                <AppText style={styles.cardTitle}>
-                  {t.movementTitle}
-                </AppText>
-
-              </View>
-
-              <AppText style={styles.cardValue}>
-                {movementEvents} {t.movementEventsShort}
-              </AppText>
-
-              <AppText style={styles.cardHint}>
-                {t.movementNightHint}
-              </AppText>
-
-            </View>
-
+            {/* Movimiento nocturno legacy oculto (Fase D): el detector nativo sigue corriendo
+                para smartWindows 30s, pero ya no se muestra "N eventos" — lo reemplaza Smart Sleep */}
             {/* Fase B Smart Sleep debug — temporal para validar logcat, ventanas 30s sincronizadas movimiento + audio */}
             {running && (
               <View style={[styles.glassCard, { borderStyle: "dashed", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }]}>

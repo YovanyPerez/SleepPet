@@ -23,6 +23,27 @@ export async function getSmartAlarmConfig() {
   return getSmartAlarmSettings();
 }
 
+export async function getSmartAlarmLastInfo() {
+  try {
+    if (SmartAlarmModule?.getLastInfo) {
+      const raw = await SmartAlarmModule.getLastInfo();
+      return {
+        lastTriggerMs: typeof raw?.lastTriggerMs === "number" ? raw.lastTriggerMs : 0,
+        lastFavorableMs: typeof raw?.lastFavorableMs === "number" ? raw.lastFavorableMs : 0,
+      };
+    }
+  } catch (e) {
+    console.log("SmartAlarm getLastInfo fallback", e?.message);
+  }
+  return { lastTriggerMs: 0, lastFavorableMs: 0 };
+}
+
+export function stopSmartAlarm() {
+  try {
+    SmartAlarmModule?.stopAlarm?.();
+  } catch (e) {}
+}
+
 // Verifica si estamos dentro de ventana [target-windowMin, target]
 // target es hoy o mañana según hora actual (si ya pasó target de hoy, es mañana)
 export function isInWakeWindow(nowMs, { hour, minute, windowMin }) {

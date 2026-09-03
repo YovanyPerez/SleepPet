@@ -43,6 +43,14 @@ import {
 } from "../storage/ReminderStorage";
 
 import {
+  getSmartAlarmSettings,
+} from "../storage/SmartAlarmStorage";
+
+import {
+  setSmartAlarmConfig,
+} from "../services/SmartAlarmService";
+
+import {
   getTranslations,
 } from "../services/TranslationService";
 
@@ -292,6 +300,16 @@ export function AppProvider({ children }) {
 
       } else {
         setSleepActive(false);
+      }
+
+      // SmartAlarm: re-sincroniza config a nativo al abrir app (re-agenda AlarmManager tras reboot)
+      try {
+        const smart = await getSmartAlarmSettings();
+        if (smart && smart.enabled) {
+          await setSmartAlarmConfig(smart);
+        }
+      } catch (e) {
+        console.log("SmartAlarm resync error", e?.message ?? e);
       }
 
       // ===========================

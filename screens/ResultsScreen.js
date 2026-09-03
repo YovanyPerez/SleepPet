@@ -22,7 +22,6 @@ import {
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
-import { movementLevel } from "../services/MovementService";
 import styles from "./styles/ResultsScreen.styles";
 
 export default function ResultsScreen({ navigation }) {
@@ -238,26 +237,7 @@ export default function ResultsScreen({ navigation }) {
 
             </View>
 
-            {lastSleepSession.movementEvents != null && (
-              <View style={styles.metricCard}>
-
-                <View style={styles.metricIcon}>
-                  <AppIcon name="movement" size={20} color="#C9B8E8" />
-                </View>
-
-                <AppText style={styles.metricLabel}>
-                  {t.movementTitle}
-                </AppText>
-
-                <AppText style={styles.metricValue}>
-                  {lastSleepSession.movementEvents} {t.movementEventsShort}
-                  {lastSleepSession.movementScore != null && movementLevel(lastSleepSession.movementScore, t)
-                    ? ` · ${movementLevel(lastSleepSession.movementScore, t)}`
-                    : ""}
-                </AppText>
-
-              </View>
-            )}
+            {/* Movimiento nocturno legacy oculto (Fase D): lo reemplaza Sueño estimado* con WAKE/LIGHT/DEEP */}
 
             <View style={styles.metricCard}>
 

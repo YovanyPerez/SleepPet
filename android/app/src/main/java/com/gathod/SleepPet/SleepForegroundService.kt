@@ -1003,12 +1003,22 @@ class SleepForegroundService : Service() {
             } else {
                 Log.i("SmartAudio", "ventana 30s #$idx NO_AUDIO stage=$smoothed")
             }
-            // Fase C: SmartAlarm ventana favorable
+            // Fase C: SmartAlarm ventana favorable (progresiva: sonido suave -> vibración)
             try {
-                if (isInSmartAlarmWindow(this@SleepForegroundService, startWall) && smoothed == "LIGHT" && confidence >= 0.6) {
-                    Log.i("SmartAlarm", "momento favorable LIGHT en ventana SmartAlarm idx=$idx conf=${String.format(Locale.US, "%.2f", confidence)}")
-                    // TODO Fase C: disparar alarma progresiva (sonido suave → vibración). Por ahora solo log.
-                } else if (isInSmartAlarmWindow(this@SleepForegroundService, startWall)) {
+                val inWindow = isInSmartAlarmWindow(this@SleepForegroundService, startWall)
+                if (inWindow && smoothed == "LIGHT" && confidence >= 0.6) {
+                    // Evitar disparar cada 30s dentro de misma ventana: solo 1 vez por noche/ventana
+                    val prefs = this@SleepForegroundService.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
+                    val lastFavorable = prefs.getLong("lastFavorableMs", 0L)
+                    val alreadyFired = lastFavorable != 0L && kotlin.math.abs(startWall - lastFavorable) < 3600000L // 1h
+                    if (!alreadyFired) {
+                        Log.i("SmartAlarm", "momento favorable LIGHT en ventana SmartAlarm idx=$idx conf=${String.format(Locale.US, "%.2f", confidence)} — disparando alarma progresiva")
+                        prefs.edit().putLong("lastFavorableMs", startWall).apply()
+                        SmartAlarmScheduler.scheduleFavorableNow(this@SleepForegroundService)
+                    } else {
+                        Log.i("SmartAlarm", "momento favorable LIGHT ya disparado antes (last=$lastFavorable) — ignorado")
+                    }
+                } else if (inWindow) {
                     Log.i("SmartAlarm", "en ventana SmartAlarm pero stage=$smoothed conf=${String.format(Locale.US, "%.2f", confidence)} no favorable")
                 }
             } catch (e: Exception) {
