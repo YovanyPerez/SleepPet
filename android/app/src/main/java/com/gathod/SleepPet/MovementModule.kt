@@ -42,6 +42,7 @@ class MovementModule(
                 )
             }
             // Fase A Smart Sleep: ventanas 30s
+            // Fase B: audio RMS/ZCR sincronizado 30s
             val smartOut = WritableNativeArray()
             val smartWindows: JSONArray = json.optJSONArray("smartWindows") ?: JSONArray()
             for (i in 0 until smartWindows.length()) {
@@ -54,6 +55,14 @@ class MovementModule(
                         putDouble("maxMovement", w.optDouble("maxMovement", 0.0))
                         putDouble("avgExcess", w.optDouble("avgExcess", 0.0))
                         putInt("samples", w.optInt("samples", 0))
+                        putDouble("audioRms", w.optDouble("audioRms", 0.0))
+                        putDouble("audioZcr", w.optDouble("audioZcr", 0.0))
+                        putInt("audioSamples", w.optInt("audioSamples", 0))
+                        putBoolean("hasAudio", w.optBoolean("hasAudio", false))
+                        putString("level", w.optString("level", "LOW"))
+                        putString("stage", w.optString("stage", "LIGHT"))
+                        putString("rawStage", w.optString("rawStage", "LIGHT"))
+                        putDouble("confidence", w.optDouble("confidence", 0.5))
                     }
                 )
             }

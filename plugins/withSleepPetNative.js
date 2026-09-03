@@ -10,11 +10,13 @@ const PERMISSIONS = [
   "android.permission.POST_NOTIFICATIONS",
   "android.permission.FOREGROUND_SERVICE",
   "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+  "android.permission.FOREGROUND_SERVICE_MICROPHONE",
   "android.permission.ACTIVITY_RECOGNITION",
   "android.permission.QUERY_ALL_PACKAGES",
   "android.permission.SCHEDULE_EXACT_ALARM",
   "android.permission.CAMERA",
   "android.permission.WAKE_LOCK",
+  "android.permission.RECORD_AUDIO",
 ];
 
 const PACKAGE_ADDS = [
@@ -88,7 +90,7 @@ module.exports = function withSleepPetNative(config) {
           "android:name": ".SleepForegroundService",
           "android:exported": "false",
           "android:stopWithTask": "false",
-          "android:foregroundServiceType": "specialUse",
+          "android:foregroundServiceType": "specialUse|microphone",
         },
         property: [
           {

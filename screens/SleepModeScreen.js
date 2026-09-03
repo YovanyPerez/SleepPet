@@ -391,6 +391,30 @@ export default function SleepModeScreen({ navigation }) {
 
         }
 
+        // Fase B Smart Sleep: micrófono opcional (fallback accel-only si denegado)
+        // Ventana 30s sincronizada, audio procesado local y descartado
+        try {
+          const audioResult = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+          );
+          addLog(`Permiso micrófono: ${audioResult}`);
+          if (
+            audioResult !== "granted" &&
+            audioResult !== PermissionsAndroid.RESULTS.GRANTED
+          ) {
+            Alert.alert(
+              t.micPermissionTitle ?? "Micrófono no concedido",
+              t.micPermissionMessage ?? "SleepPet usa el micrófono durante el modo sueño para analizar patrones acústicos (RMS/ZCR) en ventanas de 30s. El audio se procesa localmente y se descarta tras extraer features, no se guarda grabación. Continuará solo con acelerómetro.",
+              [{ text: t.ok ?? "Entendido", style: "cancel" }]
+            );
+            addLog("Mic denegado — fallback accel-only");
+          } else {
+            addLog("Mic concedido — audio + movimiento");
+          }
+        } catch (e) {
+          addLog(`Error permiso mic: ${e?.message ?? e} — fallback accel-only`);
+        }
+
       } catch (e) {
 
         // Si no concede, la sesión continúa sin notificación.
@@ -851,14 +875,14 @@ export default function SleepModeScreen({ navigation }) {
 
             </View>
 
-            {/* Fase A Smart Sleep debug — temporal solo para validar logcat, sin mic ni reglas */}
+            {/* Fase B Smart Sleep debug — temporal para validar logcat, ventanas 30s sincronizadas movimiento + audio */}
             {running && (
               <View style={[styles.glassCard, { borderStyle: "dashed", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }]}>
                 <View style={styles.cardHeader}>
                   <View style={[styles.cardIconCircle, { backgroundColor: "rgba(255,209,102,0.18)" }]}>
                     <AppIcon name="night" size={22} color={NIGHT.yellow} />
                   </View>
-                  <AppText style={styles.cardTitle}>Smart Sleep (Fase A)</AppText>
+                  <AppText style={styles.cardTitle}>Smart Sleep (Fase B)</AppText>
                   <View style={{ marginLeft: 8, backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
                     <AppText style={{ color: "rgba(255,255,255,0.85)", fontSize: 10, fontFamily: "Nunito_700Bold" }}>DEBUG</AppText>
                   </View>
@@ -868,26 +892,53 @@ export default function SleepModeScreen({ navigation }) {
                   const last = n > 0 ? smartWindows[n - 1] : null;
                   const avg = last ? last.avgMovement : 0;
                   const max = last ? last.maxMovement : 0;
-                  const level = avg < 0.93 ? "LOW" : avg < 1.02 ? "MED" : "HIGH";
+                  const level = last?.level ?? (avg < 0.93 ? "LOW" : avg < 1.02 ? "MED" : "HIGH");
                   const levelColor = level === "LOW" ? "#8FA3FF" : level === "MED" ? "#FFD166" : "#FF8FAB";
+                  const rms = last ? last.audioRms ?? 0 : 0;
+                  const zcr = last ? last.audioZcr ?? 0 : 0;
+                  const hasAudio = last ? !!last.hasAudio : false;
+                  const stage = last?.stage ?? "LIGHT";
+                  const conf = last?.confidence ?? 0.5;
+                  const stageColor = stage === "WAKE" ? "#FF8FAB" : stage === "DEEP" ? "#8FA3FF" : "#FFD166";
                   return (
                     <>
                       <AppText style={styles.cardValue}>
                         {n} ventanas · {Math.round(smartWindowMs / 1000)}s
                       </AppText>
                       <AppText style={styles.cardHint}>
-                        {n > 0 ? `última avg ${avg.toFixed(3)} · max ${max.toFixed(2)} · ${level}` : "esperando primera ventana 30s…"}
+                        {n > 0 ? `última avg ${avg.toFixed(3)} · max ${max.toFixed(2)} · ${level} · ${stage} ${(conf*100).toFixed(0)}%` : "esperando primera ventana 30s…"}
                       </AppText>
+                      {n > 0 && (
+                        <AppText style={[styles.cardHint, { marginTop: 4, fontSize: 11, opacity: hasAudio ? 0.85 : 0.6 }]}>
+                          {hasAudio
+                            ? `audio rms ${rms.toFixed(4)} · zcr ${zcr.toFixed(4)} · ${last.audioSamples ?? 0} samples`
+                            : "audio NO_AUDIO (permiso denegado o silencio) · fallback accel-only"}
+                        </AppText>
+                      )}
+                      {n > 0 && (
+                        <View style={{ marginTop: 6, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: stageColor }} />
+                          <AppText style={{ color: stageColor, fontSize: 11, fontFamily: "Nunito_800ExtraBold" }}>
+                            {stage} {stage === "WAKE" ? "· despierto" : stage === "DEEP" ? "· profundo*" : "· ligero*"} 
+                          </AppText>
+                          <AppText style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontFamily: "Nunito_400Regular" }}>
+                            raw {last?.rawStage ?? stage}
+                          </AppText>
+                        </View>
+                      )}
                       {n > 0 && (
                         <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center", gap: 6 }}>
                           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: levelColor }} />
                           <AppText style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, fontFamily: "Nunito_600SemiBold" }}>
-                            {level === "LOW" ? "quieto" : level === "MED" ? "movimiento leve" : "movimiento alto"} · ver logcat SmartSleep
+                            {level === "LOW" ? "quieto" : level === "MED" ? "movimiento leve" : "movimiento alto"} · ver logcat SmartSleep/SmartAudio
                           </AppText>
                         </View>
                       )}
                       <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Nunito_400Regular", marginTop: 6, textAlign: "center" }}>
-                        Estimación por movimiento · no médica · Fase A sin mic
+                        Ventanas 30s · movimiento + audio → WAKE/LIGHT/DEEP* · no médica · Fase C
+                      </AppText>
+                      <AppText style={{ color: "rgba(255,255,255,0.45)", fontSize: 9, fontFamily: "Nunito_400Regular", marginTop: 2, textAlign: "center" }}>
+                        *Estimación por reglas, no diagnóstico · audio descartado tras RMS/ZCR
                       </AppText>
                     </>
                   );

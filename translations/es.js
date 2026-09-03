@@ -428,6 +428,10 @@ export default {
   activityPermissionMessage:
     "SleepPet necesita el permiso de actividad física para mostrar el tiempo y los desbloqueos de tu sesión en la notificación.",
 
+  micPermissionTitle: "Micrófono opcional",
+  micPermissionMessage:
+    "SleepPet usa el micrófono durante el modo sueño para analizar patrones acústicos (RMS/ZCR) en ventanas de 30s. El audio se procesa localmente y se descarta tras extraer features, no se guarda grabación. Si lo deniegas, seguirá solo con acelerómetro.",
+
   accessibilityRequiredTitle: "Activa la accesibilidad",
   accessibilityRequiredMessage:
     "SleepPet necesita el servicio de accesibilidad para contar desbloqueos. Actívalo en Ajustes → Accesibilidad → SleepPet para iniciar la sesión.",

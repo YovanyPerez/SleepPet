@@ -5,12 +5,31 @@ const { MovementModule } = NativeModules;
 // Fallback seguro si el módulo nativo no está (build viejo o módulo no registrado)
 const EMPTY_SUMMARY = { events: 0, score: 0, epochs: [], smartWindows: [], smartWindowMs: 30000 };
 
+function normalizeSmartWindow(w) {
+  return {
+    startTime: typeof w?.startTime === "number" ? w.startTime : 0,
+    durationMs: typeof w?.durationMs === "number" ? w.durationMs : 0,
+    avgMovement: typeof w?.avgMovement === "number" ? w.avgMovement : 0,
+    maxMovement: typeof w?.maxMovement === "number" ? w.maxMovement : 0,
+    avgExcess: typeof w?.avgExcess === "number" ? w.avgExcess : 0,
+    samples: typeof w?.samples === "number" ? w.samples : 0,
+    audioRms: typeof w?.audioRms === "number" ? w.audioRms : 0,
+    audioZcr: typeof w?.audioZcr === "number" ? w.audioZcr : 0,
+    audioSamples: typeof w?.audioSamples === "number" ? w.audioSamples : 0,
+    hasAudio: typeof w?.hasAudio === "boolean" ? w.hasAudio : false,
+    level: typeof w?.level === "string" ? w.level : "LOW",
+    stage: typeof w?.stage === "string" ? w.stage : "LIGHT",
+    rawStage: typeof w?.rawStage === "string" ? w.rawStage : "LIGHT",
+    confidence: typeof w?.confidence === "number" ? w.confidence : 0.5,
+  };
+}
+
 function normalizeSummary(raw) {
   return {
     events: typeof raw?.events === "number" ? raw.events : 0,
     score: typeof raw?.score === "number" ? raw.score : 0,
     epochs: Array.isArray(raw?.epochs) ? raw.epochs : [],
-    smartWindows: Array.isArray(raw?.smartWindows) ? raw.smartWindows : [],
+    smartWindows: Array.isArray(raw?.smartWindows) ? raw.smartWindows.map(normalizeSmartWindow) : [],
     smartWindowMs: typeof raw?.smartWindowMs === "number" ? raw.smartWindowMs : 30000,
   };
 }

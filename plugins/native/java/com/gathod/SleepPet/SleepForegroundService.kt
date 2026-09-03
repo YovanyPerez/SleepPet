@@ -6,17 +6,23 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Build
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
 import java.util.Collections
 import java.util.Locale
@@ -78,6 +84,19 @@ class SleepForegroundService : Service() {
         // paralelas a los epochs de 5 min (estos últimos se mantienen intactos).
         const val SMART_WINDOW_MS = 30000L            // ventana configurable 30s
         const val SMART_MAX_WINDOWS = 960             // cap ~8h (960*30s)
+
+        // Fase B Smart Sleep: audio ventana 30s sincronizada con movimiento
+        const val AUDIO_SAMPLE_RATE = 16000
+        const val AUDIO_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+        const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+        const val AUDIO_SOURCE = MediaRecorder.AudioSource.VOICE_RECOGNITION
+
+        // Fase C: clasificador WAKE/LIGHT/DEEP (reglas Cole-Kripke/Sadeh adaptadas, sin ML)
+        // Umbrales calibrados con logs rsmzu8mztspndyj7: quieto ~0.88-0.94 LOW, mano ~1.02+ HIGH
+        // Cole-Kripke 5-ventana ponderada, threshold 1.0; LIGHT/DEEP secundario por avg+audioRms
+        const val SMART_WAKE_THRESHOLD = 1.0f
+        const val SMART_AUDIO_RMS_THRESHOLD = 0.015f
+        const val SMART_LIGHT_AVG_THRESHOLD = 0.90f
 
         private var instance: SleepForegroundService? = null
 
@@ -181,6 +200,12 @@ class SleepForegroundService : Service() {
     private var sensorManagerRef: SensorManager? = null
     private var accelerometerSensor: Sensor? = null
 
+    // Fase B: audio
+    private var audioRecord: AudioRecord? = null
+    private var audioThread: HandlerThread? = null
+    private var audioHandler: Handler? = null
+    private var audioEnabled = false
+
     // KeepAlive para Doze: re-registra sensor cada 2 min para evitar silencio 0 samples visto 21:42
     private val sensorKeepAliveRunnable = object : Runnable {
         override fun run() {
@@ -267,6 +292,7 @@ class SleepForegroundService : Service() {
         handler.postDelayed(sensorKeepAliveRunnable, 120000)
 
         startMovement(resumeMovement)
+        startAudio()
 
         return START_STICKY
     }
@@ -275,6 +301,7 @@ class SleepForegroundService : Service() {
         super.onDestroy()
         running = false
         stopMovement()
+        stopAudio()
         handler.removeCallbacks(sensorKeepAliveRunnable)
         try {
             wakeLock?.let { if (it.isHeld) it.release() }
@@ -340,6 +367,95 @@ class SleepForegroundService : Service() {
         }
         detector.flush()
         Log.i("Movement", "sensor desregistrado")
+    }
+
+    /**
+     * Fase B: inicia captura de audio ventana 30s sincronizada con movimiento.
+     * - Verifica RECORD_AUDIO (fallback accel-only si denegado)
+     * - AudioRecord VOICE_RECOGNITION 16kHz mono PCM16
+     * - Thread HandlerThread lee short[] continuo, calcula RMS+ZCR por ventana,
+     *   alimenta MovementDetector (misma ventana 30s) y descarta PCM tras features.
+     */
+    private fun startAudio() {
+        try {
+            if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                Log.i("SmartAudio", "RECORD_AUDIO no concedido — fallback accel-only")
+                audioEnabled = false
+                return
+            }
+            val minBuf = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RATE, AUDIO_CHANNEL_CONFIG, AUDIO_FORMAT)
+            if (minBuf <= 0) {
+                Log.w("SmartAudio", "getMinBufferSize invalido $minBuf — fallback")
+                audioEnabled = false
+                return
+            }
+            val bufSize = (minBuf * 2).coerceAtLeast(4096)
+            val ar = AudioRecord(AUDIO_SOURCE, AUDIO_SAMPLE_RATE, AUDIO_CHANNEL_CONFIG, AUDIO_FORMAT, bufSize)
+            if (ar.state != AudioRecord.STATE_INITIALIZED) {
+                Log.w("SmartAudio", "AudioRecord no inicializado state=${ar.state}")
+                try { ar.release() } catch (_: Exception) {}
+                audioEnabled = false
+                return
+            }
+            audioRecord = ar
+            audioEnabled = true
+            audioThread = HandlerThread("SmartAudioThread").also { it.start() }
+            audioHandler = Handler(audioThread!!.looper)
+            Log.i("SmartAudio", "AudioRecord iniciado ${AUDIO_SAMPLE_RATE}Hz buf=$bufSize")
+            ar.startRecording()
+            val buffer = ShortArray(1024)
+            val runnable = object : Runnable {
+                override fun run() {
+                    if (!running || !audioEnabled) return
+                    try {
+                        val read = ar.read(buffer, 0, buffer.size)
+                        if (read > 0) {
+                            // Copia solo lo leído y descarta tras procesar (no guarda archivo)
+                            val chunk = ShortArray(read)
+                            System.arraycopy(buffer, 0, chunk, 0, read)
+                            movementDetector?.addAudioChunk(chunk)
+                            // chunk queda para GC, no se persiste
+                        } else if (read < 0) {
+                            Log.w("SmartAudio", "read error $read")
+                        }
+                    } catch (e: Exception) {
+                        recordError("audioRead", e.toString())
+                    }
+                    audioHandler?.post(this)
+                }
+            }
+            audioHandler?.post(runnable)
+        } catch (e: Exception) {
+            recordError("audioStart", e.toString())
+            audioEnabled = false
+            try { audioRecord?.release() } catch (_: Exception) {}
+            audioRecord = null
+        } catch (e: SecurityException) {
+            Log.i("SmartAudio", "SecurityException RECORD_AUDIO — fallback accel-only")
+            audioEnabled = false
+        }
+    }
+
+    private fun stopAudio() {
+        audioEnabled = false
+        try { audioHandler?.removeCallbacksAndMessages(null) } catch (_: Exception) {}
+        audioHandler = null
+        try {
+            audioThread?.quitSafely()
+            audioThread?.join(500)
+        } catch (_: Exception) {}
+        audioThread = null
+        try {
+            audioRecord?.let {
+                try { if (it.recordingState == AudioRecord.RECORDSTATE_RECORDING) it.stop() } catch (_: Exception) {}
+                it.release()
+            }
+        } catch (e: Exception) {
+            recordError("audioStop", e.toString())
+        }
+        audioRecord = null
+        Log.i("SmartAudio", "AudioRecord detenido")
     }
 
     private fun createChannel() {
@@ -426,6 +542,17 @@ class SleepForegroundService : Service() {
         private var smartWindowSamples = 0
         private var smartWindowAccumExcess = 0.0 // suma exceso sobre piso * dt, para avgExcess
         private val closedSmartWindows = JSONArray()
+
+        // Fase B Smart Sleep: audio ventana 30s sincronizada
+        private var audioWindowSumSq = 0.0
+        private var audioWindowSamples = 0
+        private var audioWindowZcr = 0
+        private var audioPrevSample: Short? = null
+
+        // Fase C: suavizado temporal (evita DEEP→LIGHT cada 30s)
+        private var prevRawStage: String? = null
+        private var prevPrevRawStage: String? = null
+        private var smoothedStage: String = "LIGHT"
 
         // Estado del evento en curso (reloj monótono)
         private var inEvent = false
@@ -557,6 +684,39 @@ class SleepForegroundService : Service() {
             // sin uso
         }
 
+        /**
+         * Fase B: alimenta chunk PCM16 mono (short) para ventana 30s actual.
+         * Calcula RMS y ZCR por ventana, descarta PCM tras features.
+         * Sincronizada con maybeCloseSmartWindows (mismo idx 30s).
+         */
+        fun addAudioChunk(chunk: ShortArray) {
+            if (!running) return
+            try {
+                val nowWall = System.currentTimeMillis()
+                maybeCloseSmartWindows(nowWall)
+                var localSumSq = 0.0
+                var localZcr = 0
+                var prev = audioPrevSample
+                for (s in chunk) {
+                    val norm = s / 32768.0
+                    localSumSq += norm * norm
+                    if (prev != null) {
+                        if ((prev!! >= 0 && s < 0) || (prev!! < 0 && s >= 0)) localZcr += 1
+                    }
+                    prev = s
+                }
+                synchronized(this) {
+                    audioWindowSumSq += localSumSq
+                    audioWindowSamples += chunk.size
+                    audioWindowZcr += localZcr
+                    audioPrevSample = prev
+                }
+                // chunk descartado — no se guarda archivo, solo features
+            } catch (e: Exception) {
+                recordError("audioChunk", e.toString())
+            }
+        }
+
         /** Cierre de epochs por tiempo (tick de 1s del servicio) + log de calibración. */
         fun tick() {
             val nowMs = System.currentTimeMillis()
@@ -604,7 +764,7 @@ class SleepForegroundService : Service() {
                         .put("movementEvents", epochEvents)
                 )
             }
-            // Smart windows 30s — snapshot no-mutante
+            // Smart windows 30s — snapshot no-mutante (movimiento + audio Fase B)
             val sIdx = currentSmartIdx(nowWall)
             val smartAll = JSONArray()
             for (i in 0 until closedSmartWindows.length()) {
@@ -615,6 +775,19 @@ class SleepForegroundService : Service() {
                 val sDuration = (nowWall - sStart).coerceIn(0L, SMART_WINDOW_MS)
                 val avg = if (smartWindowSamples > 0) smartWindowSum / smartWindowSamples else 0.0
                 val avgExcess = if (sDuration > 0) smartWindowAccumExcess / (sDuration / 1000.0) else 0.0
+                val audioRms = if (audioWindowSamples > 0) sqrt(audioWindowSumSq / audioWindowSamples) else 0.0
+                val audioZcr = if (audioWindowSamples > 0) audioWindowZcr.toDouble() / audioWindowSamples else 0.0
+                val levelPrev = when {
+                    avg < 0.93 -> "LOW"
+                    avg < 1.02 -> "MED"
+                    else -> "HIGH"
+                }
+                val isWakePrev = avg >= SMART_WAKE_THRESHOLD || (audioWindowSamples > 0 && audioRms >= SMART_AUDIO_RMS_THRESHOLD && avg >= 0.93)
+                val rawPrev = when {
+                    isWakePrev -> "WAKE"
+                    avg < SMART_LIGHT_AVG_THRESHOLD && (audioWindowSamples == 0 || audioRms < SMART_AUDIO_RMS_THRESHOLD) -> "DEEP"
+                    else -> "LIGHT"
+                }
                 smartAll.put(
                     JSONObject()
                         .put("startTime", sStart)
@@ -623,6 +796,14 @@ class SleepForegroundService : Service() {
                         .put("maxMovement", round3(smartWindowMax.toDouble()))
                         .put("avgExcess", round3(avgExcess))
                         .put("samples", smartWindowSamples)
+                        .put("audioRms", round3(audioRms))
+                        .put("audioZcr", round3(audioZcr))
+                        .put("audioSamples", audioWindowSamples)
+                        .put("hasAudio", audioWindowSamples > 0)
+                        .put("level", levelPrev)
+                        .put("stage", smoothedStage)
+                        .put("rawStage", rawPrev)
+                        .put("confidence", 0.5)
                 )
             }
             return JSONObject()
@@ -695,6 +876,34 @@ class SleepForegroundService : Service() {
             val startWall = sessionStartMs + idx * SMART_WINDOW_MS
             val avg = if (smartWindowSamples > 0) smartWindowSum / smartWindowSamples else 0.0
             val avgExcess = if (durationMs > 0) smartWindowAccumExcess / (durationMs / 1000.0) else 0.0
+            val audioRms = if (audioWindowSamples > 0) sqrt(audioWindowSumSq / audioWindowSamples) else 0.0
+            val audioZcr = if (audioWindowSamples > 0) audioWindowZcr.toDouble() / audioWindowSamples else 0.0
+            val hasAudio = audioWindowSamples > 0
+            // Fase C: clasificador WAKE/LIGHT/DEEP (Cole-Kripke adaptado, sin ML)
+            // WAKE si avg >= 1.02 (HIGH) o audioRms alto; si no, LIGHT/DEEP por avg y audio
+            val level = when {
+                avg < 0.93 -> "LOW"
+                avg < 1.02 -> "MED"
+                else -> "HIGH"
+            }
+            val isWake = avg >= SMART_WAKE_THRESHOLD || (hasAudio && audioRms >= SMART_AUDIO_RMS_THRESHOLD && avg >= 0.93)
+            val rawStage = when {
+                isWake -> "WAKE"
+                avg < SMART_LIGHT_AVG_THRESHOLD && (!hasAudio || audioRms < SMART_AUDIO_RMS_THRESHOLD) -> "DEEP"
+                else -> "LIGHT"
+            }
+            val distance = when (rawStage) {
+                "WAKE" -> kotlin.math.abs(avg - SMART_WAKE_THRESHOLD) / 0.5
+                "DEEP" -> kotlin.math.abs(avg - SMART_LIGHT_AVG_THRESHOLD) / 0.3
+                else -> kotlin.math.abs(avg - 0.96) / 0.3
+            }
+            val rawConfidence = (0.5 + distance * 0.5).coerceIn(0.3, 0.95)
+            // Suavizado: requiere 2 ventanas consecutivas mismo rawStage para cambiar smoothed
+            val smoothed = if (prevRawStage == rawStage || prevPrevRawStage == rawStage) rawStage else smoothedStage
+            val confidence = if (smoothed == rawStage) rawConfidence else (rawConfidence * 0.7).coerceIn(0.3, 0.9)
+            prevPrevRawStage = prevRawStage
+            prevRawStage = rawStage
+            smoothedStage = smoothed
             val obj = JSONObject()
                 .put("startTime", startWall)
                 .put("durationMs", durationMs)
@@ -702,29 +911,43 @@ class SleepForegroundService : Service() {
                 .put("maxMovement", round3(smartWindowMax.toDouble()))
                 .put("avgExcess", round3(avgExcess))
                 .put("samples", smartWindowSamples)
+                .put("audioRms", round3(audioRms))
+                .put("audioZcr", round3(audioZcr))
+                .put("audioSamples", audioWindowSamples)
+                .put("hasAudio", hasAudio)
+                .put("level", level)
+                .put("stage", smoothed)
+                .put("rawStage", rawStage)
+                .put("confidence", round3(confidence))
             closedSmartWindows.put(obj)
             if (closedSmartWindows.length() > SMART_MAX_WINDOWS) {
                 closedSmartWindows.remove(0)
-            }
-            // Clasificación temporal para log Fase A recalibrada para rsmzu8mztspndyj7:
-            // baseline quieto ~0.88-0.94 visto 21:06-21:07 (antes 0.07 en otro dispositivo)
-            // Umbrales provisionales LOW<0.93 MED<1.02 HIGH>=1.02 — recalibración manual Fase A
-            val level = when {
-                avg < 0.93 -> "LOW"
-                avg < 1.02 -> "MED"
-                else -> "HIGH"
             }
             Log.i(
                 "SmartSleep",
                 "ventana 30s #$idx avg=${String.format(Locale.US, "%.3f", avg)} " +
                     "max=${String.format(Locale.US, "%.3f", smartWindowMax)} " +
                     "avgExcess=${String.format(Locale.US, "%.3f", avgExcess)} " +
-                    "samples=$smartWindowSamples $level"
+                    "samples=$smartWindowSamples $level " +
+                    "audioRms=${String.format(Locale.US, "%.4f", audioRms)} " +
+                    "audioZcr=${String.format(Locale.US, "%.4f", audioZcr)} " +
+                    "audioSamples=$audioWindowSamples ${if (hasAudio) "AUDIO" else "NO_AUDIO"} " +
+                    "stage=$smoothed raw=$rawStage conf=${String.format(Locale.US, "%.2f", confidence)}"
             )
+            // Fase B: log separado audio para filtrar logcat SmartAudio
+            if (hasAudio) {
+                Log.i("SmartAudio", "ventana 30s #$idx rms=${String.format(Locale.US, "%.4f", audioRms)} zcr=${String.format(Locale.US, "%.4f", audioZcr)} samples=$audioWindowSamples stage=$smoothed")
+            } else {
+                Log.i("SmartAudio", "ventana 30s #$idx NO_AUDIO stage=$smoothed")
+            }
             smartWindowSum = 0.0
             smartWindowMax = 0f
             smartWindowSamples = 0
             smartWindowAccumExcess = 0.0
+            audioWindowSumSq = 0.0
+            audioWindowSamples = 0
+            audioWindowZcr = 0
+            // no resetea audioPrevSample para ZCR continuo entre ventanas (opcional)
             lastClosedSmartIdx = idx
             writePrefs()
         }
