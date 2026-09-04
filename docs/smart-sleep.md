@@ -42,7 +42,7 @@ SleepModeScreen START → AppContext → SleepForegroundService (foregroundServi
 - **Sesión:** `SleepModeScreen.finishSleep()` `getMovementSummary()` → `session.smartWindows[]` (`stage/confidence/audioRms`) + `estimatedStages{wake,light,deep} min` (`toMin` `windowMs 30000`) + `smartWindowMs` → `sleep_history` (retrocompat `??`).
 - **Statistics:** `StatisticsScreen` `smartSessions` filtra `estimatedStages` `!isNap`, promedia `wake/light/deep min` en `StatCard` + hipnograma `WAKE(60px)/LIGHT(36px)/DEEP(18px)` con colores `#FF8FAB/#FFD166/#8FA3FF` últimas `48` ventanas.
 - **Results:** `ResultsScreen` `metricCard` `Sueño estimado*` `deep/light/wake m` + disclaimer `*Estimación por reglas`.
-- **SleepMode:** debug card `Fase C` `Smart Sleep (Fase C)` `N ventanas · avg/max · LEVEL · stage conf%` + `audio rms/zcr` + `*estimación no diagnóstico`.
+- **SleepMode:** card `Sueño estimado` (estado simple Despierto/ligero*/profundo*, sin debug ni números) + disclaimer.
 
 ## 7. Permisos y privacidad
 - **Permisos:** `RECORD_AUDIO` runtime (`PermissionsAndroid.request` en `SleepModeScreen.handleStartSleep` tras `ACTIVITY_RECOGNITION`, `Alert` `micPermissionTitle/Message` ES: *procesa local, descarta tras RMS/ZCR*), `FOREGROUND_SERVICE_MICROPHONE` + `FOREGROUND_SERVICE_SPECIAL_USE` + `WAKE_LOCK` + `POST_NOTIFICATIONS`/`ACTIVITY_RECOGNITION`. Acelerómetro sin permiso. `CAMERA` ya de `PPG` (`minSdk 26`).

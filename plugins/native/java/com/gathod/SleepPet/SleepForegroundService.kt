@@ -179,14 +179,24 @@ class SleepForegroundService : Service() {
 
         fun setSmartAlarmConfig(context: Context, enabled: Boolean, hour: Int, minute: Int, windowMin: Int) {
             try {
-                context.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
-                    .edit()
+                val prefs = context.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
+                val prevHour = prefs.getInt("hour", -1)
+                val prevMinute = prefs.getInt("minute", -1)
+                val prevWindow = prefs.getInt("windowMin", -1)
+                val changed = prevHour != hour || prevMinute != minute || prevWindow != windowMin
+                prefs.edit()
                     .putBoolean("enabled", enabled)
                     .putInt("hour", hour)
                     .putInt("minute", minute)
                     .putInt("windowMin", windowMin)
+                    // Nueva programación = nueva oportunidad: un Detener previo no debe silenciarla
+                    .putBoolean("stopped", false)
                     .apply()
-                Log.i("SmartAlarm", "config guardada enabled=$enabled ${hour}:${minute} window ${windowMin}m")
+                // Si cambió hora/ventana, el favorable de la noche anterior ya no vale
+                if (changed) {
+                    prefs.edit().putLong("lastFavorableMs", 0L).apply()
+                }
+                Log.i("SmartAlarm", "config guardada enabled=$enabled ${hour}:${minute} window ${windowMin}m (stopped reset)")
             } catch (e: Exception) {
                 recordError("smartAlarmSet", e.toString())
             }

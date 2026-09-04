@@ -259,7 +259,7 @@ export default function SleepModeScreen({ navigation }) {
   // Movimiento nocturno en vivo: el detector corre en el servicio nativo,
   // aquí solo se consulta el resumen cada 30s para la card (epochs de 5 min)
   const [movementEvents, setMovementEvents] = useState(0);
-  // Fase A Smart Sleep: ventanas 30s (debug temporal para validar logcat)
+  // Smart Sleep: ventanas 30s para card Sueño estimado
   const [smartWindows, setSmartWindows] = useState([]);
   const [smartWindowMs, setSmartWindowMs] = useState(30000);
 
@@ -900,70 +900,46 @@ export default function SleepModeScreen({ navigation }) {
 
             {/* Movimiento nocturno legacy oculto (Fase D): el detector nativo sigue corriendo
                 para smartWindows 30s, pero ya no se muestra "N eventos" — lo reemplaza Smart Sleep */}
-            {/* Fase B Smart Sleep debug — temporal para validar logcat, ventanas 30s sincronizadas movimiento + audio */}
+            {/* Sueño estimado — estado simple, sin debug */}
             {running && (
-              <View style={[styles.glassCard, { borderStyle: "dashed", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }]}>
+              <View style={styles.glassCard}>
                 <View style={styles.cardHeader}>
-                  <View style={[styles.cardIconCircle, { backgroundColor: "rgba(255,209,102,0.18)" }]}>
-                    <AppIcon name="night" size={22} color={NIGHT.yellow} />
+                  <View style={styles.cardIconCircle}>
+                    <AppIcon name="night" size={22} color={NIGHT.end} />
                   </View>
-                  <AppText style={styles.cardTitle}>Smart Sleep (Fase B)</AppText>
-                  <View style={{ marginLeft: 8, backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 }}>
-                    <AppText style={{ color: "rgba(255,255,255,0.85)", fontSize: 10, fontFamily: "Nunito_700Bold" }}>DEBUG</AppText>
-                  </View>
+                  <AppText style={styles.cardTitle}>
+                    {t.smartSleepTitle ?? "Sueño estimado"}
+                  </AppText>
                 </View>
                 {(() => {
                   const n = smartWindows.length;
                   const last = n > 0 ? smartWindows[n - 1] : null;
-                  const avg = last ? last.avgMovement : 0;
-                  const max = last ? last.maxMovement : 0;
-                  const level = last?.level ?? (avg < 0.93 ? "LOW" : avg < 1.02 ? "MED" : "HIGH");
-                  const levelColor = level === "LOW" ? "#8FA3FF" : level === "MED" ? "#FFD166" : "#FF8FAB";
-                  const rms = last ? last.audioRms ?? 0 : 0;
-                  const zcr = last ? last.audioZcr ?? 0 : 0;
-                  const hasAudio = last ? !!last.hasAudio : false;
-                  const stage = last?.stage ?? "LIGHT";
-                  const conf = last?.confidence ?? 0.5;
+                  const stage = last?.stage ?? null;
                   const stageColor = stage === "WAKE" ? "#FF8FAB" : stage === "DEEP" ? "#8FA3FF" : "#FFD166";
+                  const stageLabel =
+                    stage === "WAKE"
+                      ? (t.smartSleepWakePlain ?? "Despierto")
+                      : stage === "DEEP"
+                        ? (t.smartSleepDeepPlain ?? "Sueño profundo*")
+                        : stage === "LIGHT"
+                          ? (t.smartSleepLightPlain ?? "Sueño ligero*")
+                          : null;
                   return (
                     <>
-                      <AppText style={styles.cardValue}>
-                        {n} ventanas · {Math.round(smartWindowMs / 1000)}s
-                      </AppText>
-                      <AppText style={styles.cardHint}>
-                        {n > 0 ? `última avg ${avg.toFixed(3)} · max ${max.toFixed(2)} · ${level} · ${stage} ${(conf*100).toFixed(0)}%` : "esperando primera ventana 30s…"}
-                      </AppText>
-                      {n > 0 && (
-                        <AppText style={[styles.cardHint, { marginTop: 4, fontSize: 11, opacity: hasAudio ? 0.85 : 0.6 }]}>
-                          {hasAudio
-                            ? `audio rms ${rms.toFixed(4)} · zcr ${zcr.toFixed(4)} · ${last.audioSamples ?? 0} samples`
-                            : "audio NO_AUDIO (permiso denegado o silencio) · fallback accel-only"}
+                      {stageLabel ? (
+                        <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: stageColor }} />
+                          <AppText style={[styles.cardValue, { color: stageColor }]}>
+                            {stageLabel}
+                          </AppText>
+                        </View>
+                      ) : (
+                        <AppText style={styles.cardHint}>
+                          {t.smartSleepWaiting ?? "Analizando tu descanso…"}
                         </AppText>
                       )}
-                      {n > 0 && (
-                        <View style={{ marginTop: 6, flexDirection: "row", alignItems: "center", gap: 6 }}>
-                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: stageColor }} />
-                          <AppText style={{ color: stageColor, fontSize: 11, fontFamily: "Nunito_800ExtraBold" }}>
-                            {stage} {stage === "WAKE" ? "· despierto" : stage === "DEEP" ? "· profundo*" : "· ligero*"} 
-                          </AppText>
-                          <AppText style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontFamily: "Nunito_400Regular" }}>
-                            raw {last?.rawStage ?? stage}
-                          </AppText>
-                        </View>
-                      )}
-                      {n > 0 && (
-                        <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center", gap: 6 }}>
-                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: levelColor }} />
-                          <AppText style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, fontFamily: "Nunito_600SemiBold" }}>
-                            {level === "LOW" ? "quieto" : level === "MED" ? "movimiento leve" : "movimiento alto"} · ver logcat SmartSleep/SmartAudio
-                          </AppText>
-                        </View>
-                      )}
-                      <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Nunito_400Regular", marginTop: 6, textAlign: "center" }}>
-                        Ventanas 30s · movimiento + audio → WAKE/LIGHT/DEEP* · no médica · Fase C
-                      </AppText>
-                      <AppText style={{ color: "rgba(255,255,255,0.45)", fontSize: 9, fontFamily: "Nunito_400Regular", marginTop: 2, textAlign: "center" }}>
-                        *Estimación por reglas, no diagnóstico · audio descartado tras RMS/ZCR
+                      <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Nunito_400Regular", marginTop: 8, textAlign: "center" }}>
+                        {t.smartSleepDisclaimerSmall ?? "*Estimación en tu teléfono, no es medición médica"}
                       </AppText>
                     </>
                   );
