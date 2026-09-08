@@ -413,7 +413,7 @@ export default {
   notificationChannel: "Sesión de Sueño",
   notificationChannelDescription: "Monitoreo del sueño",
 
-  notificationTitle: "🌙 SleepPet",
+  notificationTitle: "SleepPet",
   notificationRunning: "Sesión de sueño en progreso",
 
   notificationTime: "⏱ Tiempo",
@@ -476,16 +476,16 @@ export default {
   reminderMinute: "Minuto",
   reminderChannel: "Recordatorio de sueño",
   reminderChannelDescription: "Recordatorio diario para ir a dormir",
-  reminderTitle: "🌙 Hora de dormir",
+  reminderTitle: "Hora de dormir",
   reminderContent: "Es hora de ir a dormir. ¡Tu mascota te espera!",
-  reminderFollowUpTitle: "🌙 Sigues despierto?",
+  reminderFollowUpTitle: "¿Sigues despierto?",
   reminderFollowUpContent: "Llevas 15 min despierto — tu mascota te espera para dormir",
 
   smartAlarmTitle: "Smart Alarm",
   smartAlarmDesc: "Despertar en fase ligera dentro de ventana",
   smartAlarmWindowHint: "Ventana favorable",
   smartAlarmWindowDesc: "Si tu sueño está en fase ligera entre {{start}} y {{end}}, SmartAlarm intentará despertarte en momento favorable.",
-  smartAlarmDisclaimer: "*Estimación por reglas, no diagnóstico médico. Siempre suena a la hora objetivo si no hay momento favorable.",
+  smartAlarmDisclaimer: "*Estimación por reglas, no diagnóstico médico. Siempre suena a la hora objetivo si no hay momento favorable — incluso si no iniciaste sesión de sueño.",
   smartAlarmNoWindow: "Sin ventana favorable esta noche",
   smartAlarmFavorable: "Momento favorable detectado",
 
@@ -494,8 +494,6 @@ export default {
   smartSleepWake: "Despierto*",
   smartSleepTitle: "Sueño estimado",
   smartSleepWaiting: "Analizando tu descanso…",
-  smartSleepDeepPlain: "Sueño profundo*",
-  smartSleepLightPlain: "Sueño ligero*",
   smartSleepWakePlain: "Despierto",
   smartSleepAvgSub: "*estimado",
   smartSleepHipnogram: "Hipnograma estimado*",

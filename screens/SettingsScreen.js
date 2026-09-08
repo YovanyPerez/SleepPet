@@ -266,6 +266,21 @@ export default function SettingsScreen({ navigation }) {
     return unsubscribe;
   }, [navigation]);
 
+  function ExactAlarmLink() {
+    if (exactAlarmOk) return null;
+    return (
+      <TouchableOpacity
+        style={styles.exactAlarmLink}
+        onPress={openExactAlarmSettings}
+      >
+        <AppIcon name="reminder" size={16} color={NIGHT.yellow} style={styles.exactAlarmIcon} />
+        <AppText style={styles.exactAlarmText}>
+          {t.exactAlarmHint}
+        </AppText>
+      </TouchableOpacity>
+    );
+  }
+
   function applyReminder(next) {
     reminderRef.current = next;
     setReminder(next);
@@ -650,22 +665,7 @@ export default function SettingsScreen({ navigation }) {
 
               </View>
 
-              {
-                reminder.enabled && !exactAlarmOk && (
-                  <TouchableOpacity
-                    style={styles.exactAlarmLink}
-                    onPress={openExactAlarmSettings}
-                  >
-
-                    <AppIcon name="reminder" size={16} color={NIGHT.yellow} style={styles.exactAlarmIcon} />
-
-                    <AppText style={styles.exactAlarmText}>
-                      {t.exactAlarmHint}
-                    </AppText>
-
-                  </TouchableOpacity>
-                )
-              }
+              {reminder.enabled && <ExactAlarmLink />}
 
             </Card>
 
@@ -740,17 +740,7 @@ export default function SettingsScreen({ navigation }) {
                   <AppText style={{ color: "rgba(0,0,0,0.45)", fontSize: 11, marginTop: 8, textAlign: "center" }}>
                     {t.smartAlarmDisclaimer ?? "*Estimación por reglas, no diagnóstico médico. Amanecer siempre a la hora objetivo si no hay momento favorable."}
                   </AppText>
-                  {!exactAlarmOk && (
-                    <TouchableOpacity
-                      style={styles.exactAlarmLink}
-                      onPress={openExactAlarmSettings}
-                    >
-                      <AppIcon name="reminder" size={16} color={NIGHT.yellow} style={styles.exactAlarmIcon} />
-                      <AppText style={styles.exactAlarmText}>
-                        {t.exactAlarmHint}
-                      </AppText>
-                    </TouchableOpacity>
-                  )}
+                  <ExactAlarmLink />
                 </>
               )}
             </Card>

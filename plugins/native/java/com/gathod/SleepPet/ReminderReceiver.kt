@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
 
@@ -103,13 +104,13 @@ class ReminderReceiver : BroadcastReceiver() {
         val title = if (isFollowup) {
             prefs.getString(
                 ReminderModule.KEY_FOLLOWUP_TITLE,
-                prefs.getString(ReminderModule.KEY_TITLE, "🌙 SleepPet") ?: "🌙 SleepPet"
-            ) ?: "🌙 SleepPet"
+                prefs.getString(ReminderModule.KEY_TITLE, "SleepPet") ?: "SleepPet"
+            ) ?: "SleepPet"
         } else {
             prefs.getString(
                 ReminderModule.KEY_TITLE,
-                "🌙 SleepPet"
-            ) ?: "🌙 SleepPet"
+                "SleepPet"
+            ) ?: "SleepPet"
         }
 
         val content = if (isFollowup) {
@@ -146,7 +147,9 @@ class ReminderReceiver : BroadcastReceiver() {
             context,
             ReminderModule.CHANNEL_ID
         )
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_sleep_moon)
+            .setColor(0xFF5E60CE.toInt())
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
             .setContentTitle(title)
             .setContentText(content)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

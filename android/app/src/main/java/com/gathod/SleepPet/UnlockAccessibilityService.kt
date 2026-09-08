@@ -142,21 +142,24 @@ class UnlockAccessibilityService : AccessibilityService() {
 
         }
 
-        // Decisión única por desbloqueo: se consume el armado aunque el paquete
-        // sea SleepPet (no cuenta ahora y tampoco cuentan navegaciones posteriores)
+        // Si quedó en SleepPet no se cuenta ni se consume: el armado sobrevive
+        // y la primera app real que abra después contará 1 vía el fallback
+        // (TYPE_WINDOW_STATE_CHANGED). Así desbloqueo→SleepPet→otra app sí cuenta.
+        if (packageName == SLEEPPET_PACKAGE) {
+
+            Log.i(TAG, "Desbloqueo en SleepPet: en espera")
+
+            return
+
+        }
+
+        // Decisión única por desbloqueo contado: se consume el armado para que
+        // navegaciones posteriores con la pantalla encendida no sobrecuenten.
         armed = false
 
         lastCountTime = now
 
-        if (packageName == SLEEPPET_PACKAGE) {
-
-            Log.i(TAG, "Desbloqueo en SleepPet: no se cuenta")
-
-        } else {
-
-            Log.i(TAG, "DESBLOQUEO contado en: $packageName")
-
-        }
+        Log.i(TAG, "DESBLOQUEO contado en: $packageName")
 
         AccessibilityModule.checkForegroundApp(packageName)
 

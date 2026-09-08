@@ -68,10 +68,12 @@ class SmartAlarmModule(reactContext: ReactApplicationContext) : ReactContextBase
                 android.content.Context.NOTIFICATION_SERVICE
             ) as android.app.NotificationManager
             manager.cancel(3001)
-            reactApplicationContext.getSharedPreferences(
+            val prefs = reactApplicationContext.getSharedPreferences(
                 SleepForegroundService.SMART_ALARM_PREFS_NAME,
                 android.content.Context.MODE_PRIVATE
-            ).edit().putBoolean("stopped", true).apply()
+            )
+            // Detener silencia solo HOY (auto-expira mañana)
+            SmartAlarmReceiver.markStoppedToday(prefs)
         } catch (_: Exception) {}
     }
 }

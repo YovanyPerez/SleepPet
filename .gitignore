@@ -36,3 +36,8 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Documentacion local (Word, no subir al repo)
+Documentacion/*.docx
+Documentacion/*.bak.docx
+*.bak.docx
+

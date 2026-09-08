@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -184,18 +185,20 @@ class SleepForegroundService : Service() {
                 val prevMinute = prefs.getInt("minute", -1)
                 val prevWindow = prefs.getInt("windowMin", -1)
                 val changed = prevHour != hour || prevMinute != minute || prevWindow != windowMin
-                prefs.edit()
+                // Nueva programación = nueva oportunidad: un Detener previo no debe silenciarla.
+                // Si cambió hora/ventana, el favorable de la noche anterior ya no vale.
+                // stoppedDate se limpia (un Detener de hoy expira al guardar de nuevo).
+                val e = prefs.edit()
                     .putBoolean("enabled", enabled)
                     .putInt("hour", hour)
                     .putInt("minute", minute)
                     .putInt("windowMin", windowMin)
-                    // Nueva programación = nueva oportunidad: un Detener previo no debe silenciarla
-                    .putBoolean("stopped", false)
-                    .apply()
-                // Si cambió hora/ventana, el favorable de la noche anterior ya no vale
+                    .remove("stopped")
+                    .putString("stoppedDate", "")
                 if (changed) {
-                    prefs.edit().putLong("lastFavorableMs", 0L).apply()
+                    e.putLong("lastFavorableMs", 0L)
                 }
+                e.apply()
                 Log.i("SmartAlarm", "config guardada enabled=$enabled ${hour}:${minute} window ${windowMin}m (stopped reset)")
             } catch (e: Exception) {
                 recordError("smartAlarmSet", e.toString())
@@ -540,24 +543,18 @@ class SleepForegroundService : Service() {
         }
     }
 
-    private fun elapsedString(): String {
-        val elapsedMillis = System.currentTimeMillis() - startTime
-        val totalSeconds = (elapsedMillis / 1000).coerceAtLeast(0)
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-        return String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
-    }
-
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_sleep_moon)
+            .setColor(0xFF5E60CE.toInt())
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
             .setContentTitle(notificationTitle)
             .setContentText(notificationContent)
+            .setUsesChronometer(true)
+            .setWhen(startTime)
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
-                    "$timeLabel: ${elapsedString()}\n" +
-                        "$unlockLabel: $unlocks"
+                    "$unlockLabel: $unlocks"
                 )
             )
             .setPriority(NotificationCompat.PRIORITY_LOW)

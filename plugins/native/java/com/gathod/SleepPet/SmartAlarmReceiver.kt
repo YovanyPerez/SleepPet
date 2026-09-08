@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -14,6 +15,33 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 
 class SmartAlarmReceiver : BroadcastReceiver() {
+
+    companion object {
+
+        // Detener/despertar guarda la FECHA (no un boolean): auto-expira al día
+        // siguiente, así un Detener no silencia las noches futuras (latch del flag viejo).
+        internal fun todayStr(): String {
+            return java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                .format(java.util.Date())
+        }
+
+        internal fun isStoppedToday(prefs: android.content.SharedPreferences): Boolean {
+            // Migración: el flag legacy "stopped" se considera expirado (suena de nuevo)
+            if (prefs.contains("stopped")) {
+                prefs.edit().remove("stopped").apply()
+            }
+            val d = prefs.getString("stoppedDate", "") ?: ""
+            return d.isNotEmpty() && d == todayStr()
+        }
+
+        internal fun markStoppedToday(prefs: android.content.SharedPreferences) {
+            if (prefs.contains("stopped")) {
+                prefs.edit().remove("stopped").apply()
+            }
+            prefs.edit().putString("stoppedDate", todayStr()).apply()
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent?) {
         try {
             val action = intent?.action
@@ -50,9 +78,9 @@ class SmartAlarmReceiver : BroadcastReceiver() {
             Log.i("SmartAlarm", "alarma ignorada — disabled")
             return
         }
-        // Si el usuario ya detuvo esta alarma, no sonar
-        if (p.getBoolean("stopped", false)) {
-            Log.i("SmartAlarm", "alarma ignorada — ya detenida por usuario")
+        // Si el usuario ya detuvo la alarma de HOY, no sonar (expira solo al cambiar de día)
+        if (isStoppedToday(p)) {
+            Log.i("SmartAlarm", "alarma ignorada — ya detenida hoy por usuario")
             return
         }
         val hour = p.getInt("hour", 7)
@@ -60,7 +88,6 @@ class SmartAlarmReceiver : BroadcastReceiver() {
         Log.i("SmartAlarm", "¡ALARMA SmartAlarm disparada ${hour}:${String.format("%02d", minute)} nivel 0 suave!")
         p.edit()
             .putLong("lastTriggerMs", System.currentTimeMillis())
-            .putBoolean("stopped", false)
             .apply()
         // Nivel 0: sonido suave + vibración corta
         SmartAlarmPlayer.play(context, 0)
@@ -74,8 +101,8 @@ class SmartAlarmReceiver : BroadcastReceiver() {
     private fun handleEscalation(context: Context, level: Int) {
         val p = prefs(context)
         if (!p.getBoolean("enabled", false)) return
-        if (p.getBoolean("stopped", false)) {
-            Log.i("SmartAlarm", "escalada nivel $level ignorada — detenida")
+        if (isStoppedToday(p)) {
+            Log.i("SmartAlarm", "escalada nivel $level ignorada — detenida hoy")
             return
         }
         val hour = p.getInt("hour", 7)
@@ -92,7 +119,7 @@ class SmartAlarmReceiver : BroadcastReceiver() {
 
     private fun handleStop(context: Context) {
         try {
-            prefs(context).edit().putBoolean("stopped", true).apply()
+            markStoppedToday(prefs(context))
             SmartAlarmScheduler.cancelEscalations(context)
             SmartAlarmPlayer.stop()
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -154,12 +181,14 @@ class SmartAlarmReceiver : BroadcastReceiver() {
             val stopPending = SmartAlarmScheduler.stopIntent(context)
             val timeStr = String.format("%02d:%02d", hour, minute)
             val stageTitle = when (level) {
-                0 -> "⏰ SmartAlarm $timeStr — ¡Buenos días! (suave)"
-                1 -> "⏰ SmartAlarm $timeStr — ¡Hora de levantarse!"
-                else -> "⏰ SmartAlarm $timeStr — ¡DESPIERTA!"
+                0 -> "SmartAlarm $timeStr — Buenos días (suave)"
+                1 -> "SmartAlarm $timeStr — Hora de levantarse"
+                else -> "SmartAlarm $timeStr — DESPIERTA"
             }
             val notif = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_sleep_moon)
+                .setColor(0xFF5E60CE.toInt())
+                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
                 .setContentTitle(stageTitle)
                 .setContentText("Despertar en fase ligera · Detener para silenciar")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

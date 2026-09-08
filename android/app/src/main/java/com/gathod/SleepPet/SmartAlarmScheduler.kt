@@ -24,8 +24,7 @@ object SmartAlarmScheduler {
             // Programar alarma obligatoria a targetTime como fallback (si no hay momento favorable, suena igual)
             val intent = Intent(context, SmartAlarmReceiver::class.java).apply { action = ACTION_SMART_ALARM }
             val pending = PendingIntent.getBroadcast(context, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            val canExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) alarmManager.canScheduleExactAlarms() else true
-            if (canExact) {
+            if (canExact(alarmManager)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
                 } else {
@@ -57,6 +56,24 @@ object SmartAlarmScheduler {
         }
     }
 
+    // Cancela solo el target obligatorio (REQUEST_CODE). Se usa cuando dispara el
+    // momento favorable: evita el doble despertar (favorable + target).
+    fun cancelTarget(context: Context) {
+        try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, SmartAlarmReceiver::class.java).apply { action = ACTION_SMART_ALARM }
+            val pending = PendingIntent.getBroadcast(context, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            alarmManager.cancel(pending)
+            Log.i("SmartAlarm", "target obligatorio cancelado (disparó favorable)")
+        } catch (e: Exception) {
+            Log.e("SmartAlarm", "cancelTarget error ${e.message}")
+        }
+    }
+
+    private fun canExact(alarmManager: AlarmManager): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) alarmManager.canScheduleExactAlarms() else true
+    }
+
     fun cancelEscalations(context: Context) {
         try {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -80,10 +97,14 @@ object SmartAlarmScheduler {
                 putExtra("level", level)
             }
             val pending = PendingIntent.getBroadcast(context, REQUEST_ESCALATE_BASE + level, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+            if (canExact(alarmManager)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+                } else {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+                }
             } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             }
             Log.i("SmartAlarm", "escalada nivel $level en ${delaySec}s")
         } catch (e: Exception) {
@@ -98,15 +119,21 @@ object SmartAlarmScheduler {
 
     fun scheduleFavorableNow(context: Context) {
         // Disparo anticipado dentro de ventana favorable (LIGHT) — programa alarma inmediata +5s
+        // y cancela el target obligatorio para no despertar dos veces (las escaladas son la red de seguridad).
         try {
+            cancelTarget(context)
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val triggerAt = System.currentTimeMillis() + 5000
             val intent = Intent(context, SmartAlarmReceiver::class.java).apply { action = ACTION_SMART_ALARM }
             val pending = PendingIntent.getBroadcast(context, REQUEST_FAVORABLE, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+            if (canExact(alarmManager)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+                } else {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+                }
             } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             }
             Log.i("SmartAlarm", "alarma favorable programada en 5s")
         } catch (e: Exception) {

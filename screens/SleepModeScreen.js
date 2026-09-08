@@ -482,6 +482,14 @@ export default function SleepModeScreen({ navigation }) {
 
     stopNotification();
 
+    // Despertador inteligente: si despierta (temprano o no), la alarma de HOY
+    // ya no debe sonar — stopSmartAlarm detiene sonido y marca stoppedDate de
+    // hoy (auto-expira mañana, sin latch como el boolean anterior).
+    try {
+      const { stopSmartAlarm } = await import("../services/SmartAlarmService");
+      stopSmartAlarm();
+    } catch (e) {}
+
     setSleepActive(false);
 
     setSleepSessionStarted(false);
@@ -783,6 +791,15 @@ export default function SleepModeScreen({ navigation }) {
     outputRange: [24, 0],
   });
 
+  // Sueño estimado: último smartWindow 30s → { color, label } o null
+  const lastSmart = smartWindows.length > 0 ? smartWindows[smartWindows.length - 1] : null;
+  const SMART_META = {
+    WAKE: { color: "#FF8FAB", label: t.smartSleepWakePlain ?? "Despierto" },
+    DEEP: { color: "#8FA3FF", label: t.smartSleepDeep ?? "Sueño profundo*" },
+    LIGHT: { color: "#FFD166", label: t.smartSleepLight ?? "Sueño ligero*" },
+  };
+  const smartMeta = lastSmart ? SMART_META[lastSmart.stage] : null;
+
   return (
 
     <NightBackground
@@ -911,39 +928,21 @@ export default function SleepModeScreen({ navigation }) {
                     {t.smartSleepTitle ?? "Sueño estimado"}
                   </AppText>
                 </View>
-                {(() => {
-                  const n = smartWindows.length;
-                  const last = n > 0 ? smartWindows[n - 1] : null;
-                  const stage = last?.stage ?? null;
-                  const stageColor = stage === "WAKE" ? "#FF8FAB" : stage === "DEEP" ? "#8FA3FF" : "#FFD166";
-                  const stageLabel =
-                    stage === "WAKE"
-                      ? (t.smartSleepWakePlain ?? "Despierto")
-                      : stage === "DEEP"
-                        ? (t.smartSleepDeepPlain ?? "Sueño profundo*")
-                        : stage === "LIGHT"
-                          ? (t.smartSleepLightPlain ?? "Sueño ligero*")
-                          : null;
-                  return (
-                    <>
-                      {stageLabel ? (
-                        <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 8 }}>
-                          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: stageColor }} />
-                          <AppText style={[styles.cardValue, { color: stageColor }]}>
-                            {stageLabel}
-                          </AppText>
-                        </View>
-                      ) : (
-                        <AppText style={styles.cardHint}>
-                          {t.smartSleepWaiting ?? "Analizando tu descanso…"}
-                        </AppText>
-                      )}
-                      <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Nunito_400Regular", marginTop: 8, textAlign: "center" }}>
-                        {t.smartSleepDisclaimerSmall ?? "*Estimación en tu teléfono, no es medición médica"}
-                      </AppText>
-                    </>
-                  );
-                })()}
+                {smartMeta ? (
+                  <View style={{ marginTop: 4, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: smartMeta.color }} />
+                    <AppText style={[styles.cardValue, { color: smartMeta.color }]}>
+                      {smartMeta.label}
+                    </AppText>
+                  </View>
+                ) : (
+                  <AppText style={styles.cardHint}>
+                    {t.smartSleepWaiting ?? "Analizando tu descanso…"}
+                  </AppText>
+                )}
+                <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Nunito_400Regular", marginTop: 8, textAlign: "center" }}>
+                  {t.smartSleepDisclaimerSmall ?? "*Estimación en tu teléfono, no es medición médica"}
+                </AppText>
               </View>
             )}
 

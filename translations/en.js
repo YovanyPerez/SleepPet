@@ -412,7 +412,7 @@ export default {
   notificationChannel: "Sleep Session",
   notificationChannelDescription: "Sleep monitoring",
 
-  notificationTitle: "🌙 SleepPet",
+  notificationTitle: "SleepPet",
   notificationRunning: "Sleep session running",
 
   notificationTime: "⏱ Time",
@@ -475,16 +475,16 @@ export default {
   reminderMinute: "Minute",
   reminderChannel: "Sleep reminder",
   reminderChannelDescription: "Daily bedtime reminder",
-  reminderTitle: "🌙 Time to sleep",
+  reminderTitle: "Time to sleep",
   reminderContent: "It's time to go to bed. Your pet is waiting!",
-  reminderFollowUpTitle: "🌙 Still awake?",
+  reminderFollowUpTitle: "Still awake?",
   reminderFollowUpContent: "You've been awake 15 min — your pet is waiting to sleep",
 
   smartAlarmTitle: "Smart Alarm",
   smartAlarmDesc: "Wake in light phase within window",
   smartAlarmWindowHint: "Favorable window",
   smartAlarmWindowDesc: "If light sleep between {{start}} and {{end}}, SmartAlarm tries to wake you at a favorable moment.",
-  smartAlarmDisclaimer: "*Rule-based estimation, not medical diagnosis. Always rings at target time if no favorable moment.",
+  smartAlarmDisclaimer: "*Rule-based estimation, not medical diagnosis. Always rings at target time if no favorable moment — even if you didn't start a sleep session.",
   smartAlarmNoWindow: "No favorable window tonight",
   smartAlarmFavorable: "Favorable moment detected",
 
@@ -493,8 +493,6 @@ export default {
   smartSleepWake: "Awake*",
   smartSleepTitle: "Estimated sleep",
   smartSleepWaiting: "Analyzing your rest…",
-  smartSleepDeepPlain: "Deep sleep*",
-  smartSleepLightPlain: "Light sleep*",
   smartSleepWakePlain: "Awake",
   smartSleepAvgSub: "*estimated",
   smartSleepHipnogram: "Estimated hypnogram*",

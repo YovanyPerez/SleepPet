@@ -2,6 +2,7 @@
 import { useFrameProcessor } from "react-native-vision-camera";
 import { Worklets } from "react-native-worklets-core";
 import { calculateBPM } from "../services/PPGService";
+import { createStability, pushReading, pushMiss } from "../services/PPGStability";
 
 const DEFAULT_FPS = 30;
 
@@ -11,9 +12,8 @@ const SPATIAL_STD_MAX = 18; // textura: dedo+flash uniforme (5-12) vs habitacion
 const BAD_STREAK = Math.round(DEFAULT_FPS * 0.5); // ~0.5s fuera -> descartar toma
 const GOOD_STREAK = DEFAULT_FPS; // ~1s dentro -> dedo confirmado
 
-// Confirmacion por estabilidad (sin limite de tiempo)
+// Confirmacion por estabilidad (sin limite de tiempo; TOL en services/PPGStability)
 const STABILITY_DURATION_MS = 3000;
-const BPM_STABILITY_TOLERANCE = 5;
 const MIN_CONFIDENCE_FOR_CONFIRM = 0.6;
 const MIN_STABLE_READINGS = 5;
 const PREPARING_MS = 350;
@@ -47,7 +47,7 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
   const lastSpatialStdRef = useRef(null);
   const tickRef = useRef(0);
   const liveHistoryRef = useRef([]);
-  const stableChainRef = useRef([]);
+  const stableChainRef = useRef(createStability());
   const badStreakRef = useRef(0);
   const goodStreakRef = useRef(0);
   const startTakeRef = useRef(null);
@@ -75,7 +75,7 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
     lastSpatialStdRef.current = null;
     tickRef.current = 0;
     liveHistoryRef.current = [];
-    stableChainRef.current = [];
+    stableChainRef.current = createStability();
     badStreakRef.current = 0;
     goodStreakRef.current = 0;
     setLiveBpm(null);
@@ -143,23 +143,14 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
           setLiveBpm(medianHist);
           setBeatMs(Math.round(Math.min(1500, Math.max(350, 60000 / medianHist)) / 25) * 25);
 
-          // Cadena contigua de estabilidad
-          const chain = stableChainRef.current;
-          const anchor = chain[0];
-          const last = chain[chain.length - 1];
-          if (
-            !last ||
-            (Math.abs(result.bpm - last.bpm) <= BPM_STABILITY_TOLERANCE &&
-              Math.abs(result.bpm - anchor.bpm) <= BPM_STABILITY_TOLERANCE)
-          ) {
-            chain.push({ bpm: result.bpm, conf: result.confidence, t: Date.now() });
-          } else {
-            stableChainRef.current = [
-              { bpm: result.bpm, conf: result.confidence, t: Date.now() },
-            ];
-          }
+          // Cadena contigua de estabilidad (ancla movil + 1 miss aislado)
+          stableChainRef.current = pushReading(stableChainRef.current, {
+            bpm: result.bpm,
+            conf: result.confidence,
+            t: Date.now(),
+          });
 
-          const ch = stableChainRef.current;
+          const ch = stableChainRef.current.chain;
           if (ch.length > 1) {
             setStabilityMs(
               Math.min(STABILITY_DURATION_MS, ch[ch.length - 1].t - ch[0].t)
@@ -179,9 +170,9 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
             return;
           }
         } else {
-          // Lectura invalida rompe la cadena (dedo presente, seguir midiendo)
-          if (stableChainRef.current.length) {
-            stableChainRef.current = [];
+          // Lectura invalida: 1 miss aislado conserva cadena, 2 seguidos la vacian
+          stableChainRef.current = pushMiss(stableChainRef.current);
+          if (!stableChainRef.current.chain.length) {
             setStabilityMs(0);
           }
         }
