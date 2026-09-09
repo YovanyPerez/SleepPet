@@ -12,7 +12,7 @@ import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
 import { PET_IMAGES } from "../constants/PetImages";
 import { getTranslations } from "../services/TranslationService";
-import { calculateGoalHours } from "../utils/sleepUtils";
+import { calculateGoalHours, sanitizeAgeDigits, isValidAge } from "../utils/sleepUtils";
 
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
@@ -50,11 +50,12 @@ export default function CreateProfileScreen({ navigation }) {
 
   async function finishSetup() {
 
-    const hours = calculateGoalHours(Number(age));
+    const ageNum = Math.min(99, Math.max(1, Number(sanitizeAgeDigits(age)) || 1));
+    const hours = calculateGoalHours(ageNum);
 
     setUserName(name);
 
-    setUserAge(Number(age));
+    setUserAge(ageNum);
 
     setGoalHours(hours);
 
@@ -74,6 +75,10 @@ export default function CreateProfileScreen({ navigation }) {
         {
 
           name: "Home",
+
+          // Perfil recién creado = usuario nuevo: Home muestra el onboarding
+          // una vez y luego deriva a SleepSetup (nunca automático después).
+          params: { showOnboarding: true },
 
         },
 
@@ -150,17 +155,24 @@ export default function CreateProfileScreen({ navigation }) {
 
                 <TextInput
                   value={age}
-                  onChangeText={setAge}
+                  onChangeText={(v) => setAge(sanitizeAgeDigits(v))}
                   keyboardType="numeric"
+                  maxLength={2}
                   placeholder={t.agePlaceholder}
                   placeholderTextColor="#B8B2E8"
                   cursorColor={NIGHT.end}
                   style={styles.input}
                 />
 
+                {age !== "" && !isValidAge(age) && (
+                  <AppText style={styles.hint}>
+                    {t.ageInvalid}
+                  </AppText>
+                )}
+
                 <TouchableOpacity
-                  style={[styles.button, !age && styles.buttonDisabled]}
-                  disabled={!age}
+                  style={[styles.button, !isValidAge(age) && styles.buttonDisabled]}
+                  disabled={!isValidAge(age)}
                   onPress={() => setStep(3)}
                 >
 

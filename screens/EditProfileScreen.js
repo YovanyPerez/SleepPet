@@ -10,6 +10,7 @@ import {
   ScrollView,
   View,
   Animated,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,6 +24,8 @@ import {
 
 import {
   calculateGoalHours,
+  sanitizeAgeDigits,
+  isValidAge,
 } from "../utils/sleepUtils";
 
 import NightBackground from "../components/NightBackground";
@@ -85,6 +88,11 @@ export default function EditProfileScreen({ navigation }) {
 
   function saveProfile() {
 
+    if (age !== "" && !isValidAge(age)) {
+      Alert.alert(t.ageInvalid);
+      return;
+    }
+
     setUserName(name);
 
     setPetNames((prev) => ({
@@ -92,7 +100,7 @@ export default function EditProfileScreen({ navigation }) {
       [selectedPet]: petNameInput,
     }));
 
-    setUserAge(Number(age));
+    setUserAge(age === "" ? null : Math.min(99, Math.max(1, Number(sanitizeAgeDigits(age)))));
 
     setGoalHours(Number(goal));
 
@@ -224,13 +232,20 @@ export default function EditProfileScreen({ navigation }) {
 
               <TextInput
                 value={age}
-                onChangeText={setAge}
+                onChangeText={(v) => setAge(sanitizeAgeDigits(v))}
                 placeholder={t.age}
                 placeholderTextColor="#B8B2E8"
                 cursorColor={NIGHT.end}
                 keyboardType="numeric"
+                maxLength={2}
                 style={styles.input}
               />
+
+              {age !== "" && !isValidAge(age) && (
+                <AppText style={styles.fieldDesc}>
+                  {t.ageInvalid}
+                </AppText>
+              )}
 
             </View>
 

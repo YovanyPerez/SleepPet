@@ -183,6 +183,10 @@ export function AppProvider({ children }) {
 
   const [lastStreakDateKey, setLastStreakDateKey] = useState(null);
 
+  // Guía inicial vista (adicional; NUNCA decide sola si el usuario es nuevo —
+  // ver services/UserDataService.js y REGLA CRÍTICA de onboarding)
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
   // ===========================
   // Cargar datos
   // ===========================
@@ -237,6 +241,8 @@ export function AppProvider({ children }) {
         setBpmConfidence(data.bpmConfidence ?? null);
 
         setLastStreakDateKey(data.lastStreakDateKey ?? null);
+
+        setHasCompletedOnboarding(data.hasCompletedOnboarding ?? false);
 
       }
 
@@ -400,6 +406,8 @@ export function AppProvider({ children }) {
 
       lastStreakDateKey,
 
+      hasCompletedOnboarding,
+
     });
 
     saveUnlockedAchievements(
@@ -447,6 +455,8 @@ export function AppProvider({ children }) {
       bpmConfidence,
 
       lastStreakDateKey,
+
+      hasCompletedOnboarding,
 
   ]);
 
@@ -702,6 +712,9 @@ export function AppProvider({ children }) {
 
     lastStreakDateKey,
     setLastStreakDateKey,
+
+    hasCompletedOnboarding,
+    setHasCompletedOnboarding,
 
   };
 

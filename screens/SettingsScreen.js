@@ -50,6 +50,7 @@ import {
 } from "../services/SmartAlarmService";
 
 import NightBackground from "../components/NightBackground";
+import TimeSelector, { wrapValue } from "../components/TimeSelector";
 import Card from "../components/Card";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
@@ -63,104 +64,6 @@ const APP_VERSION =
   Constants.expoConfig?.version ||
   Constants.nativeAppVersion ||
   "1.0.0";
-
-function wrapValue(value, direction, min, max) {
-  if (direction > 0) {
-    return value >= max ? min : value + 1;
-  }
-  return value <= min ? max : value - 1;
-}
-
-function TimeSelector({ hour, minute, hourLabel, minuteLabel, onStep }) {
-
-  const [field, setField] = useState("hour");
-
-  const fieldRef = useRef(field);
-  fieldRef.current = field;
-
-  const timer = useRef(null);
-
-  useEffect(() => () => clearHold(), []);
-
-  function clearHold() {
-    if (timer.current) {
-      clearTimeout(timer.current.timeout);
-      clearInterval(timer.current.interval);
-      timer.current = null;
-    }
-  }
-
-  function step(direction) {
-    onStep(fieldRef.current, direction);
-  }
-
-  function pressIn(direction) {
-    step(direction);
-    const timeout = setTimeout(() => {
-      timer.current.interval = setInterval(() => step(direction), 110);
-    }, 350);
-    timer.current = { timeout, interval: null };
-  }
-
-  const hourActive = field === "hour";
-  const minuteActive = field === "minute";
-
-  return (
-    <View style={styles.timeContainer}>
-
-      <View style={styles.timeLabels}>
-        <AppText style={styles.timeFieldLabel}>{hourLabel}</AppText>
-        <View style={styles.timeLabelsSpacer} />
-        <AppText style={styles.timeFieldLabel}>{minuteLabel}</AppText>
-      </View>
-
-      <View style={styles.timePill}>
-
-        <TouchableOpacity
-          style={styles.timeBtn}
-          onPressIn={() => pressIn(-1)}
-          onPressOut={clearHold}
-        >
-          <AppText style={styles.timeBtnText}>−</AppText>
-        </TouchableOpacity>
-
-        <View style={styles.timeValues}>
-
-          <TouchableOpacity
-            style={[styles.timeField, hourActive && styles.timeFieldActive]}
-            onPress={() => setField("hour")}
-          >
-            <AppText style={styles.timeValue}>
-              {String(hour).padStart(2, "0")}
-            </AppText>
-          </TouchableOpacity>
-
-          <AppText style={styles.timeColon}>:</AppText>
-
-          <TouchableOpacity
-            style={[styles.timeField, minuteActive && styles.timeFieldActive]}
-            onPress={() => setField("minute")}
-          >
-            <AppText style={styles.timeValue}>
-              {String(minute).padStart(2, "0")}
-            </AppText>
-          </TouchableOpacity>
-
-        </View>
-
-        <TouchableOpacity
-          style={styles.timeBtn}
-          onPressIn={() => pressIn(1)}
-          onPressOut={clearHold}
-        >
-          <AppText style={styles.timeBtnText}>+</AppText>
-        </TouchableOpacity>
-
-      </View>
-
-    </View>
-  );
-}
 
 export default function SettingsScreen({ navigation }) {
 
@@ -196,6 +99,8 @@ export default function SettingsScreen({ navigation }) {
     setLastSleepSession,
 
     setLastStreakDateKey,
+
+    setHasCompletedOnboarding,
 
   } = useContext(AppContext);
 
@@ -407,6 +312,8 @@ export default function SettingsScreen({ navigation }) {
             setLastSleepSession(null);
 
             setLastStreakDateKey(null);
+
+            setHasCompletedOnboarding(false);
 
             Alert.alert(
 
@@ -764,6 +671,33 @@ export default function SettingsScreen({ navigation }) {
 
                 <AppText style={styles.optionDesc}>
                   {t.resetDesc}
+                </AppText>
+
+              </View>
+
+              <AppIcon name="chevron" size={18} color="#9AA0B8" />
+
+            </TouchableOpacity>
+
+            {/* Ver guía (replay manual del onboarding, nunca automático) */}
+
+            <TouchableOpacity
+              style={styles.optionCard}
+              onPress={() => navigation.navigate("Home", { replayGuide: true })}
+            >
+
+              <View style={styles.iconCircle}>
+                <AppIcon name="sparkles" size={20} color={NIGHT.end} />
+              </View>
+
+              <View style={styles.optionText}>
+
+                <AppText style={styles.optionTitle}>
+                  {t.settingsGuideTitle}
+                </AppText>
+
+                <AppText style={styles.optionDesc}>
+                  {t.settingsGuideDesc}
                 </AppText>
 
               </View>

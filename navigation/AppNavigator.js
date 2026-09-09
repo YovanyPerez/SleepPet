@@ -8,6 +8,7 @@ import {
 
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
+import { hasExistingUserData } from "../services/UserDataService";
 import LoadingScreen from "../components/LoadingScreen";
 
 import HomeScreen from "../screens/HomeScreen";
@@ -26,6 +27,7 @@ import AchievementsScreen from "../screens/AchievementsScreen";
 import AchievementPopup from "../components/AchievementPopup";
 import AboutScreen from "../screens/AboutScreen";
 import PPGMeasureScreen from "../screens/PPGMeasureScreen";
+import SleepSetupScreen from "../screens/SleepSetupScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +38,26 @@ export default function AppNavigator() {
     loading,
 
     userName,
+
+    sleepHistory,
+
+    level,
+
+    xp,
+
+    coins,
+
+    streak,
+
+    ownedPets,
+
+    unlockedAchievements,
+
+    lastStreakDateKey,
+
+    goalType,
+
+    hasCompletedOnboarding,
 
     achievementPopup,
 
@@ -53,6 +75,21 @@ export default function AppNavigator() {
 
   }
 
+  // REGLA CRÍTICA: usuario nuevo = sin datos reales persistidos (nunca un solo flag)
+  const existingUser = hasExistingUserData({
+    userName,
+    sleepHistory,
+    level,
+    xp,
+    coins,
+    streak,
+    ownedPets,
+    unlockedAchievements,
+    lastStreakDateKey,
+    goalType,
+    hasCompletedOnboarding,
+  });
+
   return (
 
     <>
@@ -61,7 +98,7 @@ export default function AppNavigator() {
 
         <Stack.Navigator
           initialRouteName={
-            userName ? "Home" : "Welcome"
+            existingUser ? "Home" : "Welcome"
           }
           screenOptions={{
             headerShown: false,
@@ -141,6 +178,11 @@ export default function AppNavigator() {
           <Stack.Screen
             name="PPGMeasure"
             component={PPGMeasureScreen}
+          />
+
+          <Stack.Screen
+            name="SleepSetup"
+            component={SleepSetupScreen}
           />
 
         </Stack.Navigator>

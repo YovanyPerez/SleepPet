@@ -12,9 +12,16 @@ const TAB_ICONS = {
   Settings: "settings",
 };
 
-export default function BottomNav({ active, navigation }) {
+export default function BottomNav({ active, navigation, onTabLayout }) {
   return (
-    <View style={styles.bar}>
+    <View
+      style={styles.bar}
+      onLayout={
+        onTabLayout
+          ? (e) => onTabLayout("__bar", e.nativeEvent.layout)
+          : undefined
+      }
+    >
       {TAB_ORDER.map((key) => {
         const isActive = active === key;
         return (
@@ -22,6 +29,11 @@ export default function BottomNav({ active, navigation }) {
             key={key}
             style={[styles.tab, isActive && styles.tabActive]}
             onPress={() => navigation.navigate(key)}
+            onLayout={
+              onTabLayout
+                ? (e) => onTabLayout(key, e.nativeEvent.layout)
+                : undefined
+            }
           >
             <AppIcon
               name={TAB_ICONS[key]}

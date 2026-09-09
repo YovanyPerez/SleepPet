@@ -110,6 +110,14 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
   },
 
+  hint: {
+    color: NIGHT.yellow,
+    fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
+    textAlign: "center",
+    marginBottom: 14,
+  },
+
 });
 
 export default styles;

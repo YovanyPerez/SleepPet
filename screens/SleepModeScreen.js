@@ -294,6 +294,19 @@ export default function SleepModeScreen({ navigation }) {
 
   async function handleStartSleep() {
 
+    // Preparación pendiente: derivar a SleepSetup (solo muestra lo que falta);
+    // al volver con todo listo, el flujo normal continúa sin duplicarse.
+    try {
+      const { getMissingSetup } = await import("../services/SetupCheckService");
+      const missing = await getMissingSetup();
+      if (missing.length > 0) {
+        navigation.navigate("SleepSetup", { missing });
+        return;
+      }
+    } catch (e) {
+      addLog(`Error chequeo previo: ${e?.message ?? e}`);
+    }
+
     // Bloqueo: requiere servicio de accesibilidad para contar desbloqueos
     try {
       const enabled = await isAccessibilityEnabled();
