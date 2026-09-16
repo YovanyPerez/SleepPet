@@ -88,17 +88,7 @@ class UnlockAccessibilityService : AccessibilityService() {
 
         Log.i(TAG, "Servicio desenlazado")
 
-        handler.removeCallbacksAndMessages(null)
-
-        try {
-
-            unregisterReceiver(screenReceiver)
-
-        } catch (e: Exception) {
-
-            Log.w(TAG, "Receiver no registrado", e)
-
-        }
+        cleanup()
 
         return super.onUnbind(intent)
 
@@ -106,6 +96,14 @@ class UnlockAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
 
+        cleanup()
+
+        super.onDestroy()
+
+    }
+
+    private fun cleanup() {
+
         handler.removeCallbacksAndMessages(null)
 
         try {
@@ -117,8 +115,6 @@ class UnlockAccessibilityService : AccessibilityService() {
             Log.w(TAG, "Receiver no registrado", e)
 
         }
-
-        super.onDestroy()
 
     }
 

@@ -81,13 +81,7 @@ export default function AchievementCard({
 
       <View style={[styles.iconCircle, { backgroundColor: iconCircleBg }]}>
 
-        {
-          achievement.iconName ? (
-            <AppIcon name={achievement.iconName} size={26} color={iconColor} />
-          ) : (
-            <AppText style={styles.iconText}>{achievement.icon}</AppText>
-          )
-        }
+        <AppIcon name={achievement.iconName} size={26} color={iconColor} />
 
       </View>
 
@@ -107,8 +101,6 @@ export default function AchievementCard({
           progress={percentage}
           color={barColor}
           background="#EAE7FF"
-          height={8}
-          radius={4}
         />
 
         <AppText style={styles.progressText}>
@@ -183,10 +175,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
-  },
-
-  iconText: {
-    fontSize: 26,
   },
 
   middle: {

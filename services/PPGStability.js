@@ -10,7 +10,7 @@ function medianOf(nums) {
   return s[Math.floor(s.length / 2)];
 }
 
-export function medianBpm(chain) {
+function medianBpm(chain) {
   return medianOf(chain.map((x) => x.bpm));
 }
 

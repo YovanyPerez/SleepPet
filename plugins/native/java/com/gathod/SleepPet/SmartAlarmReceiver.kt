@@ -21,8 +21,7 @@ class SmartAlarmReceiver : BroadcastReceiver() {
         // Detener/despertar guarda la FECHA (no un boolean): auto-expira al día
         // siguiente, así un Detener no silencia las noches futuras (latch del flag viejo).
         internal fun todayStr(): String {
-            return java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                .format(java.util.Date())
+            return java.time.LocalDate.now().toString()
         }
 
         internal fun isStoppedToday(prefs: android.content.SharedPreferences): Boolean {
@@ -46,10 +45,6 @@ class SmartAlarmReceiver : BroadcastReceiver() {
         try {
             val action = intent?.action
             when (action) {
-                Intent.ACTION_BOOT_COMPLETED -> {
-                    Log.i("SmartAlarm", "BOOT_COMPLETED recibido — SmartAlarm re-agenda pendiente abrir app")
-                    return
-                }
                 SmartAlarmScheduler.ACTION_STOP -> {
                     handleStop(context)
                     return
@@ -135,23 +130,13 @@ class SmartAlarmReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
                 val vib = vm?.defaultVibrator
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vib?.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-                } else {
-                    @Suppress("DEPRECATION")
-                    vib?.vibrate(timings, -1)
-                }
+                vib?.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
             } else {
                 @Suppress("DEPRECATION")
                 val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    try {
-                        vib?.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-                    } catch (_: Exception) {
-                        @Suppress("DEPRECATION")
-                        vib?.vibrate(timings, -1)
-                    }
-                } else {
+                try {
+                    vib?.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
+                } catch (_: Exception) {
                     @Suppress("DEPRECATION")
                     vib?.vibrate(timings, -1)
                 }
@@ -165,20 +150,19 @@ class SmartAlarmReceiver : BroadcastReceiver() {
         try {
             val channelId = "smart_alarm_channel"
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val ch = NotificationChannel(channelId, "Smart Alarm", NotificationManager.IMPORTANCE_HIGH).apply {
-                    description = "Despertar favorable Smart Sleep"
-                    enableVibration(true)
-                    setShowBadge(false)
-                }
-                manager.createNotificationChannel(ch)
+            val ch = NotificationChannel(channelId, "Smart Alarm", NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Despertar favorable Smart Sleep"
+                enableVibration(true)
+                setShowBadge(false)
             }
+            manager.createNotificationChannel(ch)
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra("fromSmartAlarm", true)
             }
             val pending = PendingIntent.getActivity(context, 4001, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            val stopPending = SmartAlarmScheduler.stopIntent(context)
+            val stopIntent = Intent(context, SmartAlarmReceiver::class.java).apply { action = SmartAlarmScheduler.ACTION_STOP }
+            val stopPending = PendingIntent.getBroadcast(context, 3020, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val timeStr = String.format("%02d:%02d", hour, minute)
             val stageTitle = when (level) {
                 0 -> "SmartAlarm $timeStr — Buenos días (suave)"

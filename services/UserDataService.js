@@ -50,7 +50,3 @@ export function hasExistingUserData(s = {}) {
 
   return false;
 }
-
-export function isNewUser(s = {}) {
-  return !hasExistingUserData(s);
-}

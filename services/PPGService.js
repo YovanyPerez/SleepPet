@@ -315,24 +315,3 @@ export function calculateBPM(redMeans, fps) {
 
   return { bpm, confidence: finalConfidence, error: null, peaks: peaks.length, filteredStd: Number(filteredStd.toFixed(3)), spectralBpm, spectralDelta: spectralDelta != null ? Number(spectralDelta.toFixed(1)) : null };
 }
-
-export function getPPGErrorMessage(error, t) {
-  if (!t) return error;
-  switch (error) {
-    case "no_finger":
-      return t.ppgErrorNoFinger;
-    case "low_signal":
-      return t.ppgErrorLowLight;
-    case "too_short":
-      return t.ppgErrorTooShort;
-    case "no_peaks":
-    case "unstable":
-    case "low_confidence":
-    case "low_pulsatile":
-      return t.ppgErrorUnstable;
-    case "out_of_range":
-      return t.ppgErrorOutOfRange;
-    default:
-      return t.ppgErrorGeneric;
-  }
-}

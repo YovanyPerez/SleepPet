@@ -20,12 +20,6 @@ class BootReceiver : BroadcastReceiver() {
                 SmartAlarmScheduler.scheduleExact(context, hour, minute, windowMin)
                 Log.i("SmartAlarm", "SmartAlarm re-agendado tras boot ${hour}:${String.format("%02d", minute)} window ${windowMin}m")
             }
-            // Reminder: se re-agenda al abrir app vía AppContext, pero también intentamos aquí si hay prefs
-            val rprefs = context.getSharedPreferences("sleep_reminder", Context.MODE_PRIVATE)
-            val remHour = rprefs.getInt("hour", -1)
-            if (remHour != -1) {
-                Log.i("BootReceiver", "reminder prefs encontrados — re-agenda al abrir app")
-            }
         } catch (e: Exception) {
             Log.e("BootReceiver", "error ${e.message}")
         }

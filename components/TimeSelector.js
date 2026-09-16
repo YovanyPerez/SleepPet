@@ -4,10 +4,8 @@ import AppText from "./AppText";
 import { COLORS, NIGHT, NIGHT_STYLES } from "../constants/theme";
 
 function wrapValue(value, direction, min, max) {
-  if (direction > 0) {
-    return value >= max ? min : value + 1;
-  }
-  return value <= min ? max : value - 1;
+  const size = max - min + 1;
+  return min + (((value - min + direction) % size) + size) % size;
 }
 
 // Selector de hora [−] HH : MM [+] con press-and-hold (extraído de SettingsScreen,

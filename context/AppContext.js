@@ -24,9 +24,12 @@ import {
 } from "../services/AccessibilityListener";
 
 import {
-  getCurrentSleepSession,
   updateUnlockState,
 } from "../services/SleepService";
+
+import {
+  getCurrentSleep,
+} from "../storage/CurrentSleepStorage";
 
 import {
   startNotification,
@@ -144,11 +147,20 @@ export function AppProvider({ children }) {
 
   const [streak, setStreak] = useState(0);
 
+  // Escudos de racha (tienda): auto-consumo al fallar un día
+  const [streakShields, setStreakShields] = useState(0);
+
   // ===========================
   // Historial
   // ===========================
 
   const [sleepHistory, setSleepHistory] = useState([]);
+
+  // ===========================
+  // Daily Check-in (energía + experiencia de estudio, 1 por día)
+  // ===========================
+
+  const [dailyCheckIns, setDailyCheckIns] = useState([]);
 
   // ===========================
   // Última sesión
@@ -203,6 +215,8 @@ export function AppProvider({ children }) {
 
         setStreak(data.streak ?? 0);
 
+        setStreakShields(data.streakShields ?? 0);
+
         setPetMood(data.petMood ?? "happy");
 
         setPetHappiness(
@@ -244,6 +258,10 @@ export function AppProvider({ children }) {
 
         setHasCompletedOnboarding(data.hasCompletedOnboarding ?? false);
 
+        setDailyCheckIns(
+          Array.isArray(data.dailyCheckIns) ? data.dailyCheckIns : []
+        );
+
       }
 
       const achievements =
@@ -264,7 +282,7 @@ export function AppProvider({ children }) {
       setLastSleepHours(history?.[0]?.hours ?? 0);
 
       const currentSleep =
-        await getCurrentSleepSession();
+        await getCurrentSleep();
 
       if (
         currentSleep &&
@@ -374,6 +392,8 @@ export function AppProvider({ children }) {
 
       streak,
 
+      streakShields,
+
       petMood,
 
       petHappiness,
@@ -408,6 +428,8 @@ export function AppProvider({ children }) {
 
       hasCompletedOnboarding,
 
+      dailyCheckIns,
+
     });
 
     saveUnlockedAchievements(
@@ -421,6 +443,8 @@ export function AppProvider({ children }) {
     coins,
 
     streak,
+
+    streakShields,
 
     petMood,
 
@@ -457,6 +481,8 @@ export function AppProvider({ children }) {
       lastStreakDateKey,
 
       hasCompletedOnboarding,
+
+      dailyCheckIns,
 
   ]);
 
@@ -674,12 +700,22 @@ export function AppProvider({ children }) {
     streak,
     setStreak,
 
+    streakShields,
+    setStreakShields,
+
     // ===========================
     // Historial
     // ===========================
 
     sleepHistory,
     setSleepHistory,
+
+    // ===========================
+    // Daily Check-in
+    // ===========================
+
+    dailyCheckIns,
+    setDailyCheckIns,
 
     // ===========================
     // Última sesión

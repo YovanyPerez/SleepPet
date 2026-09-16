@@ -34,6 +34,8 @@ const PET_IDS = [
   "frog",
   "bear",
   "dragon",
+  "hippogriff",
+  "unicorn",
 ];
 
 let found = {};

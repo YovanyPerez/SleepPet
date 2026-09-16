@@ -45,6 +45,7 @@ const ICONS = {
   accessibility: { family: "io", name: "accessibility" },
   bell: { family: "io", name: "notifications" },
   clock: { family: "io", name: "time" },
+  shield: { family: "mci", name: "shield" },
 };
 
 export default function AppIcon({

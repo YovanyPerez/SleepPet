@@ -82,15 +82,3 @@ export async function finishSleepSession() {
   };
 
 }
-
-export async function getCurrentSleepSession() {
-
-  return await getCurrentSleep();
-
-}
-
-export async function cancelSleepSession() {
-
-  await clearCurrentSleep();
-
-}

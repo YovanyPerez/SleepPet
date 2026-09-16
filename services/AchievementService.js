@@ -168,34 +168,7 @@ export function checkAchievements(player) {
 
   return ACHIEVEMENTS.map((achievement) => {
 
-    let progress = 0;
-
-    switch (achievement.type) {
-
-      case "sessions":
-        progress = player.sessions;
-        break;
-
-      case "streak":
-        progress = player.streak;
-        break;
-
-      case "coins":
-        progress = player.coins;
-        break;
-
-      case "level":
-        progress = player.level;
-        break;
-
-      case "pets":
-        progress = player.pets;
-        break;
-
-      default:
-        progress = 0;
-
-    }
+    const progress = player[achievement.type] ?? 0;
 
     const unlocked = progress >= achievement.goal;
 

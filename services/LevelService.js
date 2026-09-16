@@ -1,22 +1,14 @@
 // XP que se gana según la calidad del sueño
 
+const XP_BY_QUALITY = {
+  Excellent: 25,
+  Good: 18,
+  Fair: 10,
+};
+
 export function getXPFromQuality(quality) {
 
-  switch (quality) {
-
-    case "Excellent":
-      return 25;
-
-    case "Good":
-      return 18;
-
-    case "Fair":
-      return 10;
-
-    default:
-      return 5;
-
-  }
+  return XP_BY_QUALITY[quality] ?? 5;
 
 }
 

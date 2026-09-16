@@ -28,9 +28,3 @@ export async function saveSmartAlarmSettings(settings) {
     console.log("SmartAlarmStorage save error", e);
   }
 }
-
-export async function clearSmartAlarmSettings() {
-  try {
-    await AsyncStorage.removeItem(KEY);
-  } catch (e) {}
-}

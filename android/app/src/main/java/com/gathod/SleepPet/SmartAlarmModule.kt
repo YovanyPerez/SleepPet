@@ -27,22 +27,6 @@ class SmartAlarmModule(reactContext: ReactApplicationContext) : ReactContextBase
     }
 
     @ReactMethod
-    fun getConfig(promise: Promise) {
-        try {
-            val json = SleepForegroundService.getSmartAlarmConfig(reactApplicationContext)
-            val map = com.facebook.react.bridge.WritableNativeMap().apply {
-                putBoolean("enabled", json.optBoolean("enabled", false))
-                putInt("hour", json.optInt("hour", 7))
-                putInt("minute", json.optInt("minute", 0))
-                putInt("windowMin", json.optInt("windowMin", 30))
-            }
-            promise.resolve(map)
-        } catch (e: Exception) {
-            promise.reject("smartalarm_error", e.message)
-        }
-    }
-
-    @ReactMethod
     fun getLastInfo(promise: Promise) {
         try {
             val prefs = reactApplicationContext.getSharedPreferences(

@@ -18,8 +18,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import {
   finishSleepSession,
-  getCurrentSleepSession,
 } from "../services/SleepService";
+import { getCurrentSleep } from "../storage/CurrentSleepStorage";
 import { getHeartRateRecommendation } from "../services/HeartRateRecommendService";
 import AppIcon from "../components/AppIcon";
 
@@ -115,6 +115,9 @@ export default function SleepModeScreen({ navigation }) {
 
     streak,
     setStreak,
+
+    streakShields,
+    setStreakShields,
 
     coins,
     setCoins,
@@ -247,8 +250,6 @@ export default function SleepModeScreen({ navigation }) {
     running,
 
     startSleep,
-
-    cancelSleep,
 
     stopTimer,
 
@@ -445,7 +446,7 @@ export default function SleepModeScreen({ navigation }) {
 
     await startSleep({ preSleepBpm, bpmConfidence });
 
-    const current = await getCurrentSleepSession();
+    const current = await getCurrentSleep();
 
     if (current) {
 
@@ -641,8 +642,9 @@ export default function SleepModeScreen({ navigation }) {
       // Fase D: info SmartAlarm (disparo favorable vs target obligatorio)
       smartAlarm: await (async () => {
         try {
-          const { getSmartAlarmConfig, getSmartAlarmLastInfo } = await import("../services/SmartAlarmService");
-          const cfg = await getSmartAlarmConfig();
+          const { getSmartAlarmLastInfo } = await import("../services/SmartAlarmService");
+          const { getSmartAlarmSettings } = await import("../storage/SmartAlarmStorage");
+          const cfg = await getSmartAlarmSettings();
           const info = await getSmartAlarmLastInfo();
           const startMs = result.start.getTime();
           const endMs = result.end.getTime();
@@ -697,9 +699,12 @@ export default function SleepModeScreen({ navigation }) {
       lastStreakDateKey,
       sessionEnd: result.end,
       hoursSlept: session.hours,
+      shields: streakShields,
     });
 
     setStreak(streakUpdate.streak);
+
+    setStreakShields(streakUpdate.shields);
 
     setLastStreakDateKey(streakUpdate.lastStreakDateKey);
 

@@ -22,41 +22,13 @@ const PERMISSIONS = [
 ];
 
 const PACKAGE_ADDS = [
-  "add(AccessibilityPackage())",
-  "add(NotificationPackage())",
-  "add(ReminderPackage())",
-  "add(MovementPackage())",
-  "add(SmartAlarmPackage())",
+  "add(SleepPetPackage())",
 ];
-
-function hasPermission(manifest, name) {
-  const list = manifest["uses-permission"] || [];
-  return list.some(
-    (p) => p.$ && p.$["android:name"] === name
-  );
-}
 
 function hasElement(list, name) {
   return list.some(
     (item) => item.$ && item.$["android:name"] === name
   );
-}
-
-function copyDir(src, dest) {
-  if (!fs.existsSync(src)) return;
-  const entries = fs.readdirSync(src, {
-    withFileTypes: true,
-  });
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of entries) {
-    const from = path.join(src, entry.name);
-    const to = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDir(from, to);
-    } else {
-      fs.copyFileSync(from, to);
-    }
-  }
 }
 
 module.exports = function withSleepPetNative(config) {
@@ -67,7 +39,7 @@ module.exports = function withSleepPetNative(config) {
       manifest["uses-permission"] || [];
 
     for (const permission of PERMISSIONS) {
-      if (!hasPermission(manifest, permission)) {
+      if (!hasElement(manifest["uses-permission"], permission)) {
         manifest["uses-permission"].push({
           $: { "android:name": permission },
         });
@@ -231,29 +203,37 @@ module.exports = function withSleepPetNative(config) {
         "native"
       );
 
-      copyDir(
-        path.join(nativeRoot, "java"),
-        path.join(
-          projectRoot,
-          "android",
-          "app",
-          "src",
-          "main",
-          "java"
-        )
-      );
+      const javaSrc = path.join(nativeRoot, "java");
+      if (fs.existsSync(javaSrc)) {
+        fs.cpSync(
+          javaSrc,
+          path.join(
+            projectRoot,
+            "android",
+            "app",
+            "src",
+            "main",
+            "java"
+          ),
+          { recursive: true }
+        );
+      }
 
-      copyDir(
-        path.join(nativeRoot, "res"),
-        path.join(
-          projectRoot,
-          "android",
-          "app",
-          "src",
-          "main",
-          "res"
-        )
-      );
+      const resSrc = path.join(nativeRoot, "res");
+      if (fs.existsSync(resSrc)) {
+        fs.cpSync(
+          resSrc,
+          path.join(
+            projectRoot,
+            "android",
+            "app",
+            "src",
+            "main",
+            "res"
+          ),
+          { recursive: true }
+        );
+      }
 
         return config;
       },

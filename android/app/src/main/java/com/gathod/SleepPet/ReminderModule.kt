@@ -148,33 +148,17 @@ class ReminderModule(
                     alarmManager.canScheduleExactAlarms()
 
             if (canUseExact) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAt,
-                        pendingIntent
-                    )
-                } else {
-                    alarmManager.setExact(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAt,
-                        pendingIntent
-                    )
-                }
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAt,
+                    pendingIntent
+                )
             } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAt,
-                        pendingIntent
-                    )
-                } else {
-                    alarmManager.set(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAt,
-                        pendingIntent
-                    )
-                }
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAt,
+                    pendingIntent
+                )
             }
         }
 
@@ -282,20 +266,18 @@ class ReminderModule(
         channelName: String,
         channelDescription: String
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                channelName,
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = channelDescription
-            }
-
-            val manager = reactContext.getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = channelDescription
         }
+
+        val manager = reactContext.getSystemService(
+            Context.NOTIFICATION_SERVICE
+        ) as NotificationManager
+
+        manager.createNotificationChannel(channel)
     }
 }

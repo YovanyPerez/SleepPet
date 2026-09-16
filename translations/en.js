@@ -74,13 +74,10 @@ export default {
   viewSleepHistory: "View all your sleep sessions",
 
   statistics: "Statistics",
-  checkProgress: "Check your progress",
 
   achievements: "Achievements",
-  viewAchievements: "View your unlocked achievements",
 
   settings: "Settings",
-  customizeApp: "Customize the app",
 
   backHome: "Back to Home",
 
@@ -119,8 +116,6 @@ export default {
   beginSleep: "Begin Sleep",
 
   finishSleep: "Finish Sleep",
-
-  cancelSession: "Cancel Session",
 
   sleepTooShort: "Sleep sessions must be at least 30 minutes long.",
 
@@ -361,6 +356,8 @@ export default {
   pet_frog: "Frog",
   pet_bear: "Bear",
   pet_dragon: "Dragon",
+  pet_hippogriff: "Hippogriff",
+  pet_unicorn: "Unicorn",
 
   buy: "Buy",
   select: "Select",
@@ -371,6 +368,23 @@ export default {
   petPurchasedMessage: "{{pet}} is now yours!",
   notEnoughCoins: "Not enough coins",
   notEnoughCoinsMessage: "You don't have enough coins to buy this pet.",
+  notEnoughCoinsShopMessage: "You don't have enough coins for this purchase.",
+
+  shopPets: "Pets",
+  shopTreats: "Treats",
+  shopSnack: "Snack",
+  shopSnackDesc: "+15 happiness for your pet",
+  shopFeast: "Feast",
+  shopFeastDesc: "+30 happiness for your pet",
+  shopToy: "Toy",
+  shopToyDesc: "+50 happiness for your pet",
+  shopShield: "Streak Shield",
+  shopShieldDesc: "Protects your streak if you miss a day",
+  shopShieldOwned: "Owned",
+  shopRename: "Rename pet",
+  shopRenameDesc: "Change your pet's name",
+  shopLevelRequired: "Requires level {{level}}",
+  shopLevelShort: "Lv. {{level}}",
 
   welcomeTitle: "Welcome to SleepPet",
   welcomeSubtitle: "Build healthier sleep habits while taking care of your virtual pet.",
@@ -511,23 +525,13 @@ export default {
 
   ppgTitle: "Measure pulse",
   ppgInstruction: "Cover the back camera with your index finger and keep flash on",
-  ppgMeasuring: "Measuring... {{progress}}s",
   ppgBpm: "Pulse",
   ppgBpmUnit: "bpm",
   ppgRetry: "Retry",
   ppgSkip: "Skip",
   ppgStart: "Measure pulse",
   ppgSuccess: "Pulse confirmed!",
-  ppgErrorNoFinger: "No finger detected. Cover the whole lens.",
-  ppgErrorLowLight: "Low signal. Press a bit firmer and avoid moving.",
-  ppgErrorTooShort: "Measurement too short. Hold until ~3s stable.",
-  ppgErrorUnstable: "Unstable signal. Avoid moving and retry.",
-  ppgErrorOutOfRange: "Pulse out of range. Retry.",
-  ppgErrorGeneric: "Could not measure. Retry.",
   ppgDisclaimer: "Wellness only, not medical diagnosis.",
-  ppgCameraPermissionTitle: "Camera permission required",
-  ppgCameraPermissionMessage: "SleepPet needs camera to measure your pulse with flash. Enable it in settings.",
-  ppgRecommendationTitle: "Recommendation",
   ppgRecLowTitle: "Low pulse",
   ppgRecLowMessage: "Your pulse is low. Breathe deeply for 1 minute and consult a professional if dizzy.",
   ppgRecNormalTitle: "Normal pulse",
@@ -550,13 +554,6 @@ export default {
   ppgSearching: "Looking for a stable signal...",
   ppgStableProgress: "Stable signal {{sec}}s / 3s",
   ppgNoFlash: "Your camera has no flash — measurement may fail",
-
-  movementTitle: "Night movement",
-  movementEventsShort: "events",
-  movementNightHint: "Activity detected by the accelerometer",
-  movementLow: "Low",
-  movementMedium: "Medium",
-  movementHigh: "High",
 
   resultsNapTag: "Nap — no rewards",
 
@@ -609,5 +606,47 @@ export default {
   settingsGuideDesc: "Replay the initial app tour",
 
   ageInvalid: "Enter an age between 1 and 99",
+
+  // ==========================
+  // Daily Check-in (Sleep & Study)
+  // ==========================
+
+  checkInTitle: "Today's Check-in",
+  checkInPrompt: "How are you feeling today?",
+  checkInEnergyLabel: "Energy",
+  checkInStudyLabel: "Study",
+  checkInEnergyQuestion: "How do you feel today?",
+  checkInStudyQuestion: "How was your study today?",
+  checkInCheckIn: "Check in",
+  checkInSave: "Save",
+  checkInEdit: "Edit",
+
+  checkinEnergyTired: "Tired",
+  checkinEnergyLow: "Low energy",
+  checkinEnergyOkay: "Okay",
+  checkinEnergyGood: "Good",
+  checkinEnergyEnergetic: "Energetic",
+
+  checkinStudyDifficult: "Difficult",
+  checkinStudyNormal: "Normal",
+  checkinStudyGood: "Good",
+  checkinStudyProductive: "Very productive",
+
+  // ==========================
+  // Sleep & Study
+  // ==========================
+
+  sleepAndStudy: "Sleep & Study",
+  sleepStudyNotEnough: "Not enough data yet.",
+  sleepStudyEarly: "Early pattern detected.",
+  sleepStudyWeekly: "Weekly pattern available.",
+  sleepStudyCheckIns: "Check-ins",
+  sleepStudyAvgEnergy: "Avg energy",
+  sleepStudyAvgHours: "Avg sleep",
+  sleepStudyMostStudy: "Most common study",
+  sleepStudyObsBetterEnergy: "You usually report better energy after longer nights.",
+  sleepStudyObsConsistent: "Your sleep schedule was more consistent this week.",
+  sleepStudyObsEnergeticConsistent: "Your most energetic days followed more consistent sleep.",
+  sleepStudyDisclaimer: "Patterns observed in your own records. Not a medical or academic measurement.",
 
 };

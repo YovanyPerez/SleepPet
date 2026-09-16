@@ -1,54 +1,17 @@
 import { calculateSleepScore } from "./SleepScoreService";
 
-export function calculateSleepRewards({
+export function calculateSleepRewards(args) {
 
-  hours,
+  const sleepResult = calculateSleepScore(args);
 
-  goalHours,
-
-  unlockCount,
-
-}) {
-
-  const sleepResult = calculateSleepScore({
-
-    hours,
-
-    goalHours,
-
-    unlockCount,
-
-  });
-
-  let coins = 5;
-
-  if (sleepResult.score >= 90) {
-
-    coins = 50;
-
-  }
-
-  else if (sleepResult.score >= 75) {
-
-    coins = 35;
-
-  }
-
-  else if (sleepResult.score >= 60) {
-
-    coins = 20;
-
-  }
+  const coins =
+    sleepResult.score >= 90 ? 50 :
+    sleepResult.score >= 75 ? 35 :
+    sleepResult.score >= 60 ? 20 : 5;
 
   return {
 
-    mood: sleepResult.mood,
-
-    quality: sleepResult.quality,
-
-    score: sleepResult.score,
-
-    penalty: sleepResult.penalty,
+    ...sleepResult,
 
     coins,
 

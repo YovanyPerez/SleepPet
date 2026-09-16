@@ -2,7 +2,6 @@ package com.gathod.SleepPet
 
 import android.content.Intent
 import android.provider.Settings
-import android.text.TextUtils
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -50,15 +49,7 @@ class AccessibilityModule(
                 context.contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
             ) ?: return false
-            val colonSplitter = TextUtils.SimpleStringSplitter(':')
-            colonSplitter.setString(enabled)
-            while (colonSplitter.hasNext()) {
-                val service = colonSplitter.next()
-                if (service.equals(SERVICE_ID, ignoreCase = true)) {
-                    return true
-                }
-            }
-            return false
+            return enabled.split(':').any { it.trim().equals(SERVICE_ID, ignoreCase = true) }
         }
 
     }

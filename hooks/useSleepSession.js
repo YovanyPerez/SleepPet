@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 
 import {
   startSleepSession,
-  getCurrentSleepSession,
-  cancelSleepSession,
 } from "../services/SleepService";
+
+import { getCurrentSleep } from "../storage/CurrentSleepStorage";
 
 export default function useSleepSession() {
 
@@ -26,19 +26,11 @@ export default function useSleepSession() {
 
       timer = setInterval(async () => {
 
-        const current = await getCurrentSleepSession();
+        const current = await getCurrentSleep();
 
         if (current) {
 
-          const start = new Date(current.startTime);
-
-          const now = new Date();
-
-          const elapsed = Math.floor(
-            (now.getTime() - start.getTime()) / 1000
-          );
-
-          setSeconds(elapsed);
+          setSeconds(elapsedSeconds(current));
 
         }
 
@@ -50,23 +42,23 @@ export default function useSleepSession() {
 
   }, [running]);
 
+  function elapsedSeconds(current) {
+
+    return Math.floor(
+      (Date.now() - new Date(current.startTime).getTime()) / 1000
+    );
+
+  }
+
   async function checkRunningSession() {
 
-    const current = await getCurrentSleepSession();
+    const current = await getCurrentSleep();
 
     if (current) {
 
       setRunning(true);
 
-      const start = new Date(current.startTime);
-
-      const now = new Date();
-
-      const elapsed = Math.floor(
-        (now.getTime() - start.getTime()) / 1000
-      );
-
-      setSeconds(elapsed);
+      setSeconds(elapsedSeconds(current));
 
     }
 
@@ -77,16 +69,6 @@ export default function useSleepSession() {
     await startSleepSession();
 
     setRunning(true);
-
-    setSeconds(0);
-
-  }
-
-  async function cancelSleep() {
-
-    await cancelSleepSession();
-
-    setRunning(false);
 
     setSeconds(0);
 
@@ -116,11 +98,7 @@ export default function useSleepSession() {
 
     running,
 
-    seconds,
-
     startSleep,
-
-    cancelSleep,
 
     stopTimer,
 

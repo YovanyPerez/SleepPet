@@ -1,7 +1,7 @@
 // Harness TDD para detección de usuario nuevo/existente
 // Uso: node tools/testUserData.js
 // RED: debe FALLAR hasta implementar services/UserDataService.js
-import { hasExistingUserData, isNewUser } from "../services/UserDataService.js";
+import { hasExistingUserData } from "../services/UserDataService.js";
 
 const FRESH = {
   userName: "",
@@ -23,7 +23,7 @@ function check(name, cond) {
 }
 
 // 1. Estado completamente nuevo → nuevo
-check("nuevo total → isNewUser", isNewUser(FRESH) === true);
+check("nuevo total → nuevo", hasExistingUserData(FRESH) === false);
 check("nuevo total → !hasExisting", hasExistingUserData(FRESH) === false);
 
 // 2. Existente con historial → existente
@@ -33,13 +33,13 @@ check("con historial → existente", hasExistingUserData({ ...FRESH, userName: "
 check("datos + flag false → existente", hasExistingUserData({ ...FRESH, userName: "Ana", xp: 40 }) === true);
 
 // 4. Parcial: solo nombre, resto inicial → sigue nuevo (recién creado)
-check("solo nombre → nuevo", isNewUser({ ...FRESH, userName: "Ana" }) === true);
+check("solo nombre → nuevo", hasExistingUserData({ ...FRESH, userName: "Ana" }) === false);
 
 // 5. Nombre + level>1 → existente
 check("level 2 → existente", hasExistingUserData({ ...FRESH, userName: "Ana", level: 2 }) === true);
 
 // 6. Post-reset → nuevo
-check("post-reset → nuevo", isNewUser({ ...FRESH }) === true);
+check("post-reset → nuevo", hasExistingUserData({ ...FRESH }) === false);
 
 // Señales fuertes aisladas → existente
 check("xp>0 → existente", hasExistingUserData({ ...FRESH, xp: 10 }) === true);
@@ -50,11 +50,11 @@ check("lastStreakDateKey → existente", hasExistingUserData({ ...FRESH, lastStr
 check("mascota extra → existente", hasExistingUserData({ ...FRESH, ownedPets: ["cat", "dog"] }) === true);
 
 // Solo débiles (nombre + objetivo, sin progreso) → nuevo
-check("nombre+objetivo sin progreso → nuevo", isNewUser({ ...FRESH, userName: "Ana", goalType: "habits" }) === true);
+check("nombre+objetivo sin progreso → nuevo", hasExistingUserData({ ...FRESH, userName: "Ana", goalType: "habits" }) === false);
 
 // Flag + dato real → existente (el flag NUNCA decide solo)
 check("flag + nombre → existente", hasExistingUserData({ ...FRESH, userName: "Ana", hasCompletedOnboarding: true }) === true);
-check("flag solo sin nada → nuevo", isNewUser({ ...FRESH, hasCompletedOnboarding: true }) === true);
+check("flag solo sin nada → nuevo", hasExistingUserData({ ...FRESH, hasCompletedOnboarding: true }) === false);
 
 const total = 15;
 console.log(failures === 0 ? `=== ${total}/${total} OK ===` : `=== ${total - failures}/${total} OK, ${failures} FAIL ===`);

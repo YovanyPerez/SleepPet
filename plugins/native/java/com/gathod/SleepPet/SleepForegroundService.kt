@@ -15,7 +15,6 @@ import android.hardware.SensorManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
@@ -202,19 +201,6 @@ class SleepForegroundService : Service() {
                 Log.i("SmartAlarm", "config guardada enabled=$enabled ${hour}:${minute} window ${windowMin}m (stopped reset)")
             } catch (e: Exception) {
                 recordError("smartAlarmSet", e.toString())
-            }
-        }
-
-        fun getSmartAlarmConfig(context: Context): JSONObject {
-            return try {
-                val prefs = context.getSharedPreferences(SMART_ALARM_PREFS_NAME, Context.MODE_PRIVATE)
-                JSONObject()
-                    .put("enabled", prefs.getBoolean("enabled", false))
-                    .put("hour", prefs.getInt("hour", 7))
-                    .put("minute", prefs.getInt("minute", 0))
-                    .put("windowMin", prefs.getInt("windowMin", 30))
-            } catch (e: Exception) {
-                JSONObject().put("enabled", false).put("hour", 7).put("minute", 0).put("windowMin", 30)
             }
         }
 
@@ -446,8 +432,7 @@ class SleepForegroundService : Service() {
      */
     private fun startAudio() {
         try {
-            if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 Log.i("SmartAudio", "RECORD_AUDIO no concedido — fallback accel-only")
                 audioEnabled = false
                 return
@@ -527,20 +512,18 @@ class SleepForegroundService : Service() {
     }
 
     private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                channelName,
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = channelDescription
-                setShowBadge(false)
-            }
-            val manager = getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            channelName,
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = channelDescription
+            setShowBadge(false)
         }
+        val manager = getSystemService(
+            Context.NOTIFICATION_SERVICE
+        ) as NotificationManager
+        manager.createNotificationChannel(channel)
     }
 
     private fun buildNotification(): Notification {

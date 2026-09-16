@@ -25,8 +25,14 @@ import AppIcon from "../components/AppIcon";
 import BottomNav from "../components/BottomNav";
 import SectionHeader from "../components/SectionHeader";
 import MotivationalCard from "../components/MotivationalCard";
+import CheckInCard from "../components/CheckInCard";
 import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import { NIGHT } from "../constants/theme";
+import {
+  analyzeSleepStudy,
+  energyLevelFromAverage,
+  mostCommonStudy,
+} from "../services/CheckInService";
 import styles from "./styles/StatisticsScreen.styles";
 import {
   toDateKey,
@@ -49,6 +55,7 @@ export default function StatisticsScreen({ navigation }) {
     language,
     sleepHistory,
     goalHours,
+    dailyCheckIns,
   } = useContext(AppContext);
 
   const t = getTranslations(language);
@@ -172,6 +179,55 @@ export default function StatisticsScreen({ navigation }) {
     inputRange: [0, 1],
     outputRange: [20, 0],
   });
+
+  // ===========================
+  // Sleep & Study (descriptivo, nunca causal)
+  // ===========================
+
+  const study = analyzeSleepStudy({
+    sleepHistory: history,
+    checkIns: dailyCheckIns,
+  });
+
+  const ENERGY_LABELS = {
+    tired: t.checkinEnergyTired,
+    low: t.checkinEnergyLow,
+    okay: t.checkinEnergyOkay,
+    good: t.checkinEnergyGood,
+    energetic: t.checkinEnergyEnergetic,
+  };
+
+  const STUDY_LABELS = {
+    difficult: t.checkinStudyDifficult,
+    normal: t.checkinStudyNormal,
+    good: t.checkinStudyGood,
+    productive: t.checkinStudyProductive,
+  };
+
+  const avgEnergyLabel = energyLevelFromAverage(study.avgEnergy)
+    ? ENERGY_LABELS[energyLevelFromAverage(study.avgEnergy)]
+    : null;
+
+  const mostStudyLabel = mostCommonStudy(study.studyDistribution)
+    ? STUDY_LABELS[mostCommonStudy(study.studyDistribution)]
+    : null;
+
+  let observation = null;
+  if (study.sleepEnergyRelation) {
+    const rel = study.sleepEnergyRelation;
+    if (
+      study.consistency != null &&
+      study.consistency < 1 &&
+      rel.highEnergyAvgHours > rel.lowEnergyAvgHours + 0.5
+    ) {
+      observation = t.sleepStudyObsEnergeticConsistent;
+    } else if (rel.highEnergyAvgHours > rel.lowEnergyAvgHours + 0.5) {
+      observation = t.sleepStudyObsBetterEnergy;
+    }
+  }
+  if (!observation && study.consistency != null && study.consistency < 1) {
+    observation = t.sleepStudyObsConsistent;
+  }
 
   return (
 
@@ -422,6 +478,88 @@ export default function StatisticsScreen({ navigation }) {
 
               )
             }
+
+            {/* Sleep & Study — Daily Check-in + análisis descriptivo (nunca causal) */}
+
+            <View style={styles.sleepStudySection}>
+
+              <SectionHeader icon="sparkles" title={t.sleepAndStudy} />
+
+              <CheckInCard />
+
+              {
+                study.tier === "none" ? (
+                  <View style={styles.emptyCard}>
+                    <AppIcon
+                      name="sparkles"
+                      size={30}
+                      color={NIGHT.yellow}
+                      style={styles.emptyIcon}
+                    />
+                    <AppText style={styles.emptyTitle}>
+                      {t.sleepStudyNotEnough}
+                    </AppText>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.grid}>
+
+                      <StatCard
+                        icon="check"
+                        iconColor={NIGHT.yellow}
+                        label={t.sleepStudyCheckIns}
+                        value={study.checkInCount}
+                        sub={t.registered}
+                      />
+
+                      <StatCard
+                        icon="flash"
+                        iconColor="#FFB703"
+                        label={t.sleepStudyAvgEnergy}
+                        value={avgEnergyLabel ?? "—"}
+                        sub={t.checkInEnergyLabel}
+                      />
+
+                      <StatCard
+                        icon="night"
+                        iconColor="#8FA3FF"
+                        label={t.sleepStudyAvgHours}
+                        value={study.avgSleepHours != null ? `${study.avgSleepHours.toFixed(1)} h` : "—"}
+                        sub={t.ofSleep}
+                      />
+
+                      <StatCard
+                        icon="calendar"
+                        iconColor="#5E60CE"
+                        label={t.sleepStudyMostStudy}
+                        value={mostStudyLabel ?? "—"}
+                        sub={t.checkInStudyLabel}
+                      />
+
+                    </View>
+
+                    <AppText style={styles.sleepStudyTier}>
+                      {study.tier === "weekly" ? t.sleepStudyWeekly : t.sleepStudyEarly}
+                    </AppText>
+
+                    {
+                      observation && (
+                        <View style={styles.sleepStudyObs}>
+                          <AppText style={styles.sleepStudyObsText}>
+                            {observation}
+                          </AppText>
+                        </View>
+                      )
+                    }
+
+                    <AppText style={styles.sleepStudyDisclaimer}>
+                      {t.sleepStudyDisclaimer}
+                    </AppText>
+                  </>
+                )
+              }
+
+            </View>
 
           </Animated.View>
 

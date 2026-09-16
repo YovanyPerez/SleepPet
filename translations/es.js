@@ -74,13 +74,10 @@ export default {
   viewSleepHistory: "Ver todas tus sesiones de sueño",
 
   statistics: "Estadísticas",
-  checkProgress: "Revisa tu progreso",
 
   achievements: "Logros",
-  viewAchievements: "Ver tus logros desbloqueados",
 
   settings: "Configuración",
-  customizeApp: "Personaliza la aplicación",
 
   backHome: "Volver al Inicio",
 
@@ -119,8 +116,6 @@ export default {
   beginSleep: "Comenzar Sueño",
 
   finishSleep: "Finalizar Sueño",
-
-  cancelSession: "Cancelar Sesión",
 
   sleepTooShort: "Las sesiones de sueño deben durar al menos 30 minutos.",
 
@@ -359,6 +354,8 @@ export default {
   pet_frog: "Rana",
   pet_bear: "Oso",
   pet_dragon: "Dragón",
+  pet_hippogriff: "Hipogrifo",
+  pet_unicorn: "Unicornio",
 
   buy: "Comprar",
   select: "Seleccionar",
@@ -369,6 +366,23 @@ export default {
   petPurchasedMessage: "¡{{pet}} ahora es tuyo!",
   notEnoughCoins: "No tienes suficientes monedas",
   notEnoughCoinsMessage: "No tienes suficientes monedas para comprar esta mascota.",
+  notEnoughCoinsShopMessage: "No tienes suficientes monedas para esta compra.",
+
+  shopPets: "Mascotas",
+  shopTreats: "Consumibles",
+  shopSnack: "Snack",
+  shopSnackDesc: "+15 de felicidad para tu mascota",
+  shopFeast: "Banquete",
+  shopFeastDesc: "+30 de felicidad para tu mascota",
+  shopToy: "Juguete",
+  shopToyDesc: "+50 de felicidad para tu mascota",
+  shopShield: "Escudo de racha",
+  shopShieldDesc: "Protege tu racha si fallas un día",
+  shopShieldOwned: "Posees",
+  shopRename: "Renombrar mascota",
+  shopRenameDesc: "Cambia el nombre de tu mascota",
+  shopLevelRequired: "Requiere nivel {{level}}",
+  shopLevelShort: "Nv. {{level}}",
 
   welcomeTitle: "Bienvenido a SleepPet",
   welcomeSubtitle: "Crea hábitos de sueño saludables mientras cuidas de tu mascota virtual.",
@@ -512,23 +526,13 @@ export default {
 
   ppgTitle: "Medir pulso",
   ppgInstruction: "Tapa la cámara trasera con el dedo índice y mantén el flash encendido",
-  ppgMeasuring: "Midiendo... {{progress}}s",
   ppgBpm: "Pulso",
   ppgBpmUnit: "lpm",
   ppgRetry: "Reintentar",
   ppgSkip: "Omitir",
   ppgStart: "Medir pulso",
   ppgSuccess: "¡Pulso confirmado!",
-  ppgErrorNoFinger: "No detectamos tu dedo. Cubre toda la lente.",
-  ppgErrorLowLight: "Señal baja. Presiona un poco más firme y evita moverte.",
-  ppgErrorTooShort: "Medición muy corta. Mantén el dedo hasta completar ~3s estables.",
-  ppgErrorUnstable: "Señal inestable. Evita moverte y reintenta.",
-  ppgErrorOutOfRange: "Pulso fuera de rango. Reintenta.",
-  ppgErrorGeneric: "No se pudo medir. Reintenta.",
   ppgDisclaimer: "Solo bienestar, no es diagnóstico médico.",
-  ppgCameraPermissionTitle: "Permiso de cámara requerido",
-  ppgCameraPermissionMessage: "SleepPet necesita la cámara para medir tu pulso con el flash. Actívalo en ajustes.",
-  ppgRecommendationTitle: "Recomendación",
   ppgRecLowTitle: "Pulso bajo",
   ppgRecLowMessage: "Tu pulso está bajo. Respira profundo 1 minuto y si sientes mareo consulta a un profesional.",
   ppgRecNormalTitle: "Pulso normal",
@@ -551,13 +555,6 @@ export default {
   ppgSearching: "Buscando una señal estable...",
   ppgStableProgress: "Señal estable {{sec}}s / 3s",
   ppgNoFlash: "Tu cámara no tiene flash — la medición puede fallar",
-
-  movementTitle: "Movimiento nocturno",
-  movementEventsShort: "eventos",
-  movementNightHint: "Actividad detectada por el acelerómetro",
-  movementLow: "Bajo",
-  movementMedium: "Medio",
-  movementHigh: "Alto",
 
   resultsNapTag: "Siesta — sin recompensas",
 
@@ -610,5 +607,47 @@ export default {
   settingsGuideDesc: "Repasar el tour inicial de la app",
 
   ageInvalid: "Escribe una edad entre 1 y 99 años",
+
+  // ==========================
+  // Daily Check-in (Sueño y Estudio)
+  // ==========================
+
+  checkInTitle: "Check-in de hoy",
+  checkInPrompt: "¿Cómo te sientes hoy?",
+  checkInEnergyLabel: "Energía",
+  checkInStudyLabel: "Estudio",
+  checkInEnergyQuestion: "¿Cómo te sientes hoy?",
+  checkInStudyQuestion: "¿Cómo fue tu estudio hoy?",
+  checkInCheckIn: "Registrar",
+  checkInSave: "Guardar",
+  checkInEdit: "Editar",
+
+  checkinEnergyTired: "Cansado",
+  checkinEnergyLow: "Poca energía",
+  checkinEnergyOkay: "Normal",
+  checkinEnergyGood: "Bien",
+  checkinEnergyEnergetic: "Con energía",
+
+  checkinStudyDifficult: "Difícil",
+  checkinStudyNormal: "Normal",
+  checkinStudyGood: "Bien",
+  checkinStudyProductive: "Muy productivo",
+
+  // ==========================
+  // Sleep & Study
+  // ==========================
+
+  sleepAndStudy: "Sueño y Estudio",
+  sleepStudyNotEnough: "Aún no hay suficientes datos.",
+  sleepStudyEarly: "Patrón inicial detectado.",
+  sleepStudyWeekly: "Patrón semanal disponible.",
+  sleepStudyCheckIns: "Check-ins",
+  sleepStudyAvgEnergy: "Energía promedio",
+  sleepStudyAvgHours: "Sueño promedio",
+  sleepStudyMostStudy: "Estudio más común",
+  sleepStudyObsBetterEnergy: "Sueles reportar más energía después de noches más largas.",
+  sleepStudyObsConsistent: "Tu horario de sueño fue más consistente esta semana.",
+  sleepStudyObsEnergeticConsistent: "Tus días con más energía siguieron a un sueño más consistente.",
+  sleepStudyDisclaimer: "Patrones observados en tus propios registros. No es una medición médica ni académica.",
 
 };

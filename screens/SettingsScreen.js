@@ -75,6 +75,8 @@ export default function SettingsScreen({ navigation }) {
     setCoins,
     setStreak,
 
+    setStreakShields,
+
     setLevel,
     setXp,
 
@@ -288,6 +290,8 @@ export default function SettingsScreen({ navigation }) {
             // Reinicia el contexto
             setCoins(0);
             setStreak(0);
+
+            setStreakShields(0);
 
             setLevel(1);
             setXp(0);

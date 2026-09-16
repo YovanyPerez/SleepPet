@@ -31,64 +31,45 @@ import SleepSetupScreen from "../screens/SleepSetupScreen";
 
 const Stack = createNativeStackNavigator();
 
+const SCREENS = {
+  Welcome: WelcomeScreen,
+  CreateProfile: CreateProfileScreen,
+  Home: HomeScreen,
+  SleepMode: SleepModeScreen,
+  Results: ResultsScreen,
+  Menu: MenuScreen,
+  History: HistoryScreen,
+  Statistics: StatisticsScreen,
+  Settings: SettingsScreen,
+  PetShop: PetShopScreen,
+  Profile: ProfileScreen,
+  EditProfile: EditProfileScreen,
+  Achievements: AchievementsScreen,
+  About: AboutScreen,
+  PPGMeasure: PPGMeasureScreen,
+  SleepSetup: SleepSetupScreen,
+};
+
 export default function AppNavigator() {
 
+  const ctx = useContext(AppContext);
+
   const {
-
-    loading,
-
-    userName,
-
-    sleepHistory,
-
-    level,
-
-    xp,
-
-    coins,
-
-    streak,
-
-    ownedPets,
-
-    unlockedAchievements,
-
-    lastStreakDateKey,
-
-    goalType,
-
-    hasCompletedOnboarding,
-
     achievementPopup,
-
     setAchievementPopup,
-
     language,
-
-  } = useContext(AppContext);
+  } = ctx;
 
   const t = getTranslations(language);
 
-  if (loading) {
+  if (ctx.loading) {
 
     return <LoadingScreen tagline={t.splashTagline} />;
 
   }
 
   // REGLA CRÍTICA: usuario nuevo = sin datos reales persistidos (nunca un solo flag)
-  const existingUser = hasExistingUserData({
-    userName,
-    sleepHistory,
-    level,
-    xp,
-    coins,
-    streak,
-    ownedPets,
-    unlockedAchievements,
-    lastStreakDateKey,
-    goalType,
-    hasCompletedOnboarding,
-  });
+  const existingUser = hasExistingUserData(ctx);
 
   return (
 
@@ -105,85 +86,13 @@ export default function AppNavigator() {
           }}
         >
 
-          <Stack.Screen
-            name="Welcome"
-            component={WelcomeScreen}
-          />
-
-          <Stack.Screen
-            name="CreateProfile"
-            component={CreateProfileScreen}
-          />
-
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-          />
-
-          <Stack.Screen
-            name="SleepMode"
-            component={SleepModeScreen}
-          />
-
-          <Stack.Screen
-            name="Results"
-            component={ResultsScreen}
-          />
-
-          <Stack.Screen
-            name="Menu"
-            component={MenuScreen}
-          />
-
-          <Stack.Screen
-            name="History"
-            component={HistoryScreen}
-          />
-
-          <Stack.Screen
-            name="Statistics"
-            component={StatisticsScreen}
-          />
-
-          <Stack.Screen
-            name="Settings"
-            component={SettingsScreen}
-          />
-
-          <Stack.Screen
-            name="PetShop"
-            component={PetShopScreen}
-          />
-
-          <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-          />
-
-          <Stack.Screen
-            name="EditProfile"
-            component={EditProfileScreen}
-          />
-
-          <Stack.Screen
-            name="Achievements"
-            component={AchievementsScreen}
-          />
-
-          <Stack.Screen
-            name="About"
-            component={AboutScreen}
-          />
-
-          <Stack.Screen
-            name="PPGMeasure"
-            component={PPGMeasureScreen}
-          />
-
-          <Stack.Screen
-            name="SleepSetup"
-            component={SleepSetupScreen}
-          />
+          {Object.entries(SCREENS).map(([name, component]) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              component={component}
+            />
+          ))}
 
         </Stack.Navigator>
 

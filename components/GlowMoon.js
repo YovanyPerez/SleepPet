@@ -3,7 +3,7 @@ import { Animated, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { NIGHT } from "../constants/theme";
 
-export default function GlowMoon({ size = 120, color = NIGHT.yellow }) {
+export default function GlowMoon({ size = 120 }) {
   const float = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -72,7 +72,7 @@ export default function GlowMoon({ size = 120, color = NIGHT.yellow }) {
             width: size * 1.1,
             height: size * 1.1,
             borderRadius: size * 0.55,
-            backgroundColor: color,
+            backgroundColor: NIGHT.yellow,
             opacity: haloOpacity,
           },
         ]}
@@ -80,11 +80,11 @@ export default function GlowMoon({ size = 120, color = NIGHT.yellow }) {
       <MaterialCommunityIcons
         name="weather-night"
         size={size}
-        color={color}
+        color={NIGHT.yellow}
         style={[
           styles.icon,
           {
-            textShadowColor: color,
+            textShadowColor: NIGHT.yellow,
             textShadowRadius: size * 0.18,
           },
         ]}

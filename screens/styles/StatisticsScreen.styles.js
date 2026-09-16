@@ -82,6 +82,43 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
+  sleepStudySection: {
+    marginTop: 8,
+  },
+
+  sleepStudyTier: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 14,
+    fontFamily: "Nunito_700Bold",
+    textAlign: "center",
+    marginTop: 2,
+    marginBottom: 10,
+  },
+
+  sleepStudyObs: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 4,
+  },
+
+  sleepStudyObsText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+    textAlign: "center",
+  },
+
+  sleepStudyDisclaimer: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 11,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+    marginTop: 10,
+  },
+
   bottomNav: {
     ...NIGHT_STYLES.bottomNav,
   },

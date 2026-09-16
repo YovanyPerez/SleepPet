@@ -23,29 +23,9 @@ export default function SleepCard({ session }) {
 
   const t = getTranslations(language);
 
-  function moodText() {
-
-    switch (session.mood) {
-
-      case "happy":
-        return t.happy;
-
-      case "normal":
-        return t.normal;
-
-      case "sleepy":
-        return t.sleepy;
-
-      default:
-        return t.sad;
-
-    }
-
-  }
-
   const mood = MOOD_STYLES[session.mood] || MOOD_STYLES.normal;
 
-  const moodName = moodText();
+  const moodName = t[session.mood] ?? t.sad;
 
   return (
 

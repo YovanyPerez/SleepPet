@@ -66,16 +66,3 @@ export function clearMovementSummary() {
     console.log("Movement: error limpiando resumen:", e?.message ?? e);
   }
 }
-
-/**
- * Etiqueta de presentación a partir del score (solo texto para la UI).
- * Espejo de los umbrales de etiqueta del detector nativo (SCORE_LOW 0.12,
- * SCORE_HIGH 0.30); los números reales siempre se calculan en nativo.
- * No es una clasificación clínica.
- */
-export function movementLevel(score, t) {
-  if (typeof score !== "number") return null;
-  if (score < 0.12) return t.movementLow;
-  if (score < 0.3) return t.movementMedium;
-  return t.movementHigh;
-}

@@ -22,7 +22,7 @@ try {
 const FPS = 30;
 
 // Generador sintético: sinusoide + ruido + drift + escalón AE aislado
-function generateSignal({ bpm, durationSec = 10, fps = FPS, noise = 0.6, driftAmp = 0.4, baseline = 150, aeStepAt = -1, aeStepAmp = 8 }) {
+function generateSignal({ bpm, durationSec = 10, fps = FPS, noise = 0.6, driftAmp = 0.4, baseline = 150, amplitude = 6, aeStepAt = -1, aeStepAmp = 8 }) {
   const n = Math.round(durationSec * fps);
   const freq = bpm / 60; // Hz
   const driftFreq = 0.2; // deriva respiratoria lenta
@@ -38,20 +38,22 @@ function generateSignal({ bpm, durationSec = 10, fps = FPS, noise = 0.6, driftAm
     const cardiac = Math.sin(2 * Math.PI * freq * t);
     const drift = driftAmp * Math.sin(2 * Math.PI * driftFreq * t);
     const nse = noise * rand();
-    let v = baseline + 6 * cardiac + drift + nse;
+    let v = baseline + amplitude * cardiac + drift + nse;
     if (aeStepAt >= 0 && i >= aeStepAt) v += aeStepAmp;
     arr[i] = v;
   }
   return arr;
 }
 
-function runCase({ bpm, ...opts }) {
+function runCase({ bpm, expectError, ...opts }) {
   const signal = generateSignal({ bpm, ...opts });
   const res = calculateBPM(signal, FPS);
-  const ok = res.bpm != null && Math.abs(res.bpm - bpm) <= 3;
+  const ok = expectError
+    ? res.error === expectError
+    : res.bpm != null && Math.abs(res.bpm - bpm) <= 3;
   const status = ok ? "OK" : "FAIL";
   console.log(
-    `${status} | esperado ${String(bpm).padStart(3)} lpm | obtenido ${String(res.bpm ?? "-").padStart(3)} | conf=${(res.confidence ?? 0).toFixed(2)} | esp=${res.spectralBpm != null ? String(res.spectralBpm).padStart(5) : "    -"} delta=${res.spectralDelta != null ? res.spectralDelta.toFixed(1).padStart(4) : "   -"} | err=${res.error ?? "null"} | picos=${res.peaks ?? "-"} | opts=${JSON.stringify(opts)}`
+    `${status} | esperado ${expectError ?? String(bpm).padStart(3) + " lpm"} | obtenido ${String(res.bpm ?? "-").padStart(3)} | conf=${(res.confidence ?? 0).toFixed(2)} | esp=${res.spectralBpm != null ? String(res.spectralBpm).padStart(5) : "    -"} delta=${res.spectralDelta != null ? res.spectralDelta.toFixed(1).padStart(4) : "   -"} | err=${res.error ?? "null"} | picos=${res.peaks ?? "-"} | opts=${JSON.stringify(opts)}`
   );
   return ok;
 }
@@ -85,18 +87,16 @@ test("Escalon AE a mitad (aeStepAt=150)", [
   { bpm: 90, aeStepAt: 150, aeStepAmp: 10 },
 ]);
 
-// Señales que deben fallar (validacion)
+// Señales que deben fallar (validacion): se comprueba el codigo de error exacto
 test("Casos que deben fallar (sin dedo / senal plana)", [
-  { bpm: 75, baseline: 40 }, // avg <80 -> no_finger
-  { bpm: 75, noise: 0.05, driftAmp: 0 }, // std muy bajo -> low_signal (ajustar si no dispara)
+  { bpm: 75, baseline: 40, expectError: "no_finger" },
+  { bpm: 75, amplitude: 0, noise: 0.05, driftAmp: 0, expectError: "low_signal" },
 ]);
 
 // Duración corta
 test("Duracion corta (4s -> too_short)", [
-  { bpm: 75, durationSec: 4 },
+  { bpm: 75, durationSec: 4, expectError: "too_short" },
 ]);
 
 console.log(`\n=== Resumen: ${passed}/${total} OK ===`);
-if (passed < total) {
-  console.log("(algunos FAIL son esperados en casos 'deben fallar'; revisa err=no_finger/low_signal/too_short)");
-}
+process.exit(passed === total ? 0 : 1);

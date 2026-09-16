@@ -36,14 +36,8 @@ import styles from "./styles/EditProfileScreen.styles";
 export default function EditProfileScreen({ navigation }) {
 
   const {
-
     userName,
     setUserName,
-
-    petNames,
-    setPetNames,
-
-    selectedPet,
 
     userAge,
     setUserAge,
@@ -69,10 +63,6 @@ export default function EditProfileScreen({ navigation }) {
 
   const [name, setName] = useState(userName);
 
-  const [petNameInput, setPetNameInput] = useState(
-    petNames?.[selectedPet] || ""
-  );
-
   const [age, setAge] = useState(
     userAge ? String(userAge) : ""
   );
@@ -94,11 +84,6 @@ export default function EditProfileScreen({ navigation }) {
     }
 
     setUserName(name);
-
-    setPetNames((prev) => ({
-      ...prev,
-      [selectedPet]: petNameInput,
-    }));
 
     setUserAge(age === "" ? null : Math.min(99, Math.max(1, Number(sanitizeAgeDigits(age)))));
 
@@ -246,33 +231,6 @@ export default function EditProfileScreen({ navigation }) {
                   {t.ageInvalid}
                 </AppText>
               )}
-
-            </View>
-
-            {/* Pet name */}
-
-            <View style={styles.glassCard}>
-
-              <View style={styles.fieldHeader}>
-
-                <View style={styles.fieldIcon}>
-                  <AppIcon name="paw" size={18} color={NIGHT.yellow} />
-                </View>
-
-                <AppText style={styles.fieldLabel}>
-                  {t.petName}
-                </AppText>
-
-              </View>
-
-              <TextInput
-                value={petNameInput}
-                onChangeText={setPetNameInput}
-                placeholder={t.petNamePlaceholder}
-                placeholderTextColor="#B8B2E8"
-                cursorColor={NIGHT.end}
-                style={styles.input}
-              />
 
             </View>
 

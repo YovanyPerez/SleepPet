@@ -7,46 +7,14 @@ import {
 
 import { COLORS } from "../constants/theme";
 
-function parseTimeString(str) {
-
-  const match = String(str).match(
-    /(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)?/i
-  );
-
-  if (!match) return null;
-
-  let hours = Number(match[1]);
-  const minutes = Number(match[2]) || 0;
-  const seconds = Number(match[3]) || 0;
-  const suffix = match[4] ? match[4].toLowerCase() : null;
-
-  if (suffix === "pm" && hours < 12) hours += 12;
-  if (suffix === "am" && hours === 12) hours = 0;
-
-  return hours * 3600 + minutes * 60 + seconds;
-
-}
-
 function daySecondsOf(entry, startSec, crossedMidnight) {
 
-  let seconds = null;
+  const d = new Date(entry);
 
-  if (typeof entry === "number") {
-
-    const d = new Date(entry);
-
-    seconds =
-      d.getHours() * 3600 +
-      d.getMinutes() * 60 +
-      d.getSeconds();
-
-  } else if (typeof entry === "string") {
-
-    seconds = parseTimeString(entry);
-
-  }
-
-  if (seconds === null) return null;
+  let seconds =
+    d.getHours() * 3600 +
+    d.getMinutes() * 60 +
+    d.getSeconds();
 
   if (crossedMidnight && seconds < startSec) {
     seconds += 86400;

@@ -10,6 +10,7 @@ import { NIGHT } from "../constants/theme";
 import { PET_IMAGES } from "../constants/PetImages";
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
+import { meetsLevelRequirement } from "../services/ShopService";
 
 import AppText from "./AppText";
 import AppIcon from "./AppIcon";
@@ -24,9 +25,17 @@ export default function PetCard({
   onSelect,
 }) {
 
-  const { language } = useContext(AppContext);
+  const { language, level } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  // Candado de nivel: solo bloquea comprar; una mascota poseída nunca se bloquea
+  const levelLocked =
+    pet.available &&
+    !owned &&
+    !meetsLevelRequirement(pet, level);
+
+  const minLevel = pet.minLevel ?? 1;
 
   function renderAction() {
 
@@ -73,6 +82,22 @@ export default function PetCard({
 
     }
 
+    if (levelLocked) {
+
+      return (
+        <View style={[styles.actionButton, styles.disabledButton]}>
+
+          <AppIcon name="lock" size={14} color="rgba(255,255,255,0.5)" style={styles.actionIcon} />
+
+          <AppText style={styles.disabledText}>
+            {t.shopLevelRequired.replace("{{level}}", minLevel)}
+          </AppText>
+
+        </View>
+      );
+
+    }
+
     return (
       <TouchableOpacity
         style={[styles.actionButton, styles.buyButton]}
@@ -98,6 +123,22 @@ export default function PetCard({
         <AppText style={styles.priceText}>
           {t.comingSoon}
         </AppText>
+      );
+
+    }
+
+    if (levelLocked) {
+
+      return (
+        <View style={styles.priceRow}>
+
+          <AppIcon name="lock" size={14} color="rgba(255,255,255,0.6)" style={styles.priceIcon} />
+
+          <AppText style={styles.priceText}>
+            {t.shopLevelShort.replace("{{level}}", minLevel)}
+          </AppText>
+
+        </View>
       );
 
     }

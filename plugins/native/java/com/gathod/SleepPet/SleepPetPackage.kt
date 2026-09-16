@@ -5,14 +5,18 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
-class ReminderPackage : ReactPackage {
+class SleepPetPackage : ReactPackage {
 
     override fun createNativeModules(
         reactContext: ReactApplicationContext
     ): List<NativeModule> {
 
         return listOf(
-            ReminderModule(reactContext)
+            AccessibilityModule(reactContext),
+            MovementModule(reactContext),
+            NotificationModule(reactContext),
+            ReminderModule(reactContext),
+            SmartAlarmModule(reactContext)
         )
 
     }
@@ -24,5 +28,4 @@ class ReminderPackage : ReactPackage {
         return emptyList()
 
     }
-
 }

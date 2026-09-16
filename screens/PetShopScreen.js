@@ -9,6 +9,7 @@ import {
   FlatList,
   Alert,
   Animated,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,6 +19,12 @@ import {
   PETS,
   canBuyPet,
 } from "../services/PetService";
+import {
+  CONSUMABLES,
+  SHIELD_PRICE,
+  RENAME_PRICE,
+  applyConsumable,
+} from "../services/ShopService";
 import {
   getTranslations,
 } from "../services/TranslationService";
@@ -49,11 +56,21 @@ export default function PetShopScreen({ navigation }) {
     petNames,
     setPetNames,
 
+    petHappiness,
+    setPetHappiness,
+    setLastHappinessUpdate,
+
+    streakShields,
+    setStreakShields,
+
+    level,
+
   } = useContext(AppContext);
 
   const t = getTranslations(language);
 
   const [namingPet, setNamingPet] = useState(null);
+  const [renaming, setRenaming] = useState(false);
 
   const appear = useRef(new Animated.Value(0)).current;
 
@@ -67,7 +84,20 @@ export default function PetShopScreen({ navigation }) {
 
   function buyPet(pet) {
 
-    if (!canBuyPet(pet, coins)) {
+    if (!canBuyPet(pet, coins, level)) {
+
+      if (level < (pet.minLevel ?? 1)) {
+
+        Alert.alert(
+          t.shopLevelRequired.replace(
+            "{{level}}",
+            pet.minLevel ?? 1
+          )
+        );
+
+        return;
+
+      }
 
       Alert.alert(
         t.notEnoughCoins,
@@ -92,6 +122,136 @@ export default function PetShopScreen({ navigation }) {
   function selectPet(id) {
 
     setSelectedPet(id);
+
+  }
+
+  function buyConsumable(item) {
+
+    if (coins < item.price) {
+
+      Alert.alert(
+        t.notEnoughCoins,
+        t.notEnoughCoinsShopMessage
+      );
+
+      return;
+
+    }
+
+    setCoins(coins - item.price);
+
+    setPetHappiness(
+      applyConsumable(petHappiness, item.happiness)
+    );
+
+    setLastHappinessUpdate(Date.now());
+
+  }
+
+  function buyShield() {
+
+    if (coins < SHIELD_PRICE) {
+
+      Alert.alert(
+        t.notEnoughCoins,
+        t.notEnoughCoinsShopMessage
+      );
+
+      return;
+
+    }
+
+    setCoins(coins - SHIELD_PRICE);
+
+    setStreakShields(streakShields + 1);
+
+  }
+
+  function openRename() {
+
+    if (coins < RENAME_PRICE) {
+
+      Alert.alert(
+        t.notEnoughCoins,
+        t.notEnoughCoinsShopMessage
+      );
+
+      return;
+
+    }
+
+    setRenaming(true);
+
+  }
+
+  function confirmRename(name) {
+
+    if (name) {
+
+      setCoins(coins - RENAME_PRICE);
+
+      setPetNames({
+        ...petNames,
+        [selectedPet]: name,
+      });
+
+    }
+
+    setRenaming(false);
+
+  }
+
+  function renderShopRow({
+    icon,
+    title,
+    desc,
+    extra,
+    price,
+    onPress,
+  }) {
+
+    return (
+
+      <View style={styles.shopRow}>
+
+        <View style={styles.shopIconBox}>
+          <AppIcon name={icon} size={22} color={NIGHT.yellow} />
+        </View>
+
+        <View style={styles.shopInfo}>
+
+          <AppText style={styles.shopName}>
+            {title}
+          </AppText>
+
+          <AppText style={styles.shopDesc}>
+            {desc}
+          </AppText>
+
+          {extra ? (
+            <AppText style={styles.shopExtra}>
+              {extra}
+            </AppText>
+          ) : null}
+
+        </View>
+
+        <TouchableOpacity
+          style={styles.shopBuy}
+          onPress={onPress}
+        >
+
+          <AppIcon name="coins" size={13} color={NIGHT.yellow} style={styles.shopBuyIcon} />
+
+          <AppText style={styles.shopBuyText}>
+            {price}
+          </AppText>
+
+        </TouchableOpacity>
+
+      </View>
+
+    );
 
   }
 
@@ -183,6 +343,52 @@ export default function PetShopScreen({ navigation }) {
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.list}
+            ListHeaderComponent={
+
+              <View>
+
+                <AppText style={styles.sectionTitle}>
+                  {t.shopTreats}
+                </AppText>
+
+                {CONSUMABLES.map((item) =>
+                  renderShopRow({
+                    icon: item.icon,
+                    title: t[item.nameKey],
+                    desc: t[item.descKey],
+                    price: item.price,
+                    onPress: () => buyConsumable(item),
+                  })
+                )}
+
+                <AppText style={styles.sectionTitle}>
+                  {t.shopShield}
+                </AppText>
+
+                {renderShopRow({
+                  icon: "shield",
+                  title: t.shopShield,
+                  desc: t.shopShieldDesc,
+                  extra: `${t.shopShieldOwned}: ${streakShields}`,
+                  price: SHIELD_PRICE,
+                  onPress: buyShield,
+                })}
+
+                {renderShopRow({
+                  icon: "pencil",
+                  title: t.shopRename,
+                  desc: t.shopRenameDesc,
+                  price: RENAME_PRICE,
+                  onPress: openRename,
+                })}
+
+                <AppText style={styles.sectionTitle}>
+                  {t.shopPets}
+                </AppText>
+
+              </View>
+
+            }
             renderItem={({ item }) => (
 
               <PetCard
@@ -224,6 +430,19 @@ export default function PetShopScreen({ navigation }) {
           confirmLabel={t.ok}
           onConfirm={confirmPetName}
           onCancel={() => setNamingPet(null)}
+        />
+
+        {/* Renombrar mascota seleccionada (costo en monedas) */}
+
+        <NamePetModal
+          visible={renaming}
+          title={t.shopRename}
+          message={t.shopRenameDesc}
+          placeholder={petNames[selectedPet] || t.petNamePlaceholder}
+          cancelLabel={t.cancel}
+          confirmLabel={t.ok}
+          onConfirm={confirmRename}
+          onCancel={() => setRenaming(false)}
         />
 
       </SafeAreaView>

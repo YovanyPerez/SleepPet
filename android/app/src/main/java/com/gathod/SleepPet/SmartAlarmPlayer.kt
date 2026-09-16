@@ -3,7 +3,6 @@ package com.gathod.SleepPet
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
 
@@ -32,17 +31,12 @@ object SmartAlarmPlayer {
                 return
             }
             val mp = MediaPlayer()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mp.setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                mp.setAudioStreamType(android.media.AudioManager.STREAM_ALARM)
-            }
+            mp.setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            )
             mp.setDataSource(context, uri)
             mp.setVolume(vol, vol)
             mp.isLooping = false

@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.os.Build
 import androidx.core.app.NotificationCompat
 
 class ReminderReceiver : BroadcastReceiver() {
@@ -172,20 +171,18 @@ class ReminderReceiver : BroadcastReceiver() {
         channelName: String,
         channelDescription: String
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                ReminderModule.CHANNEL_ID,
-                channelName,
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = channelDescription
-            }
-
-            val manager = context.getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            ReminderModule.CHANNEL_ID,
+            channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = channelDescription
         }
+
+        val manager = context.getSystemService(
+            Context.NOTIFICATION_SERVICE
+        ) as NotificationManager
+
+        manager.createNotificationChannel(channel)
     }
 }

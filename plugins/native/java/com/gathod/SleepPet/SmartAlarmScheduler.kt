@@ -25,11 +25,7 @@ object SmartAlarmScheduler {
             val intent = Intent(context, SmartAlarmReceiver::class.java).apply { action = ACTION_SMART_ALARM }
             val pending = PendingIntent.getBroadcast(context, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             if (canExact(alarmManager)) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-                } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-                }
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
                 Log.i("SmartAlarm", "alarma exacta programada ${hour}:${String.format("%02d", minute)} trigger ${java.util.Date(triggerAt)}")
             } else {
                 alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
@@ -98,11 +94,7 @@ object SmartAlarmScheduler {
             }
             val pending = PendingIntent.getBroadcast(context, REQUEST_ESCALATE_BASE + level, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             if (canExact(alarmManager)) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-                } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-                }
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             } else {
                 alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             }
@@ -110,11 +102,6 @@ object SmartAlarmScheduler {
         } catch (e: Exception) {
             Log.e("SmartAlarm", "escalation error ${e.message}")
         }
-    }
-
-    fun stopIntent(context: Context): PendingIntent {
-        val i = Intent(context, SmartAlarmReceiver::class.java).apply { action = ACTION_STOP }
-        return PendingIntent.getBroadcast(context, 3020, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
 
     fun scheduleFavorableNow(context: Context) {
@@ -127,11 +114,7 @@ object SmartAlarmScheduler {
             val intent = Intent(context, SmartAlarmReceiver::class.java).apply { action = ACTION_SMART_ALARM }
             val pending = PendingIntent.getBroadcast(context, REQUEST_FAVORABLE, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             if (canExact(alarmManager)) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-                } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
-                }
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             } else {
                 alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             }
