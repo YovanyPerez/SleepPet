@@ -157,7 +157,7 @@ export default function SleepSetupScreen({ navigation, route }) {
 
   function handleBack() {
     if (firstRun) {
-      navigation.replace("Home");
+      navigation.navigate("Tabs", { screen: "Home" });
     } else {
       navigation.goBack();
     }

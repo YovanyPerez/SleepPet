@@ -80,10 +80,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
 
-  bottomNav: {
-    ...NIGHT_STYLES.bottomNav,
-  },
-
 });
 
 export default styles;

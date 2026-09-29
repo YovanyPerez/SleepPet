@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 import {
-  COLORS,
   NIGHT,
   SHADOW,
   NIGHT_STYLES,
@@ -60,18 +59,32 @@ const styles = StyleSheet.create({
   petCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: NIGHT.lavender,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 28,
     padding: 18,
     marginBottom: 18,
-    ...SHADOW.card,
   },
 
-  petImage: {
+  petImageWrap: {
+    width: 130,
+    height: 130,
+    marginRight: 12,
+    borderRadius: 28,
+    overflow: "hidden",
+    backgroundColor: "rgba(27,27,75,0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+
+  petImageLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
     width: 130,
     height: 130,
     resizeMode: "contain",
-    marginRight: 12,
   },
 
   petInfo: {
@@ -81,12 +94,14 @@ const styles = StyleSheet.create({
   petName: {
     fontSize: 24,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   dialogBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -95,7 +110,7 @@ const styles = StyleSheet.create({
 
   dialogText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.85)",
     fontFamily: "Nunito_600SemiBold",
   },
 
@@ -112,7 +127,7 @@ const styles = StyleSheet.create({
   happiness: {
     fontSize: 13,
     fontFamily: "Nunito_700Bold",
-    color: "#6C63A8",
+    color: "rgba(255,255,255,0.8)",
   },
 
   // Stats
@@ -125,7 +140,10 @@ const styles = StyleSheet.create({
 
   statCard: {
     width: "48%",
-    ...NIGHT_STYLES.cardWhite,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 26,
     paddingVertical: 18,
     paddingHorizontal: 16,
     alignItems: "center",
@@ -138,20 +156,20 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     fontFamily: "Nunito_700Bold",
-    color: "#8A7FD6",
+    color: "rgba(255,255,255,0.65)",
     letterSpacing: 1,
   },
 
   statValue: {
     fontSize: 32,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
     marginTop: 4,
   },
 
   statUnit: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.6)",
     fontFamily: "Nunito_600SemiBold",
     marginTop: 2,
   },
@@ -159,7 +177,10 @@ const styles = StyleSheet.create({
   // Nivel
 
   levelCard: {
-    ...NIGHT_STYLES.cardWhite,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 26,
     padding: 18,
     marginBottom: 18,
   },
@@ -186,26 +207,29 @@ const styles = StyleSheet.create({
   levelTitle: {
     fontSize: 20,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   levelXp: {
     fontSize: 14,
     fontFamily: "Nunito_700Bold",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.65)",
   },
 
   levelHint: {
     marginTop: 10,
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.6)",
     fontFamily: "Nunito_400Regular",
   },
 
   // Última noche
 
   lastNightCard: {
-    ...NIGHT_STYLES.cardWhite,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 26,
     padding: 18,
     marginBottom: 18,
   },
@@ -218,14 +242,14 @@ const styles = StyleSheet.create({
   lastNightTitle: {
     fontSize: 14,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "rgba(255,255,255,0.8)",
     letterSpacing: 1,
   },
 
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#DCF5E3",
+    backgroundColor: "rgba(74,222,128,0.16)",
     borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -238,7 +262,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontFamily: "Nunito_700Bold",
-    color: "#2E7D32",
+    color: "#4ADE80",
   },
 
   lastNightRow: {
@@ -258,13 +282,13 @@ const styles = StyleSheet.create({
   lastNightValue: {
     fontSize: 20,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   lastNightLabel: {
     fontSize: 11,
     fontFamily: "Nunito_700Bold",
-    color: "#8A7FD6",
+    color: "rgba(255,255,255,0.6)",
     marginTop: 2,
     letterSpacing: 1,
   },
@@ -272,13 +296,13 @@ const styles = StyleSheet.create({
   lastNightDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#EEE7FB",
+    backgroundColor: "rgba(255,255,255,0.14)",
   },
 
   lastNightEmpty: {
     textAlign: "center",
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.65)",
     fontFamily: "Nunito_600SemiBold",
     paddingVertical: 8,
   },
@@ -308,12 +332,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
     fontFamily: "Nunito_400Regular",
     marginTop: 4,
-  },
-
-  // Navegación inferior
-
-  bottomNav: {
-    ...NIGHT_STYLES.bottomNav,
   },
 
 });

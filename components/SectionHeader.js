@@ -8,16 +8,17 @@ export default function SectionHeader({
   icon,
   title,
   iconColor = NIGHT.end,
+  small = false,
 }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, small && styles.rowSmall]}>
       <AppIcon
         name={icon}
-        size={20}
+        size={small ? 16 : 20}
         color={iconColor}
         style={styles.icon}
       />
-      <AppText style={styles.title}>
+      <AppText style={[styles.title, small && styles.titleSmall]}>
         {title}
       </AppText>
     </View>
@@ -40,5 +41,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 20,
     fontFamily: "Nunito_800ExtraBold",
+  },
+
+  rowSmall: {
+    marginBottom: 10,
+  },
+
+  titleSmall: {
+    fontSize: 16,
   },
 });

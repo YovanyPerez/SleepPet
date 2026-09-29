@@ -24,6 +24,7 @@ import { getTranslations } from "../services/TranslationService";
 import { NIGHT } from "../constants/theme";
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
+import AppIcon from "../components/AppIcon";
 import styles from "./styles/PPGMeasureScreen.styles";
 import usePPG from "../hooks/usePPG";
 import { getHeartRateRecommendation } from "../services/HeartRateRecommendService";
@@ -39,11 +40,19 @@ const EXPOSURE_BIAS = 1;
 // const EXPOSURE_BIAS = 0; // rollback rapido: 0 = neutral (alternar 0/1 sin plan nuevo, solo rebuild)
 
 export default function PPGMeasureScreen({ navigation }) {
-  const { language } = useContext(AppContext);
+  const { language, hasSeenPPGTutorial, setHasSeenPPGTutorial } = useContext(AppContext);
   const t = getTranslations(language);
+  const [showTutHelp, setShowTutHelp] = useState(false);
+  const shadowDiagnostics = __DEV__;
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
   const [legacyPermission, setLegacyPermission] = useState(null);
+
+  // Re-assert torch al primer frame real (sesion nativa viva): device listo
+  // != sesion lista y la prop "on" temprana se descarta en silencio.
+  // Forwarder estable (el hook lo guarda en ref): la logica real se asigna
+  // tras usePPG porque necesita `phase` (TDZ si se lee antes).
+  const firstFrameHandlerRef = useRef(null);
 
   const {
     phase,
@@ -62,7 +71,26 @@ export default function PPGMeasureScreen({ navigation }) {
     reset,
     frameProcessor,
     getSpark,
-  } = usePPG({ fps: 30 });
+  } = usePPG({ fps: 30, shadowDiagnostics, onFirstFrame: (...args) => firstFrameHandlerRef.current?.(...args) });
+
+  // Logica del re-assert (tras usePPG por TDZ de `phase`): flanco off->on
+  // que obliga a reaplicar el torch. Solo en espera/preparacion (en
+  // measuring el flash ya va bien y un parpadeo perturbaria la senal) y
+  // una vez por montaje (handleRetry lo resetea). No pelea con cleanup.
+  firstFrameHandlerRef.current = () => {
+    if (torchReassertedRef.current || leavingRef.current) return;
+    if (phase !== "waiting" && phase !== "preparing") return;
+    if (!torchOn) return;
+    torchReassertedRef.current = true;
+    console.log("PPG torch re-assert tras primer frame");
+    setTorchOn(false);
+    torchTimerRef.current = setTimeout(() => {
+      if (!leavingRef.current) {
+        setTorchOn(true);
+      }
+      torchTimerRef.current = null;
+    }, 400);
+  };
 
   // Pipeline de camara encendido mientras mide O espera el dedo
   const ppgActive = measuring || waitingFinger;
@@ -74,10 +102,17 @@ export default function PPGMeasureScreen({ navigation }) {
   const [torchOn, setTorchOn] = useState(false);
   // Invalida re-arms/callbacks pendientes tras abandonar la pantalla
   const leavingRef = useRef(false);
+  // Re-assert torch una vez por montaje (se resetea en handleRetry)
+  const torchReassertedRef = useRef(false);
+  const torchTimerRef = useRef(null);
 
   // Cleanup unico del flujo PPG: apaga torch, detiene medicion/timers/FP
   const cleanupPPG = useCallback(() => {
     leavingRef.current = true;
+    if (torchTimerRef.current) {
+      clearTimeout(torchTimerRef.current);
+      torchTimerRef.current = null;
+    }
     setTorchOn(false);
     stop();
   }, [stop]);
@@ -127,14 +162,15 @@ export default function PPGMeasureScreen({ navigation }) {
 
   const permissionOk = hasPermission || legacyPermission;
 
-  // Auto-armar al montar cuando permiso y device esten listos (sin boton Iniciar)
+  // Auto-armar al montar cuando permiso y device esten listos (sin boton Iniciar).
+  // Supeditado al tutorial: sin verlo, espera al boton "Entendido, medir".
   // A1: depende de device — evita torch="on" contra sesion aun no inicializada (causaba flash apagado 1ª entrada)
   useEffect(() => {
-    if (device && permissionOk && phase === "idle" && !leavingRef.current) {
+    if (device && permissionOk && phase === "idle" && hasSeenPPGTutorial && !leavingRef.current) {
       start();
       setTorchOn(true);
     }
-  }, [device, permissionOk, phase, start]);
+  }, [device, permissionOk, phase, hasSeenPPGTutorial, start]);
 
   // Reintento torch si device llega tarde y ya estamos en pipeline activo
   useEffect(() => {
@@ -142,6 +178,16 @@ export default function PPGMeasureScreen({ navigation }) {
       setTorchOn(true);
     }
   }, [device, permissionOk, ppgActive, torchOn]);
+
+  // Limpieza del timer de re-assert al desmontar (backstop)
+  useEffect(() => {
+    return () => {
+      if (torchTimerRef.current) {
+        clearTimeout(torchTimerRef.current);
+        torchTimerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -208,10 +254,30 @@ export default function PPGMeasureScreen({ navigation }) {
 
   function handleRetry() {
     leavingRef.current = false;
+    torchReassertedRef.current = false;
     reset();
     setRecommendation(null);
     start();
     setTorchOn(true);
+  }
+
+  // Pasos del mini-tutorial (primera vez y ayuda colapsable)
+  const tutSteps = [
+    { icon: "flash", color: NIGHT.yellow, text: t.ppgTut1 },
+    { icon: "finger", color: "#8FA3FF", text: t.ppgTut2 },
+    { icon: "meditation", color: "#FF8FAB", text: t.ppgTut3 },
+  ];
+
+  function handleStartTutorial() {
+    setHasSeenPPGTutorial(true);
+    setShowTutHelp(false);
+    leavingRef.current = false;
+    torchReassertedRef.current = false;
+    reset();
+    if (device && permissionOk && phase === "idle") {
+      start();
+      setTorchOn(true);
+    }
   }
 
   function handleUseResult() {
@@ -282,6 +348,38 @@ export default function PPGMeasureScreen({ navigation }) {
           <AppText style={styles.title}>{t.ppgTitle}</AppText>
           <AppText style={styles.subtitle}>{t.ppgInstruction}</AppText>
 
+          {!hasSeenPPGTutorial ? (
+            <View style={styles.tutCard}>
+              <AppText style={styles.tutTitle}>{t.ppgTutTitle}</AppText>
+              {tutSteps.map((s) => (
+                <View key={s.icon} style={styles.tutRow}>
+                  <View style={styles.tutIconCircle}>
+                    <AppIcon name={s.icon} size={20} color={s.color} />
+                  </View>
+                  <AppText style={styles.tutText}>{s.text}</AppText>
+                </View>
+              ))}
+              <TouchableOpacity style={styles.tutButton} onPress={handleStartTutorial}>
+                <AppText style={styles.tutButtonText}>{t.ppgTutStart.toUpperCase()}</AppText>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity onPress={() => setShowTutHelp((v) => !v)}>
+                <AppText style={styles.tutHelp}>{t.ppgTutHelp}</AppText>
+              </TouchableOpacity>
+              {showTutHelp && (
+                <View style={[styles.tutCard, { marginTop: 8 }]}>
+                  {tutSteps.map((s) => (
+                    <View key={s.icon} style={[styles.tutRow, { marginBottom: 8 }]}>
+                      <View style={styles.tutIconCircle}>
+                        <AppIcon name={s.icon} size={20} color={s.color} />
+                      </View>
+                      <AppText style={styles.tutText}>{s.text}</AppText>
+                    </View>
+                  ))}
+                </View>
+              )}
           {/* Circulo de camara con anillo de estado */}
           <View style={[styles.circleWrap, { borderColor: ringColor }]}>
             {device ? (
@@ -399,6 +497,8 @@ export default function PPGMeasureScreen({ navigation }) {
               </>
             )}
           </View>
+            </>
+          )}
 
           <AppText style={styles.disclaimer}>{t.ppgDisclaimer}</AppText>
         </ScrollView>

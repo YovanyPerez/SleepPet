@@ -4,11 +4,11 @@
 // medición médica ni una medición objetiva de rendimiento académico.
 // Los análisis son descriptivos (patrones observados), nunca causales.
 //
-// Formato de un check-in:
-//   { dateKey: "YYYY-MM-DD", energy: "good", studyExperience: "productive", updatedAt: <ms> }
+// Formato de un registro diario (energía y estudio se contestan por separado):
+//   { dateKey: "YYYY-MM-DD", energy?: "good", studyExperience?: "productive", updatedAt: <ms> }
 //
 // Invariantes:
-// - Máximo 1 check-in por dateKey (upsert, no duplica).
+// - Máximo 1 registro por dateKey; cada respuesta parcial se combina con la existente.
 // - Datos corruptos ignorados de forma segura (sin lanzar).
 // - Sin divisiones por cero ni NaN.
 
@@ -23,7 +23,7 @@ const ENERGY_ORDER = {
   energetic: 5,
 };
 
-// Umbrales de "suficiencia" por nº de días con check-in (tunables).
+// Umbrales de "suficiencia" por días con respuesta de estudio (tunables).
 const TIER_WEEKLY_MIN = 7;
 const TIER_EARLY_MIN = 3;
 
@@ -44,8 +44,9 @@ function isValidCheckIn(entry) {
     entry &&
     typeof entry === "object" &&
     isValidDateKey(entry.dateKey) &&
-    isValidEnergy(entry.energy) &&
-    isValidStudy(entry.studyExperience)
+    (entry.energy == null || isValidEnergy(entry.energy)) &&
+    (entry.studyExperience == null || isValidStudy(entry.studyExperience)) &&
+    (isValidEnergy(entry.energy) || isValidStudy(entry.studyExperience))
   );
 }
 
@@ -64,22 +65,29 @@ function dedupByDateKey(list) {
 
 export function upsertCheckIn(list, entry) {
   const base = Array.isArray(list) ? list : [];
+  const canonical = dedupByDateKey(base);
 
   if (!isValidCheckIn(entry)) {
-    return dedupByDateKey(base);
+    return canonical;
   }
+
+  const previous = canonical.find((c) => c.dateKey === entry.dateKey);
+  const energy = isValidEnergy(entry.energy)
+    ? entry.energy
+    : previous?.energy;
+  const studyExperience = isValidStudy(entry.studyExperience)
+    ? entry.studyExperience
+    : previous?.studyExperience;
 
   const stamped = {
     dateKey: entry.dateKey,
-    energy: entry.energy,
-    studyExperience: entry.studyExperience,
+    ...(energy ? { energy } : {}),
+    ...(studyExperience ? { studyExperience } : {}),
     updatedAt:
       typeof entry.updatedAt === "number" ? entry.updatedAt : Date.now(),
   };
 
-  const rest = dedupByDateKey(base).filter(
-    (c) => c.dateKey !== stamped.dateKey
-  );
+  const rest = canonical.filter((c) => c.dateKey !== stamped.dateKey);
 
   return [stamped, ...rest];
 }
@@ -96,7 +104,11 @@ export function analyzeSleepStudy({ sleepHistory = [], checkIns = [] } = {}) {
   const validCheckIns = dedupByDateKey(
     Array.isArray(checkIns) ? checkIns : []
   );
-  const checkInCount = validCheckIns.length;
+  const energyCheckIns = validCheckIns.filter((c) => isValidEnergy(c.energy));
+  const studyCheckIns = validCheckIns.filter((c) =>
+    isValidStudy(c.studyExperience)
+  );
+  const checkInCount = studyCheckIns.length;
 
   const energyDistribution = {
     tired: 0,
@@ -106,11 +118,13 @@ export function analyzeSleepStudy({ sleepHistory = [], checkIns = [] } = {}) {
     energetic: 0,
   };
   let energySum = 0;
-  for (const c of validCheckIns) {
+  for (const c of energyCheckIns) {
     energyDistribution[c.energy]++;
     energySum += ENERGY_ORDER[c.energy];
   }
-  const avgEnergy = checkInCount > 0 ? energySum / checkInCount : null;
+  const avgEnergy = energyCheckIns.length > 0
+    ? energySum / energyCheckIns.length
+    : null;
 
   const studyDistribution = {
     difficult: 0,
@@ -118,7 +132,7 @@ export function analyzeSleepStudy({ sleepHistory = [], checkIns = [] } = {}) {
     good: 0,
     productive: 0,
   };
-  for (const c of validCheckIns) {
+  for (const c of studyCheckIns) {
     studyDistribution[c.studyExperience]++;
   }
 
@@ -162,7 +176,7 @@ export function analyzeSleepStudy({ sleepHistory = [], checkIns = [] } = {}) {
   let lowCount = 0;
   let highSum = 0;
   let highCount = 0;
-  for (const c of validCheckIns) {
+  for (const c of energyCheckIns) {
     const h = dayHours.get(c.dateKey);
     if (typeof h !== "number") continue;
     if (lowKeys.has(c.energy)) {

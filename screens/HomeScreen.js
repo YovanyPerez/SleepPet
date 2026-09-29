@@ -1,5 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import {
+  Animated,
+  Easing,
   ScrollView,
   View,
   Image,
@@ -12,11 +14,10 @@ import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
 import AppText from "../components/AppText";
 import ProgressBar from "../components/ProgressBar";
-import BottomNav from "../components/BottomNav";
+import { TabBarFramesContext } from "../components/BottomNav";
 import OnboardingOverlay from "../components/OnboardingOverlay";
 import NightBackground from "../components/NightBackground";
 import AppIcon from "../components/AppIcon";
-import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import { PET_IMAGES } from "../constants/PetImages";
 import { getPet } from "../services/PetService";
 import { getTranslations } from "../services/TranslationService";
@@ -72,17 +73,36 @@ export default function HomeScreen({ navigation }) {
         ? t[pet.nameKey]
         : "Michi";
 
-  // Badge dinámico según el estado de la última sesión
+  // Badge dinámico según el estado de la última sesión (tintes translúcidos sobre glass)
   const MOOD_BADGES = {
-    happy: { label: t.excellentSleep, text: "#2E7D32", bg: "#E8F5E9" },
-    normal: { label: t.goodSleep, text: "#2E7D32", bg: "#E8F5E9" },
-    sleepy: { label: t.needMoreRest, text: "#B45309", bg: "#FEF3C7" },
-    sad: { label: t.trySleepingLonger, text: "#B91C1C", bg: "#FEE2E2" },
+    happy: { label: t.excellentSleep, text: "#4ADE80", bg: "rgba(74,222,128,0.16)" },
+    normal: { label: t.goodSleep, text: "#4ADE80", bg: "rgba(74,222,128,0.16)" },
+    sleepy: { label: t.needMoreRest, text: "#FFB703", bg: "rgba(255,183,3,0.22)" },
+    sad: { label: t.trySleepingLonger, text: "#FF8FAB", bg: "rgba(255,143,171,0.18)" },
   };
 
   const moodBadge = lastSleepSession
     ? MOOD_BADGES[lastSleepSession.mood] || MOOD_BADGES.normal
     : null;
+
+  // Crossfade de la mascota cuando cambia el mood (evita el swap seco
+  // después de una sesión). baseMood sostiene la capa de abajo.
+  const [baseMood, setBaseMood] = useState(petMood);
+  const moodFade = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (petMood === baseMood) return;
+    moodFade.setValue(0);
+    Animated.timing(moodFade, {
+      toValue: 1,
+      duration: 220,
+      easing: Easing.bezier(0.23, 1, 0.32, 1),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setBaseMood(petMood);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [petMood, baseMood]);
 
   function greeting() {
 
@@ -118,6 +138,9 @@ export default function HomeScreen({ navigation }) {
   const [scrollY, setScrollY] = useState(0);
   const [tick, setTick] = useState(0);
   const scrollRef = useRef(null);
+
+  // La barra la renderiza TabsNavigator; sus frames llegan por contexto.
+  const tabFrames = useContext(TabBarFramesContext);
 
   const setFrame = (key) => (e) => {
     const { x, y, width, height } = e.nativeEvent.layout;
@@ -161,9 +184,9 @@ export default function HomeScreen({ navigation }) {
     const key = ONBOARDING_STEPS[guideStep].key;
     // Tabs: wrapper + barra + tab (todo medido con onLayout)
     if (key === "tabStats" || key === "tabAch") {
-      const w = frames.__tabsWrap;
-      const b = frames.__bar;
-      const tb = frames[key];
+      const w = tabFrames.__tabsWrap;
+      const b = tabFrames.__bar;
+      const tb = tabFrames[key];
       if (!w || !b || !tb) return null;
       return {
         x: w.x + b.x + tb.x,
@@ -214,8 +237,6 @@ export default function HomeScreen({ navigation }) {
 
   return (
 
-    <SwipeableTabScreen active="Home" navigation={navigation}>
-
     <NightBackground>
 
       <ScrollView
@@ -265,10 +286,16 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.petCard} onLayout={setFrame("pet")}>
 
-          <Image
-            source={PET_IMAGES[selectedPet][petMood]}
-            style={styles.petImage}
-          />
+          <View style={styles.petImageWrap}>
+            <Image
+              source={PET_IMAGES[selectedPet][baseMood]}
+              style={styles.petImageLayer}
+            />
+            <Animated.Image
+              source={PET_IMAGES[selectedPet][petMood]}
+              style={[styles.petImageLayer, { opacity: moodFade }]}
+            />
+          </View>
 
           <View style={styles.petInfo}>
 
@@ -286,7 +313,7 @@ export default function HomeScreen({ navigation }) {
               <AppIcon
                 name="happiness"
                 size={13}
-                color="#6C63A8"
+                color={NIGHT.pink}
                 style={styles.happinessIcon}
               />
               <AppText style={styles.happiness}>
@@ -297,7 +324,7 @@ export default function HomeScreen({ navigation }) {
             <ProgressBar
               progress={petHappiness}
               color={NIGHT.pink}
-              background="#D8D2F0"
+              background="rgba(255,255,255,0.14)"
               height={10}
             />
 
@@ -384,7 +411,7 @@ export default function HomeScreen({ navigation }) {
           <ProgressBar
             progress={xp}
             color={NIGHT.yellow}
-            background="#EEE7FB"
+            background="rgba(255,255,255,0.14)"
             height={12}
           />
 
@@ -441,7 +468,7 @@ export default function HomeScreen({ navigation }) {
                   <AppIcon
                     name="sleep"
                     size={20}
-                    color="#7C6FD0"
+                    color="#B9B3F5"
                     style={styles.lastNightIcon}
                   />
                   <AppText style={styles.lastNightValue}>
@@ -458,7 +485,7 @@ export default function HomeScreen({ navigation }) {
                   <AppIcon
                     name="score"
                     size={20}
-                    color="#5E60CE"
+                    color="#8FA3FF"
                     style={styles.lastNightIcon}
                   />
                   <AppText style={styles.lastNightValue}>
@@ -475,7 +502,7 @@ export default function HomeScreen({ navigation }) {
                   <AppIcon
                     name="unlocks"
                     size={20}
-                    color="#5E60CE"
+                    color="#8FA3FF"
                     style={styles.lastNightIcon}
                   />
                   <AppText style={styles.lastNightValue}>
@@ -526,20 +553,6 @@ export default function HomeScreen({ navigation }) {
 
       </ScrollView>
 
-      {/* Navegación inferior */}
-
-      <View style={styles.bottomNav} onLayout={setFrame("__tabsWrap")}>
-        <BottomNav
-          active="Home"
-          navigation={navigation}
-          onTabLayout={(key, layout) => {
-            const k = key === "Statistics" ? "tabStats" : key === "Achievements" ? "tabAch" : null;
-            if (k) setFrame(k)({ nativeEvent: { layout } });
-            else if (key === "__bar") setFrame("__bar")({ nativeEvent: { layout } });
-          }}
-        />
-      </View>
-
       {guideStep >= 0 && (
         <OnboardingOverlay
           steps={ONBOARDING_STEPS}
@@ -554,8 +567,6 @@ export default function HomeScreen({ navigation }) {
       )}
 
     </NightBackground>
-
-    </SwipeableTabScreen>
 
   );
 

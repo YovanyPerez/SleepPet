@@ -50,6 +50,8 @@ class UnlockAccessibilityService : AccessibilityService() {
 
                     Log.d(TAG, "Usuario desbloqueó (USER_PRESENT)")
 
+                    SleepForegroundService.markScreenInteraction()
+
                     // Se resuelve el paquete real tras un delay corto y se pasa a
                     // countUnlock: si el usuario quedó en SleepPet, el filtro de
                     // checkForegroundApp ya funciona (antes se pasaba "" y contaba siempre).
@@ -57,6 +59,12 @@ class UnlockAccessibilityService : AccessibilityService() {
                         { countUnlock(foregroundPackage()) },
                         FOREGROUND_CHECK_DELAY_MS
                     )
+
+                }
+
+                Intent.ACTION_SCREEN_ON -> {
+
+                    SleepForegroundService.markScreenInteraction()
 
                 }
 
@@ -77,6 +85,8 @@ class UnlockAccessibilityService : AccessibilityService() {
             addAction(Intent.ACTION_SCREEN_OFF)
 
             addAction(Intent.ACTION_USER_PRESENT)
+
+            addAction(Intent.ACTION_SCREEN_ON)
 
         }
 
@@ -204,9 +214,6 @@ class UnlockAccessibilityService : AccessibilityService() {
         if (packageName == SYSTEM_UI)
             return
 
-        if (!armed)
-            return
-
         if (!isRealApp(packageName)) {
 
             Log.d(TAG, "No es app real: $packageName")
@@ -214,6 +221,14 @@ class UnlockAccessibilityService : AccessibilityService() {
             return
 
         }
+
+        // App real en primer plano = celular en uso (aunque no hubiera
+        // desbloqueo que contar: ej. sesión iniciada con la pantalla ya
+        // encendida). Se avisa al servicio para el stage WAKE.
+        SleepForegroundService.markScreenInteraction()
+
+        if (!armed)
+            return
 
         countUnlock(packageName)
 

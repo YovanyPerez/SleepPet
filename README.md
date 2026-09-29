@@ -2,7 +2,22 @@
 
 App Android de sueño gamificada: registra tu descanso, mide señales con el teléfono y cuida una mascota que reacciona a cómo duermes.
 
-Versión actual: **1.1.1** (versionCode 7).
+Versión actual: **1.3.2** (versionCode 13).
+
+## Capturas
+
+Recorrido completo en español (build 1.3.0; faltan Home, Achievements, Results y Editar perfil):
+
+| | | |
+|---|---|---|
+| ![Bienvenida](docs/screenshots/01_bienvenida.jpg) **Bienvenida** — idioma y comienzo | ![Términos](docs/screenshots/02_terminos.jpg) **Términos** — checkbox obligatorio | ![Nombre](docs/screenshots/03_crear_nombre.jpg) **Perfil 1/4** — tu nombre |
+| ![Edad](docs/screenshots/04_crear_edad.jpg) **Perfil 2/4** — tu edad | ![Objetivo](docs/screenshots/05_crear_objetivo.jpg) **Perfil 3/4** — tu objetivo | ![Mascota](docs/screenshots/06_crear_mascota.jpg) **Perfil 4/4** — nombra a tu mascota |
+| ![Preparación](docs/screenshots/07_setup_preparacion.jpg) **Preparación** — accesibilidad y permisos | ![Recordatorio](docs/screenshots/08_ajustes_recordatorio.jpg) **Ajustes** — recordatorio 22:30 y SmartAlarm | ![Modo sueño](docs/screenshots/09_sleep_inicial.jpg) **Modo Sueño** — listo para registrar |
+| ![Pulso](docs/screenshots/10_sleep_pulso.jpg) **Pulso** — 71 lpm, confianza 85% | ![Check-in](docs/screenshots/11_sleep_checkin.jpg) **Check-in** — energía y estudio del día | ![Activo](docs/screenshots/12_sleep_activo.jpg) **Sesión activa** — cronómetro y desbloqueos |
+| ![Consumibles](docs/screenshots/13_tienda_consumibles.jpg) **Tienda** — snacks y felicidad | ![Mascotas](docs/screenshots/14_tienda_mascotas.jpg) **Tienda** — Gato, Perro, Panda, Zorro | ![Ajustes](docs/screenshots/15_ajustes.jpg) **Ajustes** — idioma y recordatorio |
+| ![Desafío](docs/screenshots/16_smartalarm_desafio.jpg) **SmartAlarm** — desafío "escribir palabra" | ![Más ajustes](docs/screenshots/17_ajustes_mas.jpg) **Ajustes** — reiniciar, guía, acerca de | ![Acerca de](docs/screenshots/18_acerca_de.jpg) **Acerca de** — versión y términos |
+| ![Menú](docs/screenshots/19_menu.jpg) **Menú** — perfil e historial | ![Perfil](docs/screenshots/20_perfil.jpg) **Perfil** — datos personales | ![Progreso](docs/screenshots/21_perfil_progreso.jpg) **Perfil** — nivel y racha |
+| ![Historial](docs/screenshots/22_historial_vacio.jpg) **Historial** — vacío inicial | ![PPG](docs/screenshots/23_ppg_midiendo.jpg) **PPG** — medición en vivo con flash | |
 
 ## Qué hace
 
@@ -79,6 +94,11 @@ Harnesses puros de Node (sin frameworks):
 ```bash
 node tools/testUserData.js       # detección de usuario existente (15/15)
 node tools/testPPGStability.js   # cadena de estabilidad del pulso (4/4)
-node tools/testPPG.js            # algoritmo PPG con señal sintética (11/13 baseline)
-node tools/testCheckIn.js        # lógica de check-in diario (23/23)
+node tools/testPPG.js            # algoritmo PPG con señal sintética (13/13)
+node tools/testPPGDiagnostics.js # diagnóstico sombra PPG (6/6)
+node tools/testCheckIn.js        # lógica de check-in diario (29/29)
+node tools/testShop.js           # tienda (TODO OK)
+node tools/testWakeBackfill.js   # backfill WAKE del historial (10/10)
+node tools/testPetHappiness.js   # felicidad y mood de la mascota (12/12)
+node tools/testPetAlert.js       # alerta de mascota triste (6/6)
 ```

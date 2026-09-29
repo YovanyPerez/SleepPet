@@ -18,11 +18,9 @@ import { NIGHT } from "../constants/theme";
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
-import BottomNav from "../components/BottomNav";
 import AchievementCard from "../components/AchievementCard";
 import AchievementSummary from "../components/AchievementSummary";
 import AchievementFilter from "../components/AchievementFilter";
-import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import styles from "./styles/AchievementsScreen.styles";
 
 import {
@@ -114,8 +112,6 @@ export default function AchievementsScreen({ navigation }) {
   });
 
   return (
-
-    <SwipeableTabScreen active="Achievements" navigation={navigation}>
 
     <NightBackground
       colors={[NIGHT.start, "#25256F", "#5751C9"]}
@@ -218,20 +214,9 @@ export default function AchievementsScreen({ navigation }) {
 
         </ScrollView>
 
-        {/* Navegación inferior */}
-
-        <View style={styles.bottomNav}>
-          <BottomNav
-            active="Achievements"
-            navigation={navigation}
-          />
-        </View>
-
       </SafeAreaView>
 
     </NightBackground>
-
-    </SwipeableTabScreen>
 
   );
 

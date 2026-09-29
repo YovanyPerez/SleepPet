@@ -51,11 +51,8 @@ import {
 
 import NightBackground from "../components/NightBackground";
 import TimeSelector, { wrapValue } from "../components/TimeSelector";
-import Card from "../components/Card";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
-import BottomNav from "../components/BottomNav";
-import SwipeableTabScreen from "../components/SwipeableTabScreen";
 
 import Constants from "expo-constants";
 import styles from "./styles/SettingsScreen.styles";
@@ -102,7 +99,13 @@ export default function SettingsScreen({ navigation }) {
 
     setLastStreakDateKey,
 
+    setLastHappinessAlertKey,
+
     setHasCompletedOnboarding,
+
+    setHasAcceptedTerms,
+
+    setHasSeenPPGTutorial,
 
   } = useContext(AppContext);
 
@@ -137,12 +140,14 @@ export default function SettingsScreen({ navigation }) {
     hour: 7,
     minute: 0,
     windowMin: 30,
+    dismissMode: "off",
   });
   const smartAlarmRef = useRef({
     enabled: false,
     hour: 7,
     minute: 0,
     windowMin: 30,
+    dismissMode: "off",
   });
 
   useEffect(() => {
@@ -154,7 +159,7 @@ export default function SettingsScreen({ navigation }) {
       smartAlarmRef.current = smart;
       setSmartAlarm(smart);
       // sincroniza a nativo (SharedPreferences smart_alarm)
-      setSmartAlarmConfig(smart).catch(() => {});
+      setSmartAlarmConfig(smart, language).catch(() => {});
     })();
   }, []);
 
@@ -238,7 +243,7 @@ export default function SettingsScreen({ navigation }) {
     smartAlarmRef.current = next;
     setSmartAlarm(next);
     saveSmartAlarmSettings(next);
-    setSmartAlarmConfig(next).catch(() => {});
+    setSmartAlarmConfig(next, language).catch(() => {});
   }
 
   function stepSmartTime(field, direction) {
@@ -250,7 +255,7 @@ export default function SettingsScreen({ navigation }) {
     smartAlarmRef.current = next;
     setSmartAlarm(next);
     saveSmartAlarmSettings(next);
-    setSmartAlarmConfig(next).catch(() => {});
+    setSmartAlarmConfig(next, language).catch(() => {});
   }
 
   function resetProgress() {
@@ -317,7 +322,13 @@ export default function SettingsScreen({ navigation }) {
 
             setLastStreakDateKey(null);
 
+            setLastHappinessAlertKey(null);
+
             setHasCompletedOnboarding(false);
+
+            setHasAcceptedTerms(false);
+
+            setHasSeenPPGTutorial(false);
 
             Alert.alert(
 
@@ -379,8 +390,6 @@ export default function SettingsScreen({ navigation }) {
 
   return (
 
-    <SwipeableTabScreen active="Settings" navigation={navigation}>
-
     <NightBackground moon={false}>
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -421,12 +430,12 @@ export default function SettingsScreen({ navigation }) {
 
             {/* Idioma */}
 
-            <Card style={styles.card}>
+            <View style={styles.card}>
 
               <View style={styles.cardHeaderRow}>
 
                 <View style={styles.iconCircle}>
-                  <AppIcon name="language" size={20} color={NIGHT.end} />
+                  <AppIcon name="language" size={20} color={NIGHT.yellow} />
                 </View>
 
                 <View style={styles.cardHeaderText}>
@@ -507,16 +516,16 @@ export default function SettingsScreen({ navigation }) {
 
               </View>
 
-            </Card>
+            </View>
 
             {/* Recordatorio */}
 
-            <Card style={styles.card}>
+            <View style={styles.card}>
 
               <View style={styles.cardHeaderRow}>
 
                 <View style={styles.iconCircle}>
-                  <AppIcon name="reminder" size={20} color={NIGHT.end} />
+                  <AppIcon name="reminder" size={20} color={NIGHT.yellow} />
                 </View>
 
                 <View style={styles.cardHeaderText}>
@@ -578,13 +587,13 @@ export default function SettingsScreen({ navigation }) {
 
               {reminder.enabled && <ExactAlarmLink />}
 
-            </Card>
+            </View>
 
             {/* Smart Alarm */}
-            <Card style={styles.card}>
+            <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
                 <View style={styles.iconCircle}>
-                  <AppIcon name="night" size={20} color={NIGHT.end} />
+                  <AppIcon name="night" size={20} color={NIGHT.yellow} />
                 </View>
                 <View style={styles.cardHeaderText}>
                   <AppText style={styles.cardTitle}>
@@ -648,13 +657,44 @@ export default function SettingsScreen({ navigation }) {
                       {(t.smartAlarmWindowDesc ?? "Si tu sueño está en fase ligera entre {{start}} y {{end}}, SmartAlarm intentará despertarte en momento favorable.").replace("{{start}}", `${String((smartAlarm.hour*60+smartAlarm.minute - smartAlarm.windowMin + 1440)%1440 /60|0).padStart(2,"0")}:${String((smartAlarm.hour*60+smartAlarm.minute - smartAlarm.windowMin)%60).padStart(2,"0")}`).replace("{{end}}", `${String(smartAlarm.hour).padStart(2,"0")}:${String(smartAlarm.minute).padStart(2,"0")}`)}
                     </AppText>
                   </View>
-                  <AppText style={{ color: "rgba(0,0,0,0.45)", fontSize: 11, marginTop: 8, textAlign: "center" }}>
+                  <AppText style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, fontFamily: "Nunito_700Bold", marginTop: 14, marginBottom: 8 }}>
+                    {t.smartAlarmChallenge ?? "Apagar la alarma"}
+                  </AppText>
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    {[
+                      { mode: "off", label: t.smartAlarmChallengeOff ?? "Botón Detener" },
+                      { mode: "word", label: t.smartAlarmChallengeWord ?? "Escribir palabra" },
+                    ].map((opt) => (
+                      <TouchableOpacity
+                        key={opt.mode}
+                        style={[
+                          styles.languageButton,
+                          { flex: 1, paddingVertical: 10 },
+                          (smartAlarm.dismissMode ?? "off") === opt.mode && styles.selectedButton,
+                        ]}
+                        onPress={() => applySmartAlarm({ ...smartAlarm, dismissMode: opt.mode })}
+                      >
+                        <AppText
+                          style={[
+                            styles.buttonText,
+                            (smartAlarm.dismissMode ?? "off") === opt.mode && styles.buttonTextSelected,
+                          ]}
+                        >
+                          {opt.label}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <AppText style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, fontFamily: "Nunito_400Regular", marginTop: 6, textAlign: "center" }}>
+                    {t.smartAlarmChallengeDesc ?? "Con desafío no hay atajo: suena hasta escribir la palabra."}
+                  </AppText>
+                  <AppText style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 8, textAlign: "center" }}>
                     {t.smartAlarmDisclaimer ?? "*Estimación por reglas, no diagnóstico médico. Amanecer siempre a la hora objetivo si no hay momento favorable."}
                   </AppText>
                   <ExactAlarmLink />
                 </>
               )}
-            </Card>
+            </View>
 
             {/* Reiniciar progreso */}
 
@@ -679,7 +719,7 @@ export default function SettingsScreen({ navigation }) {
 
               </View>
 
-              <AppIcon name="chevron" size={18} color="#9AA0B8" />
+              <AppIcon name="chevron" size={18} color="rgba(255,255,255,0.5)" />
 
             </TouchableOpacity>
 
@@ -691,7 +731,7 @@ export default function SettingsScreen({ navigation }) {
             >
 
               <View style={styles.iconCircle}>
-                <AppIcon name="sparkles" size={20} color={NIGHT.end} />
+                <AppIcon name="sparkles" size={20} color={NIGHT.yellow} />
               </View>
 
               <View style={styles.optionText}>
@@ -706,7 +746,7 @@ export default function SettingsScreen({ navigation }) {
 
               </View>
 
-              <AppIcon name="chevron" size={18} color="#9AA0B8" />
+              <AppIcon name="chevron" size={18} color="rgba(255,255,255,0.5)" />
 
             </TouchableOpacity>
 
@@ -718,7 +758,7 @@ export default function SettingsScreen({ navigation }) {
             >
 
               <View style={styles.iconCircle}>
-                <AppIcon name="about" size={20} color={NIGHT.end} />
+                <AppIcon name="about" size={20} color={NIGHT.yellow} />
               </View>
 
               <View style={styles.optionText}>
@@ -733,7 +773,7 @@ export default function SettingsScreen({ navigation }) {
 
               </View>
 
-              <AppIcon name="chevron" size={18} color="#9AA0B8" />
+              <AppIcon name="chevron" size={18} color="rgba(255,255,255,0.5)" />
 
             </TouchableOpacity>
 
@@ -741,20 +781,9 @@ export default function SettingsScreen({ navigation }) {
 
         </ScrollView>
 
-        {/* Navegación inferior */}
-
-        <View style={styles.bottomNav}>
-          <BottomNav
-            active="Settings"
-            navigation={navigation}
-          />
-        </View>
-
       </SafeAreaView>
 
     </NightBackground>
-
-    </SwipeableTabScreen>
 
   );
 

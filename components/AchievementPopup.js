@@ -6,11 +6,22 @@ import {
   StyleSheet,
 } from "react-native";
 
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+
 import { AppContext } from "../context/AppContext";
 import { getTranslations } from "../services/TranslationService";
 import { NIGHT } from "../constants/theme";
 import AppText from "./AppText";
 import AppIcon from "./AppIcon";
+
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 
 /**
  * Popup global de logro desbloqueado (overlay en AppNavigator).
@@ -26,13 +37,43 @@ export default function AchievementPopup({
 
   const t = getTranslations(language);
 
+  const reduced = useReducedMotion();
+
+  // Entrada de la card (scale 0.95 -> 1 + opacity) y pulse único del icono.
+  const enter = useSharedValue(0);
+  const pulse = useSharedValue(1);
+
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      enter.set(0);
+      pulse.set(1);
+      return;
+    }
+    enter.set(
+      withTiming(1, { duration: reduced ? 150 : 220, easing: EASE_OUT })
+    );
+    if (!reduced) {
+      pulse.set(
+        withSequence(
+          withTiming(1.06, { duration: 150, easing: EASE_OUT }),
+          withTiming(1, { duration: 150, easing: EASE_OUT })
+        )
+      );
+    }
     const timer = setTimeout(() => {
       onHide?.();
     }, 2800);
     return () => clearTimeout(timer);
-  }, [visible, onHide]);
+  }, [visible, onHide, reduced, enter, pulse]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: enter.get(),
+    transform: [{ scale: reduced ? 1 : 0.95 + 0.05 * enter.get() }],
+  }));
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.get() }],
+  }));
 
   return (
     <Modal
@@ -46,11 +87,11 @@ export default function AchievementPopup({
         activeOpacity={1}
         onPress={() => onHide?.()}
       >
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, cardStyle]}>
 
-          <View style={styles.iconCircle}>
+          <Animated.View style={[styles.iconCircle, iconStyle]}>
             <AppIcon name="achievements" size={34} color={NIGHT.yellow} />
-          </View>
+          </Animated.View>
 
           <AppText style={styles.header}>
             {t.achievementUnlocked}
@@ -64,7 +105,7 @@ export default function AchievementPopup({
             +{reward} {t.coins}
           </AppText>
 
-        </View>
+        </Animated.View>
       </TouchableOpacity>
     </Modal>
   );

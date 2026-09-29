@@ -16,7 +16,12 @@ export default function WeeklyBarChart({
   data,
   goalHours,
   goalLabel,
+  variant = "white",
+  headline = null,
+  headlineSub = null,
 }) {
+
+  const glass = variant === "glass";
 
   const maxValue = Math.max(
     goalHours,
@@ -29,7 +34,22 @@ export default function WeeklyBarChart({
 
   return (
 
-    <View style={styles.container}>
+    <View style={[styles.container, glass && styles.containerGlass]}>
+
+      {(headline != null || headlineSub != null) && (
+        <View style={styles.headlineRow}>
+          {headline != null && (
+            <Text style={[styles.headline, glass && styles.headlineGlass]}>
+              {headline}
+            </Text>
+          )}
+          {headlineSub != null && (
+            <Text style={[styles.headlineSub, glass && styles.headlineSubGlass]}>
+              {headlineSub}
+            </Text>
+          )}
+        </View>
+      )}
 
       <View style={styles.chartArea}>
 
@@ -63,7 +83,7 @@ export default function WeeklyBarChart({
               ]}
             >
 
-              <Text style={styles.barValue}>
+              <Text style={[styles.barValue, glass && styles.barValueGlass]}>
                 {item.value > 0
                   ? `${Math.round(item.value * 10) / 10}h`
                   : ""}
@@ -110,6 +130,8 @@ export default function WeeklyBarChart({
             style={[
               styles.dayLabel,
               item.isToday && styles.dayLabelToday,
+              glass && styles.dayLabelGlass,
+              glass && item.isToday && styles.dayLabelTodayGlass,
             ]}
           >
 
@@ -211,6 +233,51 @@ const styles = StyleSheet.create({
     color: NIGHT.end,
     fontWeight: "bold",
     fontFamily: "Nunito_800ExtraBold",
+  },
+
+  containerGlass: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+
+  headlineRow: {
+    marginBottom: 6,
+  },
+
+  headline: {
+    fontSize: 26,
+    fontFamily: "Nunito_800ExtraBold",
+    color: COLORS.text,
+  },
+
+  headlineGlass: {
+    color: "#FFFFFF",
+  },
+
+  headlineSub: {
+    fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+
+  headlineSubGlass: {
+    color: "rgba(255,255,255,0.65)",
+  },
+
+  barValueGlass: {
+    color: "rgba(255,255,255,0.75)",
+  },
+
+  dayLabelGlass: {
+    color: "rgba(255,255,255,0.6)",
+  },
+
+  dayLabelTodayGlass: {
+    color: NIGHT.yellow,
   },
 
 });

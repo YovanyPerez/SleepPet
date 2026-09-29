@@ -26,6 +26,30 @@ class SmartAlarmModule(reactContext: ReactApplicationContext) : ReactContextBase
         }
     }
 
+    /**
+     * Modo de apagado: "off" (botón Detener, como siempre) o "word" (desafío
+     * de escribir palabra, sin atajo). lang "es"/"en" elige el banco.
+     */
+    @ReactMethod
+    fun setDismissConfig(mode: String, lang: String, promise: Promise) {
+        try {
+            val safeMode = if (mode == "word") "word" else "off"
+            val safeLang = if (lang == "en") "en" else "es"
+            reactApplicationContext.getSharedPreferences(
+                SleepForegroundService.SMART_ALARM_PREFS_NAME,
+                android.content.Context.MODE_PRIVATE
+            ).edit()
+                .putString("dismissMode", safeMode)
+                .putString("dismissLang", safeLang)
+                .apply()
+            Log.i("SmartAlarm", "dismiss config guardada mode=$safeMode lang=$safeLang")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e("SmartAlarm", "setDismissConfig error ${e.message}")
+            promise.reject("smartalarm_error", e.message)
+        }
+    }
+
     @ReactMethod
     fun getLastInfo(promise: Promise) {
         try {

@@ -43,11 +43,13 @@ import {
 import {
   getTranslations,
 } from "../services/TranslationService";
+import { getCheckInByDate, upsertCheckIn } from "../services/CheckInService";
 
 import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
-import { calculatePetHappiness } from "../services/PetHappinessService";
+import { calculatePetHappiness, moodForHappiness, shouldSchedulePetAlert, HAPPINESS_SAD_BELOW } from "../services/PetHappinessService";
+import { schedulePetAlertNative, cancelPetAlertNative } from "../services/PetAlertService";
 import { computeStreakUpdate, STREAK_MIN_HOURS } from "../services/StreakService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
@@ -76,6 +78,7 @@ import {
 import NightBackground from "../components/NightBackground";
 import GlowMoon from "../components/GlowMoon";
 import AppText from "../components/AppText";
+import PreSleepCheckInModal from "../components/PreSleepCheckInModal";
 import styles from "./styles/SleepModeScreen.styles";
 
 
@@ -142,6 +145,9 @@ export default function SleepModeScreen({ navigation }) {
     sleepHistory,
     setSleepHistory,
 
+    dailyCheckIns,
+    setDailyCheckIns,
+
     ownedPets,
 
     unlockedAchievements,
@@ -169,6 +175,9 @@ export default function SleepModeScreen({ navigation }) {
     lastStreakDateKey,
     setLastStreakDateKey,
 
+    lastHappinessAlertKey,
+    setLastHappinessAlertKey,
+
   } = useContext(AppContext);
 
   const t = getTranslations(language);
@@ -177,6 +186,8 @@ export default function SleepModeScreen({ navigation }) {
 
   const [notificationStatus, setNotificationStatus] =
     useState(null);
+
+  const [checkInPromptVisible, setCheckInPromptVisible] = useState(false);
 
   const [logLines, setLogLines] = useState([]);
 
@@ -293,7 +304,69 @@ export default function SleepModeScreen({ navigation }) {
     return `${h}:${parts[1]}:${parts[2]}`;
   }
 
-  async function handleStartSleep() {
+  async function beginSleepSession() {
+    setSleepSessionStarted(true);
+    setSleepActive(true);
+    setUnlockCount(0);
+    setUnlockTimes([]);
+
+    await startSleep({ preSleepBpm, bpmConfidence });
+
+    const current = await getCurrentSleep();
+
+    if (current) {
+      startNotification(
+        current.startTime,
+        t.notificationChannel,
+        t.notificationChannelDescription,
+        t.notificationTitle,
+        t.notificationRunning,
+        t.notificationTime,
+        t.notificationUnlocks,
+        false
+      );
+
+      addLog("startNotification llamada");
+    } else {
+      addLog("Sin sesión activa al iniciar");
+    }
+
+    getNotificationStatus()
+      .then((status) => {
+        setNotificationStatus(status);
+        addLog(
+          `Estado: 🔔=${status.notificationsEnabled} ⚙️=${status.serviceRunning}` +
+            (status.errors?.length
+              ? ` (${status.errors.length} errores nativos)`
+              : "")
+        );
+      })
+      .catch((e) => {
+        setNotificationStatus(null);
+        addLog(`Error leyendo estado: ${e?.message ?? e}`);
+      });
+  }
+
+  async function savePreSleepCheckIn(energy, studyExperience) {
+    const dateKey = toDateKey(new Date());
+    setDailyCheckIns(
+      upsertCheckIn(dailyCheckIns, {
+        dateKey,
+        energy,
+        studyExperience,
+        updatedAt: Date.now(),
+      })
+    );
+    setCheckInPromptVisible(false);
+    await handleStartSleep(true);
+  }
+
+  async function skipCheckInPrompt() {
+    setCheckInPromptVisible(false);
+    await handleStartSleep(true);
+  }
+
+  async function handleStartSleep(checkInHandled = false) {
 
     // Preparación pendiente: derivar a SleepSetup (solo muestra lo que falta);
     // al volver con todo listo, el flujo normal continúa sin duplicarse.
@@ -334,6 +407,15 @@ export default function SleepModeScreen({ navigation }) {
     } catch (e) {
       // Si falla el check, se continúa pero se loguea
       addLog(`Error check accesibilidad: ${e?.message ?? e}`);
+    }
+
+    const todayKey = toDateKey(new Date());
+    const todayCheckIn = getCheckInByDate(dailyCheckIns, todayKey);
+    const needsEnergy = !todayCheckIn?.energy;
+    const needsStudy = !todayCheckIn?.studyExperience;
+    if (!checkInHandled && (needsEnergy || needsStudy)) {
+      setCheckInPromptVisible(true);
+      return;
     }
 
     if (Platform.OS === "android") {
@@ -436,53 +518,7 @@ export default function SleepModeScreen({ navigation }) {
       }
     }
 
-    setSleepSessionStarted(true);
-
-    setSleepActive(true);
-
-    setUnlockCount(0);
-
-    setUnlockTimes([]);
-
-    await startSleep({ preSleepBpm, bpmConfidence });
-
-    const current = await getCurrentSleep();
-
-    if (current) {
-
-      startNotification(
-        current.startTime,
-        t.notificationChannel,
-        t.notificationChannelDescription,
-        t.notificationTitle,
-        t.notificationRunning,
-        t.notificationTime,
-        t.notificationUnlocks,
-        false
-      );
-
-      addLog("startNotification llamada");
-
-    } else {
-
-      addLog("Sin sesión activa al iniciar");
-
-    }
-
-    getNotificationStatus()
-      .then((status) => {
-        setNotificationStatus(status);
-        addLog(
-          `Estado: 🔔=${status.notificationsEnabled} ⚙️=${status.serviceRunning}` +
-            (status.errors?.length
-              ? ` (${status.errors.length} errores nativos)`
-              : "")
-        );
-      })
-      .catch((e) => {
-        setNotificationStatus(null);
-        addLog(`Error leyendo estado: ${e?.message ?? e}`);
-      });
+    await beginSleepSession();
 
   }
 
@@ -539,13 +575,13 @@ export default function SleepModeScreen({ navigation }) {
 
     // La felicidad de la mascota solo cambia con noches completas;
     // una siesta no la castiga ni la mejora
+    let nextHappiness = petHappiness;
     if (!isNap) {
-      setPetHappiness(
-        calculatePetHappiness(petHappiness, {
-          score: reward.score,
-          hours: result.hours,
-        })
-      );
+      nextHappiness = calculatePetHappiness(petHappiness, {
+        score: reward.score,
+        hours: result.hours,
+      });
+      setPetHappiness(nextHappiness);
     }
 
     setLastHappinessUpdate(Date.now());
@@ -687,9 +723,31 @@ export default function SleepModeScreen({ navigation }) {
 
     setLevel(levelData.level);
 
-    // Una siesta no cambia el estado de ánimo de la mascota
+    // Una siesta no cambia el estado de ánimo de la mascota.
+    // La felicidad muy baja pisa a triste aunque la noche haya sido buena.
+    // Si cruza el umbral, agenda aviso diferido (+4h, 1/día); si se
+    // recuperó, cancela el pendiente
     if (!isNap) {
-      setPetMood(reward.mood);
+      setPetMood(moodForHappiness(nextHappiness, reward.mood));
+      try {
+        const alertToday = toDateKey(new Date());
+        if (
+          shouldSchedulePetAlert({
+            happiness: nextHappiness,
+            sleepSessionActive: false,
+            lastAlertDateKey: lastHappinessAlertKey,
+            todayKey: alertToday,
+          })
+        ) {
+          schedulePetAlertNative(t.petAlertTitle, t.petAlertContent).then((ok) => {
+            if (ok) setLastHappinessAlertKey(alertToday);
+          });
+        } else if (nextHappiness >= HAPPINESS_SAD_BELOW) {
+          cancelPetAlertNative();
+        }
+      } catch (e) {
+        console.log("PetAlert error", e?.message ?? e);
+      }
     }
 
     // Racha diaria (regla B): >=3h cuenta 1x/dia, siestas neutras,
@@ -809,14 +867,24 @@ export default function SleepModeScreen({ navigation }) {
     outputRange: [24, 0],
   });
 
-  // Sueño estimado: último smartWindow 30s → { color, label } o null
+  // Sueño estimado: último smartWindow 30s → { color, label } o null.
+  // Fallback JS (el fix nativo ya fuerza WAKE, esto cubre builds viejos):
+  // desbloqueo reciente (<90s, misma gracia que PHONE_USE_GRACE_MS) = Despierto.
   const lastSmart = smartWindows.length > 0 ? smartWindows[smartWindows.length - 1] : null;
   const SMART_META = {
     WAKE: { color: "#FF8FAB", label: t.smartSleepWakePlain ?? "Despierto" },
     DEEP: { color: "#8FA3FF", label: t.smartSleepDeep ?? "Sueño profundo*" },
     LIGHT: { color: "#FFD166", label: t.smartSleepLight ?? "Sueño ligero*" },
   };
-  const smartMeta = lastSmart ? SMART_META[lastSmart.stage] : null;
+  const recentPhoneUse = Array.isArray(unlockTimes) && unlockTimes.some((ts) => {
+    const m = typeof ts === "number" ? ts : Date.parse(ts);
+    return Number.isFinite(m) && Date.now() - m <= 90000;
+  });
+  const effectiveStage = recentPhoneUse ? "WAKE" : lastSmart?.stage;
+  const smartMeta = lastSmart ? SMART_META[effectiveStage] : null;
+
+  // Check-in de hoy para precargar el modal previo a dormir
+  const todayCheckIn = getCheckInByDate(dailyCheckIns, toDateKey(new Date()));
 
   return (
 
@@ -940,7 +1008,7 @@ export default function SleepModeScreen({ navigation }) {
               <View style={styles.glassCard}>
                 <View style={styles.cardHeader}>
                   <View style={styles.cardIconCircle}>
-                    <AppIcon name="night" size={22} color={NIGHT.end} />
+                    <AppIcon name="night" size={22} color={NIGHT.yellow} />
                   </View>
                   <AppText style={styles.cardTitle}>
                     {t.smartSleepTitle ?? "Sueño estimado"}
@@ -985,7 +1053,7 @@ export default function SleepModeScreen({ navigation }) {
               <View style={[styles.glassCard, { marginTop: 16, paddingVertical: 18 }]}>
                 <View style={styles.cardHeader}>
                   <View style={styles.cardIconCircle}>
-                    <AppIcon name="heartPulse" size={22} color={NIGHT.end} />
+                    <AppIcon name="heartPulse" size={22} color="#FF8FAB" />
                   </View>
                   <AppText style={styles.cardTitle}>{t.ppgTitle}</AppText>
                 </View>
@@ -994,14 +1062,14 @@ export default function SleepModeScreen({ navigation }) {
                     <AppText style={[styles.cardValue, { fontSize: 32 }]}>{preSleepBpm} {t.ppgBpmUnit}</AppText>
                     <AppText style={styles.cardHint}>{t.ppgPulseCaptured} • {t.ppgConfidence} {Math.round((bpmConfidence ?? 0) * 100)}%</AppText>
                     {recommendation && (
-                      <View style={{ marginTop: 12, backgroundColor: "rgba(255,255,255,0.85)", borderRadius: 16, padding: 12, width: "100%" }}>
+                      <View style={{ marginTop: 12, backgroundColor: "rgba(255,255,255,0.10)", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)", borderRadius: 16, padding: 12, width: "100%" }}>
                         <AppText style={{ color: recommendation.color, fontFamily: "Nunito_800ExtraBold", fontSize: 13 }}>{recommendation.title}</AppText>
-                        <AppText style={{ color: "#4A3F8F", fontFamily: "Nunito_400Regular", fontSize: 12, marginTop: 4 }}>{recommendation.message}</AppText>
+                        <AppText style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Nunito_400Regular", fontSize: 12, marginTop: 4 }}>{recommendation.message}</AppText>
                       </View>
                     )}
                     <View style={{ flexDirection: "row", gap: 10, marginTop: 14, width: "100%" }}>
                       <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12, backgroundColor: "rgba(94,96,206,0.12)", borderWidth: 1, borderColor: NIGHT.end }]} onPress={() => navigation.replace("PPGMeasure")}>
-                        <AppText style={[styles.mainButtonTitle, { color: NIGHT.end, fontSize: 14, marginTop: 0 }]}>{t.ppgRetry.toUpperCase()}</AppText>
+                        <AppText style={[styles.mainButtonTitle, { color: "#FFFFFF", fontSize: 14, marginTop: 0 }]}>{t.ppgRetry.toUpperCase()}</AppText>
                       </TouchableOpacity>
                       <TouchableOpacity style={[styles.mainButton, { flex: 1, marginTop: 0, paddingVertical: 12 }]} onPress={() => { setPreSleepBpm(null); setBpmConfidence(null); }}>
                         <AppText style={[styles.mainButtonTitle, { fontSize: 14, marginTop: 0 }]}>{t.ppgSkip.toUpperCase()}</AppText>
@@ -1025,7 +1093,7 @@ export default function SleepModeScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.mainButton}
-              onPress={running ? finishSleep : handleStartSleep}
+              onPress={running ? finishSleep : () => handleStartSleep()}
             >
 
               {
@@ -1064,6 +1132,15 @@ export default function SleepModeScreen({ navigation }) {
           </TouchableOpacity>
 
         </ScrollView>
+
+        <PreSleepCheckInModal
+          visible={checkInPromptVisible}
+          t={t}
+          initialEnergy={todayCheckIn?.energy ?? null}
+          initialStudy={todayCheckIn?.studyExperience ?? null}
+          onSave={savePreSleepCheckIn}
+          onSkip={skipCheckInPrompt}
+        />
 
       </SafeAreaView>
 

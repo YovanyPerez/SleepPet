@@ -86,6 +86,106 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
+  motivationWrap: {
+    marginTop: 16,
+  },
+
+  lastNightCard: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 6,
+  },
+
+  lastNightDivider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    marginVertical: 12,
+  },
+
+  hipnoBars: {
+    flexDirection: "row",
+    height: 60,
+    alignItems: "flex-end",
+    gap: 2,
+  },
+
+  hipnoBar: {
+    flex: 1,
+    borderRadius: 2,
+    opacity: 0.85,
+  },
+
+  hipnoLegend: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+
+  hipnoLegendText: {
+    fontSize: 11,
+    fontFamily: "Nunito_700Bold",
+  },
+
+  hipnoDisclaimer: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 10,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+    marginTop: 6,
+  },
+
+  phasesCard: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 6,
+  },
+
+  phaseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.10)",
+  },
+
+  phaseRowLast: {
+    borderBottomWidth: 0,
+  },
+
+  phaseDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+
+  phaseLabel: {
+    flex: 1,
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+  },
+
+  phaseValue: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontFamily: "Nunito_800ExtraBold",
+  },
+
+  phasesSub: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 11,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "right",
+    marginTop: 4,
+  },
+
   sleepStudyTier: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 14,
@@ -117,10 +217,6 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular",
     textAlign: "center",
     marginTop: 10,
-  },
-
-  bottomNav: {
-    ...NIGHT_STYLES.bottomNav,
   },
 
 });

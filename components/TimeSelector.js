@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Pressable, TouchableOpacity, StyleSheet } from "react-native";
+import Animated from "react-native-reanimated";
 import AppText from "./AppText";
-import { COLORS, NIGHT, NIGHT_STYLES } from "../constants/theme";
+import { NIGHT, NIGHT_STYLES } from "../constants/theme";
 
 function wrapValue(value, direction, min, max) {
   const size = max - min + 1;
@@ -55,13 +56,15 @@ export default function TimeSelector({ hour, minute, hourLabel, minuteLabel, onS
 
       <View style={styles.timePill}>
 
-        <TouchableOpacity
-          style={styles.timeBtn}
-          onPressIn={() => pressIn(-1)}
-          onPressOut={clearHold}
-        >
-          <AppText style={styles.timeBtnText}>−</AppText>
-        </TouchableOpacity>
+        <Pressable onPressIn={() => pressIn(-1)} onPressOut={clearHold}>
+          {({ pressed }) => (
+            <Animated.View
+              style={[styles.timeBtn, pressed && styles.timeBtnPressed]}
+            >
+              <AppText style={styles.timeBtnText}>−</AppText>
+            </Animated.View>
+          )}
+        </Pressable>
 
         <View style={styles.timeValues}>
 
@@ -87,13 +90,15 @@ export default function TimeSelector({ hour, minute, hourLabel, minuteLabel, onS
 
         </View>
 
-        <TouchableOpacity
-          style={styles.timeBtn}
-          onPressIn={() => pressIn(1)}
-          onPressOut={clearHold}
-        >
-          <AppText style={styles.timeBtnText}>+</AppText>
-        </TouchableOpacity>
+        <Pressable onPressIn={() => pressIn(1)} onPressOut={clearHold}>
+          {({ pressed }) => (
+            <Animated.View
+              style={[styles.timeBtn, pressed && styles.timeBtnPressed]}
+            >
+              <AppText style={styles.timeBtnText}>+</AppText>
+            </Animated.View>
+          )}
+        </Pressable>
 
       </View>
 
@@ -121,7 +126,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
     fontFamily: "Nunito_600SemiBold",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.65)",
   },
 
   timeLabelsSpacer: {
@@ -131,7 +136,9 @@ const styles = StyleSheet.create({
   timePill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0EFFF",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -148,6 +155,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
+    transitionProperty: "transform",
+    transitionDuration: 120,
+    transitionTimingFunction: "ease-out",
+  },
+
+  timeBtnPressed: {
+    transform: [{ scale: 0.94 }],
   },
 
   timeBtnText: {
@@ -170,7 +184,7 @@ const styles = StyleSheet.create({
   },
 
   timeFieldActive: {
-    backgroundColor: "#DCD7FF",
+    backgroundColor: "rgba(255,255,255,0.22)",
   },
 
   timeValue: {
@@ -178,13 +192,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 28,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   timeColon: {
     fontSize: 24,
     fontFamily: "Nunito_700Bold",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.6)",
     marginHorizontal: 4,
   },
 

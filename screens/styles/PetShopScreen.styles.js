@@ -145,10 +145,6 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
   },
 
-  bottomNav: {
-    ...NIGHT_STYLES.bottomNav,
-  },
-
 });
 
 export default styles;

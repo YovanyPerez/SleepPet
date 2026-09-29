@@ -102,6 +102,17 @@ class SleepForegroundService : Service() {
         const val SMART_ALARM_PREFS_NAME = "smart_alarm"
         const val SMART_ALARM_KEY = "smart_alarm_config"
 
+        // Uso del celular durante la sesión: la pantalla debería estar apagada.
+        // Si está encendida o hubo interacción reciente (desbloqueo/app real),
+        // la ventana se marca WAKE aunque el acelerómetro esté quieto (sostener
+        // el celular en la mano da avg ~0.9 = LIGHT). Gracia tunable: cubre la
+        // ventana en curso + la siguiente para que el suavizado no la trague.
+        const val PHONE_USE_GRACE_MS = 90000L
+
+        @Volatile
+        private var lastPhoneUseMs = 0L
+        private var lastUnlockCount = 0
+
         private var instance: SleepForegroundService? = null
 
         private val errorLog = Collections.synchronizedList(
@@ -118,7 +129,28 @@ class SleepForegroundService : Service() {
         fun getErrorLog(): List<String> = errorLog.toList()
 
         fun updateUnlocks(count: Int) {
+            val now = System.currentTimeMillis()
+            // count==0 = sesión nueva (JS resetea): se limpia sin marcar.
+            // Si baja sin llegar a 0, también es sesión nueva: se sincroniza.
+            if (count == 0) {
+                lastUnlockCount = 0
+                lastPhoneUseMs = 0L
+            } else if (count > lastUnlockCount) {
+                lastUnlockCount = count
+                lastPhoneUseMs = now
+            } else if (count < lastUnlockCount) {
+                lastUnlockCount = count
+            }
             instance?.unlocks = count
+        }
+
+        /**
+         * Marca uso del celular ahora (desbloqueo contado, app real en primer
+         * plano, pantalla encendida). Lo llama UnlockAccessibilityService
+         * directo, sin esperar el round-trip a JS.
+         */
+        fun markScreenInteraction() {
+            lastPhoneUseMs = System.currentTimeMillis()
         }
 
         fun stopAndRemoveNotification(context: Context) {
@@ -837,6 +869,9 @@ class SleepForegroundService : Service() {
                     avg < SMART_LIGHT_AVG_THRESHOLD && (audioWindowSamples == 0 || audioRms < SMART_AUDIO_RMS_THRESHOLD) -> "DEEP"
                     else -> "LIGHT"
                 }
+                // Uso del celular: se muestra WAKE de inmediato (sin esperar al
+                // suavizado de ventanas cerradas).
+                val phonePrev = phoneAwake(sStart, nowWall)
                 smartAll.put(
                     JSONObject()
                         .put("startTime", sStart)
@@ -850,9 +885,9 @@ class SleepForegroundService : Service() {
                         .put("audioSamples", audioWindowSamples)
                         .put("hasAudio", audioWindowSamples > 0)
                         .put("level", levelPrev)
-                        .put("stage", smoothedStage)
-                        .put("rawStage", rawPrev)
-                        .put("confidence", 0.5)
+                        .put("stage", if (phonePrev) "WAKE" else smoothedStage)
+                        .put("rawStage", if (phonePrev) "WAKE" else rawPrev)
+                        .put("confidence", if (phonePrev) 0.9 else 0.5)
                 )
             }
             return JSONObject()
@@ -861,6 +896,23 @@ class SleepForegroundService : Service() {
                 .put("epochs", all)
                 .put("smartWindows", smartAll)
                 .put("smartWindowMs", SMART_WINDOW_MS)
+        }
+
+        /**
+         * ¿Usuario despierto usando el celular en esta ventana?
+         * - Pantalla encendida ahora: la sesión exige pantalla apagada.
+         * - Interacción reciente (desbloqueo/app real) dentro de la gracia:
+         *   cubre "usó el celular y ya apagó" entre un cierre y otro.
+         * El acelerómetro solo no lo detecta (celular quieto en la mano).
+         */
+        private fun phoneAwake(windowStartMs: Long, windowEndMs: Long): Boolean {
+            try {
+                val pm = this@SleepForegroundService.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                if (pm != null && pm.isInteractive) return true
+            } catch (_: Exception) {
+            }
+            val lastUse = lastPhoneUseMs
+            return lastUse > 0L && lastUse <= windowEndMs && windowEndMs - lastUse <= PHONE_USE_GRACE_MS
         }
 
         /** Flush terminal: cierra el epoch parcial y escribe prefs (onDestroy/stop). */
@@ -940,11 +992,17 @@ class SleepForegroundService : Service() {
                 else -> "HIGH"
             }
             val isWake = avg >= SMART_WAKE_THRESHOLD || (hasAudio && audioRms >= SMART_AUDIO_RMS_THRESHOLD && avg >= 0.93)
-            val rawStage = when {
+            val rawStage0 = when {
                 isWake -> "WAKE"
                 avg < SMART_LIGHT_AVG_THRESHOLD && (!hasAudio || audioRms < SMART_AUDIO_RMS_THRESHOLD) -> "DEEP"
                 else -> "LIGHT"
             }
+            // Uso del celular (pantalla encendida o interacción reciente): WAKE
+            // inmediato con bypass del suavizado — la latencia importa más que
+            // la estabilidad aquí. El acelerómetro solo no lo detecta.
+            val windowEnd = startWall + durationMs
+            val phoneAwake = phoneAwake(startWall, windowEnd)
+            val rawStage = if (phoneAwake) "WAKE" else rawStage0
             val distance = when (rawStage) {
                 "WAKE" -> kotlin.math.abs(avg - SMART_WAKE_THRESHOLD) / 0.5
                 "DEEP" -> kotlin.math.abs(avg - SMART_LIGHT_AVG_THRESHOLD) / 0.3
@@ -952,8 +1010,9 @@ class SleepForegroundService : Service() {
             }
             val rawConfidence = (0.5 + distance * 0.5).coerceIn(0.3, 0.95)
             // Suavizado: requiere 2 ventanas consecutivas mismo rawStage para cambiar smoothed
-            val smoothed = if (prevRawStage == rawStage || prevPrevRawStage == rawStage) rawStage else smoothedStage
-            val confidence = if (smoothed == rawStage) rawConfidence else (rawConfidence * 0.7).coerceIn(0.3, 0.9)
+            val smoothed0 = if (prevRawStage == rawStage || prevPrevRawStage == rawStage) rawStage else smoothedStage
+            val smoothed = if (phoneAwake) "WAKE" else smoothed0
+            val confidence = if (phoneAwake) 0.9 else if (smoothed == rawStage) rawConfidence else (rawConfidence * 0.7).coerceIn(0.3, 0.9)
             prevPrevRawStage = prevRawStage
             prevRawStage = rawStage
             smoothedStage = smoothed
@@ -985,7 +1044,7 @@ class SleepForegroundService : Service() {
                     "audioRms=${String.format(Locale.US, "%.4f", audioRms)} " +
                     "audioZcr=${String.format(Locale.US, "%.4f", audioZcr)} " +
                     "audioSamples=$audioWindowSamples ${if (hasAudio) "AUDIO" else "NO_AUDIO"} " +
-                    "stage=$smoothed raw=$rawStage conf=${String.format(Locale.US, "%.2f", confidence)}"
+                    "stage=$smoothed raw=$rawStage conf=${String.format(Locale.US, "%.2f", confidence)}${if (phoneAwake) " PHONE" else ""}"
             )
             // Fase B: log separado audio para filtrar logcat SmartAudio
             if (hasAudio) {

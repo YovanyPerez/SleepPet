@@ -40,13 +40,13 @@ export default function AchievementCard({
 
   const iconColor = unlocked ? typeColor : "#9AA0B8";
 
-  const iconCircleBg = unlocked ? "#EDEAFF" : "#F0F0F5";
+  const iconCircleBg = "rgba(255,255,255,0.12)";
 
   const barColor = unlocked
     ? COLORS.success
     : inProgress
     ? NIGHT.end
-    : "#D5D1EE";
+    : "rgba(255,255,255,0.18)";
 
   const statusIcon = unlocked ? "check" : "lock";
 
@@ -57,15 +57,15 @@ export default function AchievementCard({
     : t.locked;
 
   const statusBg = unlocked
-    ? "#DCF5E3"
+    ? "rgba(74,222,128,0.16)"
     : inProgress
-    ? "#EDEAFF"
-    : "#EEEEEE";
+    ? "rgba(124,111,208,0.30)"
+    : "rgba(255,255,255,0.10)";
 
   const statusColor = unlocked
-    ? "#2E7D32"
+    ? "#4ADE80"
     : inProgress
-    ? "#5751C9"
+    ? "#CFC9FF"
     : "#9AA0B8";
 
   return (
@@ -100,7 +100,7 @@ export default function AchievementCard({
         <ProgressBar
           progress={percentage}
           color={barColor}
-          background="#EAE7FF"
+          background="rgba(255,255,255,0.14)"
         />
 
         <AppText style={styles.progressText}>
@@ -151,21 +151,16 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.10)",
     borderRadius: 22,
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
     padding: 14,
     marginBottom: 14,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
 
   cardUnlocked: {
-    borderColor: "#4CAF50",
+    borderColor: "#4ADE80",
   },
 
   iconCircle: {
@@ -185,20 +180,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   description: {
     fontSize: 12,
     fontFamily: "Nunito_400Regular",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.65)",
     marginTop: 2,
   },
 
   progressText: {
     fontSize: 12,
     fontFamily: "Nunito_700Bold",
-    color: COLORS.text,
+    color: "rgba(255,255,255,0.8)",
     marginTop: 4,
   },
 
@@ -209,18 +204,13 @@ const styles = StyleSheet.create({
   rewardCapsule: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderWidth: 1,
-    borderColor: "#EEE7FB",
+    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginBottom: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
   },
 
   rewardIcon: {
@@ -230,7 +220,7 @@ const styles = StyleSheet.create({
   reward: {
     fontSize: 15,
     fontFamily: "Nunito_800ExtraBold",
-    color: "#5751C9",
+    color: "#FFD166",
   },
 
   statusPill: {

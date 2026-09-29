@@ -74,11 +74,11 @@ export default function CreateProfileScreen({ navigation }) {
 
         {
 
-          name: "Home",
+          name: "Tabs",
 
           // Perfil recién creado = usuario nuevo: Home muestra el onboarding
           // una vez y luego deriva a SleepSetup (nunca automático después).
-          params: { showOnboarding: true },
+          params: { screen: "Home", params: { showOnboarding: true } },
 
         },
 

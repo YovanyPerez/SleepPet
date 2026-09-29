@@ -83,6 +83,12 @@ export const NIGHT_STYLES = {
     fontFamily: FONT_FAMILY.regular,
   },
 
+  // REGLA DE SUPERFICIES (two-tier, 1.2.3): toda pantalla vive sobre
+  // NightBackground oscuro → glassCard es la superficie por defecto en las
+  // 15 pantallas (incluido Home desde 1.2.3). cardWhite queda sin usos
+  // activos, solo compat — no crear cards blancas nuevas. Los defaults
+  // blancos de StatCard/WeeklyBarChart/NightChart quedan para compat, usar
+  // variant="glass" / bare.
   glassCard: {
     backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1,

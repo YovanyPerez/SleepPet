@@ -79,7 +79,7 @@ export default function WelcomeScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate("CreateProfile")}
+            onPress={() => navigation.navigate("Terms")}
           >
 
             <AppText style={styles.buttonText}>

@@ -1,4 +1,4 @@
-// Fotopletismografia por camara: senal roja -> BPM
+// Fotopletismografia por camara: luminancia del plano Y -> BPM
 // Logica: pasa-banda Butterworth 2º orden 0.7-4Hz (42-240 bpm) + peak detection + verificador espectral
 //
 // Filtro: Butterworth pasa-banda 2º orden forward-only (cascada HP 0.7Hz + LP 4Hz)
@@ -20,6 +20,7 @@
 // filtrada. Compara bpm temporal vs pico espectral: delta<=5 -> bono +0.05 (min 1),
 // delta>5 -> pena *0.65 sin descarte (el umbral 0.60 de usePPG ya veta el resto).
 // Para independencia se descartan los primeros 2s del transitorio del Butterworth.
+// Prominencia sombra: magnitud del pico / mediana de magnitudes del rango analizado.
 
 // Umbral Hampel tunable (paso 3)
 const HAMPEL_K = 2.5;
@@ -126,12 +127,14 @@ function hampelFilter(intervals) {
 }
 
 export function estimateSpectralBPM(filtered, fps) {
-  if (!filtered || filtered.length < Math.round(fps * 5)) return { bpm: null, freq: null };
+  if (!filtered || filtered.length < Math.round(fps * 5)) {
+    return { bpm: null, freq: null, prominence: null };
+  }
   const fs = fps || 30;
   const skip = Math.round(SPECTRAL_SKIP_SEC * fs);
   const start = filtered.length > skip + 30 ? skip : 0;
   const n = filtered.length - start;
-  if (n < 20) return { bpm: null, freq: null };
+  if (n < 20) return { bpm: null, freq: null, prominence: null };
   const twoPiDivFs = (2 * Math.PI) / fs;
   let bestFreq = null;
   let bestMag = -1;
@@ -159,7 +162,9 @@ export function estimateSpectralBPM(filtered, fps) {
     }
     idx++;
   }
-  if (bestFreq == null || bestMag <= 1e-9) return { bpm: null, freq: null };
+  if (bestFreq == null || bestMag <= 1e-9) {
+    return { bpm: null, freq: null, prominence: null };
+  }
   // Refino parabolico sobre magnitudes vecinas (misma clamp que picos)
   if (bestIdx > 0 && bestIdx < mags.length - 1) {
     const y0 = mags[bestIdx];
@@ -173,7 +178,9 @@ export function estimateSpectralBPM(filtered, fps) {
       bestFreq += p * SPECTRAL_STEP;
     }
   }
-  return { bpm: bestFreq * 60, freq: bestFreq };
+  const noiseFloor = median(mags);
+  const prominence = noiseFloor > 1e-9 ? bestMag / noiseFloor : null;
+  return { bpm: bestFreq * 60, freq: bestFreq, prominence };
 }
 
 function findPeaks(signal, fps) {
@@ -227,19 +234,19 @@ function findPeaks(signal, fps) {
   return peaks;
 }
 
-export function calculateBPM(redMeans, fps) {
-  // redMeans: array de valores promedio canal rojo (0-255) por frame
+export function calculateBPM(redMeans, fps, { diagnosticOnly = false } = {}) {
+  // `redMeans` conserva el nombre histórico; la cámara entrega medias de luminancia Y.
   if (!redMeans || redMeans.length < fps * 5) {
     return { bpm: null, confidence: 0, error: "too_short", filteredStd: 0 };
   }
 
   const avg = mean(redMeans);
-  // validacion dedo: rojo muy bajo o varianza muy baja -> sin dedo
-  if (avg < 80) {
+  // Gate de brillo del plano Y; el hook además valida uniformidad espacial.
+  if (!diagnosticOnly && avg < 80) {
     return { bpm: null, confidence: 0, error: "no_finger", filteredStd: 0 };
   }
   const overallStd = std(redMeans, avg);
-  if (overallStd < 0.8) {
+  if (!diagnosticOnly && overallStd < 0.8) {
     return { bpm: null, confidence: 0, error: "low_signal", filteredStd: 0 };
   }
 
@@ -247,6 +254,16 @@ export function calculateBPM(redMeans, fps) {
   const filtered = bandPassButterworth(redMeans, fps);
   // std de señal filtrada (sin normalizar) — amplitud pulsatil real para gate de pared lisa
   const filteredStd = std(filtered, mean(filtered));
+  const pulseIndexPercent = avg > 0 ? (filteredStd / avg) * 100 : null;
+  const shadowSpectrum = diagnosticOnly ? estimateSpectralBPM(filtered, fps) : null;
+  const shadowMetrics = diagnosticOnly
+    ? {
+        pulseIndexPercent,
+        spectralBpm:
+          shadowSpectrum.bpm != null ? Number(shadowSpectrum.bpm.toFixed(1)) : null,
+        spectralProminence: shadowSpectrum.prominence,
+      }
+    : { pulseIndexPercent };
 
   // normalizar
   const mu = mean(filtered);
@@ -256,7 +273,13 @@ export function calculateBPM(redMeans, fps) {
   const peaks = findPeaks(normalized, fps);
 
   if (peaks.length < 3) {
-    return { bpm: null, confidence: 0, error: "no_peaks", filteredStd: Number(filteredStd.toFixed(3)) };
+    return {
+      bpm: null,
+      confidence: 0,
+      error: "no_peaks",
+      filteredStd: Number(filteredStd.toFixed(3)),
+      ...shadowMetrics,
+    };
   }
 
   const intervals = [];
@@ -266,7 +289,13 @@ export function calculateBPM(redMeans, fps) {
   }
 
   if (intervals.length < 2) {
-    return { bpm: null, confidence: 0, error: "unstable", filteredStd: Number(filteredStd.toFixed(3)) };
+    return {
+      bpm: null,
+      confidence: 0,
+      error: "unstable",
+      filteredStd: Number(filteredStd.toFixed(3)),
+      ...shadowMetrics,
+    };
   }
 
   // filtrar outliers RR con Hampel antes de mediana
@@ -275,7 +304,13 @@ export function calculateBPM(redMeans, fps) {
   const bpm = Math.round(60 / medianVal);
 
   if (bpm < 42 || bpm > 240) {
-    return { bpm: null, confidence: 0, error: "out_of_range", filteredStd: Number(filteredStd.toFixed(3)) };
+    return {
+      bpm: null,
+      confidence: 0,
+      error: "out_of_range",
+      filteredStd: Number(filteredStd.toFixed(3)),
+      ...shadowMetrics,
+    };
   }
 
   // confianza: ratio picos validos / esperados + regularidad (sobre intervalos filtrados)
@@ -290,18 +325,30 @@ export function calculateBPM(redMeans, fps) {
   // no hay periodicidad real (confidence <0.60), descartar — dedo debil con confidence alta pasa
   // aunque filteredStd esté cerca del umbral. Nota: confidence se calcula arriba, por eso el chequeo
   // va aqui y no justo tras el Butterworth. filteredStd sobre señal centrada (unidades luma).
-  if (filteredStd < PULSATILE_MIN_STD && confidence < 0.60) {
-    return { bpm: null, confidence: filteredStd / 2, error: "low_pulsatile", filteredStd: Number(filteredStd.toFixed(3)) };
+  if (!diagnosticOnly && filteredStd < PULSATILE_MIN_STD && confidence < 0.60) {
+    return {
+      bpm: null,
+      confidence: filteredStd / 2,
+      error: "low_pulsatile",
+      filteredStd: Number(filteredStd.toFixed(3)),
+      pulseIndexPercent,
+    };
   }
 
   // si confianza baja descartar
-  if (confidence < 0.45) {
-    return { bpm: null, confidence, error: "low_confidence", filteredStd: Number(filteredStd.toFixed(3)) };
+  if (!diagnosticOnly && confidence < 0.45) {
+    return {
+      bpm: null,
+      confidence,
+      error: "low_confidence",
+      filteredStd: Number(filteredStd.toFixed(3)),
+      pulseIndexPercent,
+    };
   }
 
   // Verificador espectral (dominio frecuencia) — cross-validacion independiente
   // Posicionado DESPUES de los gates para no mover su calibracion.
-  const spectral = estimateSpectralBPM(filtered, fps);
+  const spectral = shadowSpectrum ?? estimateSpectralBPM(filtered, fps);
   let finalConfidence = confidence;
   let spectralBpm = spectral.bpm != null ? Number(spectral.bpm.toFixed(1)) : null;
   let spectralDelta = spectral.bpm != null ? Math.abs(bpm - spectral.bpm) : null;
@@ -313,5 +360,15 @@ export function calculateBPM(redMeans, fps) {
     }
   }
 
-  return { bpm, confidence: finalConfidence, error: null, peaks: peaks.length, filteredStd: Number(filteredStd.toFixed(3)), spectralBpm, spectralDelta: spectralDelta != null ? Number(spectralDelta.toFixed(1)) : null };
+  return {
+    bpm,
+    confidence: finalConfidence,
+    error: null,
+    peaks: peaks.length,
+    filteredStd: Number(filteredStd.toFixed(3)),
+    pulseIndexPercent,
+    spectralBpm,
+    spectralDelta: spectralDelta != null ? Number(spectralDelta.toFixed(1)) : null,
+    spectralProminence: spectral.prominence,
+  };
 }

@@ -90,6 +90,23 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
   },
 
+  metricStack: {
+    flex: 1,
+  },
+
+  metricStackLabel: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+  },
+
+  metricStackValue: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontFamily: "Nunito_700Bold",
+    marginTop: 2,
+  },
+
   napTag: {
     alignSelf: "center",
     backgroundColor: "rgba(201,184,232,0.16)",

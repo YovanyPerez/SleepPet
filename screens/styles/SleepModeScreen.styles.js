@@ -118,18 +118,13 @@ const styles = StyleSheet.create({
 
   glassCard: {
     width: "100%",
-    backgroundColor: "rgba(255,255,255,0.68)",
+    backgroundColor: "rgba(255,255,255,0.10)",
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.85)",
+    borderColor: "rgba(255,255,255,0.16)",
     padding: 22,
     alignItems: "center",
     marginTop: 26,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
   },
 
   cardHeader: {
@@ -141,27 +136,29 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
     ...NIGHT_STYLES.center,
     marginRight: 10,
   },
 
   cardTitle: {
-    color: "#4A3F8F",
+    color: "rgba(255,255,255,0.7)",
     fontSize: 15,
     fontFamily: "Nunito_700Bold",
     letterSpacing: 1,
   },
 
   cardValue: {
-    color: "#1B1B4B",
+    color: "#FFFFFF",
     fontSize: 46,
     fontFamily: "Nunito_800ExtraBold",
     marginVertical: 4,
   },
 
   cardHint: {
-    color: "#6A5FAF",
+    color: "rgba(255,255,255,0.65)",
     fontSize: 13,
     fontFamily: "Nunito_400Regular",
   },
@@ -174,14 +171,14 @@ const styles = StyleSheet.create({
   },
 
   motivationalTitle: {
-    color: "#4A3F8F",
+    color: "#FFFFFF",
     fontSize: 15,
     fontFamily: "Nunito_700Bold",
     marginTop: 8,
   },
 
   motivationalText: {
-    color: "#6A5FAF",
+    color: "rgba(255,255,255,0.7)",
     fontSize: 13,
     fontFamily: "Nunito_400Regular",
     textAlign: "center",

@@ -145,6 +145,68 @@ class NotificationModule(
         SleepForegroundService.updateUnlocks(count)
     }
 
+    /**
+     * Alerta de felicidad baja (one-shot): si la mascota se recupera antes,
+     * JS la cancela con cancelPetAlert. No re-agenda (tras reboot se pierde
+     * hasta reabrir la app, igual que el recordatorio).
+     */
+    @ReactMethod
+    fun schedulePetAlert(title: String, content: String, delaySec: Int, promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val manager = context.getSystemService(
+                Context.ALARM_SERVICE
+            ) as android.app.AlarmManager
+            val intent = Intent(context, PetCheckReceiver::class.java).apply {
+                putExtra(PetCheckReceiver.EXTRA_TITLE, title)
+                putExtra(PetCheckReceiver.EXTRA_CONTENT, content)
+            }
+            val pending = android.app.PendingIntent.getBroadcast(
+                context,
+                PetCheckReceiver.REQUEST_CODE,
+                intent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+                    android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            val triggerAt = System.currentTimeMillis() +
+                (delaySec.coerceAtLeast(60)).toLong() * 1000
+            try {
+                manager.setExactAndAllowWhileIdle(
+                    android.app.AlarmManager.RTC_WAKEUP, triggerAt, pending
+                )
+            } catch (e: Exception) {
+                manager.setAndAllowWhileIdle(
+                    android.app.AlarmManager.RTC_WAKEUP, triggerAt, pending
+                )
+            }
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("petalert_error", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun cancelPetAlert(promise: Promise) {
+        try {
+            val context = reactApplicationContext
+            val manager = context.getSystemService(
+                Context.ALARM_SERVICE
+            ) as android.app.AlarmManager
+            val intent = Intent(context, PetCheckReceiver::class.java)
+            val pending = android.app.PendingIntent.getBroadcast(
+                context,
+                PetCheckReceiver.REQUEST_CODE,
+                intent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+                    android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            manager.cancel(pending)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("petalert_error", e.message)
+        }
+    }
+
     @ReactMethod
     fun stopNotification() {
         SleepForegroundService.stopAndRemoveNotification(reactApplicationContext)

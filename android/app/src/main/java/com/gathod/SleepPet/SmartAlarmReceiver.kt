@@ -148,6 +148,7 @@ class SmartAlarmReceiver : BroadcastReceiver() {
 
     private fun showSmartAlarmNotification(context: Context, hour: Int, minute: Int, level: Int) {
         try {
+            val p = prefs(context)
             val channelId = "smart_alarm_channel"
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val ch = NotificationChannel(channelId, "Smart Alarm", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -161,6 +162,17 @@ class SmartAlarmReceiver : BroadcastReceiver() {
                 putExtra("fromSmartAlarm", true)
             }
             val pending = PendingIntent.getActivity(context, 4001, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            // Modo desafío (escribir palabra): sin atajo Detener — el tap abre
+            // la pantalla del desafío, única vía para silenciar (ACTION_STOP).
+            val challenge = p.getString("dismissMode", "off") == "word"
+            val contentPending = if (challenge) {
+                val dismissIntent = Intent(context, SmartAlarmDismissActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                PendingIntent.getActivity(context, 4002, dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            } else {
+                pending
+            }
             val stopIntent = Intent(context, SmartAlarmReceiver::class.java).apply { action = SmartAlarmScheduler.ACTION_STOP }
             val stopPending = PendingIntent.getBroadcast(context, 3020, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val timeStr = String.format("%02d:%02d", hour, minute)
@@ -174,14 +186,17 @@ class SmartAlarmReceiver : BroadcastReceiver() {
                 .setColor(0xFF5E60CE.toInt())
                 .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
                 .setContentTitle(stageTitle)
-                .setContentText("Despertar en fase ligera · Detener para silenciar")
+                .setContentText(
+                    if (challenge) "Toca para escribir la palabra y apagar"
+                    else "Despertar en fase ligera · Detener para silenciar"
+                )
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setAutoCancel(false)
                 .setOngoing(true)
-                .setContentIntent(pending)
+                .setContentIntent(contentPending)
                 .setVibrate(longArrayOf(0, 600, 400, 600))
-                .addAction(0, "Detener", stopPending)
+                .apply { if (!challenge) addAction(0, "Detener", stopPending) }
                 .build()
             manager.notify(3001, notif)
             Log.i("SmartAlarm", "notificación SmartAlarm mostrada $timeStr nivel $level")

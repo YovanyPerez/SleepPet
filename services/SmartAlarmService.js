@@ -5,13 +5,16 @@ import { saveSmartAlarmSettings } from "../storage/SmartAlarmStorage";
 // Si no existe Módulo nativo, fallback JS solo guarda AsyncStorage (alarma normal a targetTime)
 const SmartAlarmModule = NativeModules.SmartAlarmModule;
 
-export async function setSmartAlarmConfig({ enabled, hour, minute, windowMin }) {
-  const next = { enabled: !!enabled, hour, minute, windowMin };
+export async function setSmartAlarmConfig({ enabled, hour, minute, windowMin, dismissMode }, lang = "es") {
+  const next = { enabled: !!enabled, hour, minute, windowMin, dismissMode: dismissMode === "word" ? "word" : "off" };
   await saveSmartAlarmSettings(next);
   // Intenta sincronizar a nativo (si existe)
   try {
     if (SmartAlarmModule?.setConfig) {
       await SmartAlarmModule.setConfig(enabled, hour, minute, windowMin);
+    }
+    if (SmartAlarmModule?.setDismissConfig) {
+      await SmartAlarmModule.setDismissConfig(next.dismissMode, lang === "en" ? "en" : "es");
     }
   } catch (e) {
     console.log("SmartAlarmModule setConfig fallback", e?.message);

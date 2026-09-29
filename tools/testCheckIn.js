@@ -104,7 +104,59 @@ check("duplicados: conserva el más reciente", getCheckInByDate(dup, "2026-09-01
 dup = upsertCheckIn(dup, { dateKey: "2026-09-01", energy: "bad" });
 check("upsert inválido no corrompe", dup.length === 1 && dup[0].energy === "good");
 
-const total = 23;
+// 11. Energía y estudio pueden registrarse por separado en el mismo día
+let partial = upsertCheckIn([], {
+  dateKey: "2026-09-20",
+  studyExperience: "good",
+  updatedAt: 1,
+});
+check(
+  "respuesta de estudio sola se guarda",
+  partial.length === 1 && partial[0].studyExperience === "good" && !partial[0].energy
+);
+partial = upsertCheckIn(partial, {
+  dateKey: "2026-09-20",
+  energy: "okay",
+  updatedAt: 2,
+});
+check(
+  "respuesta de energía se combina sin borrar estudio",
+  partial.length === 1 &&
+    partial[0].energy === "okay" &&
+    partial[0].studyExperience === "good"
+);
+partial = upsertCheckIn(partial, {
+  dateKey: "2026-09-20",
+  studyExperience: "productive",
+  updatedAt: 3,
+});
+check(
+  "actualizar estudio conserva energía",
+  partial.length === 1 &&
+    partial[0].energy === "okay" &&
+    partial[0].studyExperience === "productive"
+);
+
+const splitRecords = [
+  D("2026-10-01", "good", undefined),
+  D("2026-10-02", "okay", undefined),
+  { dateKey: "2026-10-03", studyExperience: "productive", updatedAt: 1 },
+];
+const splitAnalysis = analyzeSleepStudy({ sleepHistory: [], checkIns: splitRecords });
+check(
+  "suficiencia de estudio cuenta solo respuestas de estudio",
+  splitAnalysis.checkInCount === 1 && splitAnalysis.tier === "none"
+);
+check(
+  "promedio de energía incluye registros parciales",
+  Math.abs(splitAnalysis.avgEnergy - 3.5) < 1e-9
+);
+check(
+  "distribución de estudio incluye registros parciales",
+  splitAnalysis.studyDistribution.productive === 1
+);
+
+const total = 29;
 console.log(
   failures === 0
     ? `=== ${total}/${total} OK ===`

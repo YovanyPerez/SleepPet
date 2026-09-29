@@ -1,8 +1,6 @@
 import { StyleSheet } from "react-native";
 import {
-  COLORS,
   NIGHT,
-  SHADOW,
   NIGHT_STYLES,
 } from "../../constants/theme";
 
@@ -50,6 +48,11 @@ const styles = StyleSheet.create({
 
   card: {
     borderRadius: 26,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    padding: 20,
+    marginBottom: 20,
   },
 
   cardHeaderRow: {
@@ -60,7 +63,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#EDEBFF",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
     ...NIGHT_STYLES.center,
   },
 
@@ -73,13 +78,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontFamily: "Nunito_700Bold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   cardDesc: {
     fontSize: 13,
     fontFamily: "Nunito_400Regular",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.65)",
     marginTop: 2,
   },
 
@@ -93,7 +98,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F0F0F5",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
     padding: 14,
     borderRadius: 14,
     marginHorizontal: 5,
@@ -104,7 +111,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: "#9AA0B8",
+    color: "rgba(255,255,255,0.55)",
     fontSize: 15,
     fontFamily: "Nunito_700Bold",
   },
@@ -166,15 +173,16 @@ const styles = StyleSheet.create({
   optionCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 24,
     padding: 16,
     marginBottom: 16,
-    ...SHADOW.card,
   },
 
   resetCircle: {
-    backgroundColor: "#FFE3EA",
+    backgroundColor: "rgba(255,143,171,0.20)",
   },
 
   optionText: {
@@ -186,18 +194,14 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 17,
     fontFamily: "Nunito_700Bold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   optionDesc: {
     fontSize: 13,
     fontFamily: "Nunito_400Regular",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.65)",
     marginTop: 2,
-  },
-
-  bottomNav: {
-    ...NIGHT_STYLES.bottomNav,
   },
 
 });

@@ -48,6 +48,15 @@ export default {
   petDialog: "I need some good sleep...",
 
   happiness: "Happiness",
+  petAlertTitle: "Your pet is sad",
+  petAlertContent: "Happiness is very low. Sleep well or treat them in the shop.",
+  termsTitle: "Terms & Privacy",
+  termsP1: "SleepPet is a wellness tool, not a medical device: camera pulse, sleep stages, and recommendations are non-clinical estimates with a margin of error. They must not be used to diagnose, treat, or decide health care; consult a professional about any symptom.",
+  termsP2: "Your data (name, age, sleep, pulse, check-ins, pets) is stored only on your phone and never sent to any server. No accounts, ads, or analytics. Delete everything in Settings → Reset progress or by uninstalling the app.",
+  termsP3: "Alarms and reminders depend on Android and may be lost after rebooting your phone. Do not rely on them as your only alarm for critical commitments.",
+  termsP4: "If you are a minor, use the app with adult supervision.",
+  termsAccept: "I have read and accept the Terms and Privacy",
+  termsContinue: "Continue",
 
   lastNight: "LAST NIGHT",
 
@@ -501,6 +510,10 @@ export default {
   smartAlarmDisclaimer: "*Rule-based estimation, not medical diagnosis. Always rings at target time if no favorable moment — even if you didn't start a sleep session.",
   smartAlarmNoWindow: "No favorable window tonight",
   smartAlarmFavorable: "Favorable moment detected",
+  smartAlarmChallenge: "Stopping the alarm",
+  smartAlarmChallengeOff: "Stop button",
+  smartAlarmChallengeWord: "Type a word",
+  smartAlarmChallengeDesc: "With challenge there is no shortcut: it rings until you type the word.",
 
   smartSleepDeep: "Deep sleep*",
   smartSleepLight: "Light sleep*",
@@ -511,6 +524,9 @@ export default {
   smartSleepAvgSub: "*estimated",
   smartSleepHipnogram: "Estimated hypnogram*",
   smartSleepDisclaimerSmall: "*Rule-based estimation movement+audio, not medical diagnosis",
+  smartSleepPhases: "Estimated stages*",
+  phaseLight: "Light",
+  phaseDeep: "Deep",
 
   // ==========================
   // Night wake-ups
@@ -531,7 +547,13 @@ export default {
   ppgSkip: "Skip",
   ppgStart: "Measure pulse",
   ppgSuccess: "Pulse confirmed!",
-  ppgDisclaimer: "Wellness only, not medical diagnosis.",
+  ppgDisclaimer: "Wellness only, not medical diagnosis. Do not use these values for health decisions.",
+  ppgTutTitle: "How to measure your pulse",
+  ppgTut1: "Cover the whole lens and flash with your finger, no gaps",
+  ppgTut2: "Medium pressure: too hard flattens the signal, too soft lets light in",
+  ppgTut3: "Stay still and wait for the green ring, about 10 seconds",
+  ppgTutStart: "Got it, measure",
+  ppgTutHelp: "How to measure?",
   ppgRecLowTitle: "Low pulse",
   ppgRecLowMessage: "Your pulse is low. Breathe deeply for 1 minute and consult a professional if dizzy.",
   ppgRecNormalTitle: "Normal pulse",
@@ -539,7 +561,7 @@ export default {
   ppgRecElevatedTitle: "Elevated pulse",
   ppgRecElevatedMessage: "High activation. Try 4-7-8 breathing and avoid screens for 10 min before sleeping.",
   ppgRecHighTitle: "Very high pulse",
-  ppgRecHighMessage: "High pulse. Hydrate, avoid caffeine and wait 15 min before sleeping.",
+  ppgRecHighMessage: "High pulse. Hydrate, avoid caffeine and wait 15 min before sleeping. If it repeats or you feel unwell, consult a professional.",
   ppgPreSleepCardTitle: "Measure your pulse before sleep?",
   ppgPreSleepCardDesc: "Cover the back camera with your finger and hold until your pulse is confirmed (~3s stable).",
   ppgPulseCaptured: "Pulse captured",
@@ -612,14 +634,14 @@ export default {
   // ==========================
 
   checkInTitle: "Today's Check-in",
-  checkInPrompt: "How are you feeling today?",
+  checkInBeforeSleepTitle: "Before sleeping",
+  checkInAtSleepHint: "Asked when you start sleeping.",
   checkInEnergyLabel: "Energy",
   checkInStudyLabel: "Study",
   checkInEnergyQuestion: "How do you feel today?",
   checkInStudyQuestion: "How was your study today?",
-  checkInCheckIn: "Check in",
   checkInSave: "Save",
-  checkInEdit: "Edit",
+  checkInSkip: "Skip for now",
 
   checkinEnergyTired: "Tired",
   checkinEnergyLow: "Low energy",
@@ -640,7 +662,7 @@ export default {
   sleepStudyNotEnough: "Not enough data yet.",
   sleepStudyEarly: "Early pattern detected.",
   sleepStudyWeekly: "Weekly pattern available.",
-  sleepStudyCheckIns: "Check-ins",
+  sleepStudyCheckIns: "Study responses",
   sleepStudyAvgEnergy: "Avg energy",
   sleepStudyAvgHours: "Avg sleep",
   sleepStudyMostStudy: "Most common study",

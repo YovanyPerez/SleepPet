@@ -22,16 +22,12 @@ import NightChart from "../components/NightChart";
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
-import BottomNav from "../components/BottomNav";
 import SectionHeader from "../components/SectionHeader";
 import MotivationalCard from "../components/MotivationalCard";
 import CheckInCard from "../components/CheckInCard";
-import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import { NIGHT } from "../constants/theme";
 import {
   analyzeSleepStudy,
-  energyLevelFromAverage,
-  mostCommonStudy,
 } from "../services/CheckInService";
 import styles from "./styles/StatisticsScreen.styles";
 import {
@@ -73,27 +69,13 @@ export default function StatisticsScreen({ navigation }) {
   const history = sleepHistory;
 
   let totalHours = 0;
-  let maxHours = 0;
-  let coins = 0;
   let score = 0;
-  let best = 0;
   let perfect = 0;
-  let xp = 0;
 
   history.forEach((session) => {
 
     totalHours += session.hours;
-    coins += session.coins;
     score += session.score;
-    xp += session.earnedXP;
-
-    if (session.hours > maxHours) {
-      maxHours = session.hours;
-    }
-
-    if (session.score > best) {
-      best = session.score;
-    }
 
     if (session.score >= 90) {
       perfect++;
@@ -189,29 +171,6 @@ export default function StatisticsScreen({ navigation }) {
     checkIns: dailyCheckIns,
   });
 
-  const ENERGY_LABELS = {
-    tired: t.checkinEnergyTired,
-    low: t.checkinEnergyLow,
-    okay: t.checkinEnergyOkay,
-    good: t.checkinEnergyGood,
-    energetic: t.checkinEnergyEnergetic,
-  };
-
-  const STUDY_LABELS = {
-    difficult: t.checkinStudyDifficult,
-    normal: t.checkinStudyNormal,
-    good: t.checkinStudyGood,
-    productive: t.checkinStudyProductive,
-  };
-
-  const avgEnergyLabel = energyLevelFromAverage(study.avgEnergy)
-    ? ENERGY_LABELS[energyLevelFromAverage(study.avgEnergy)]
-    : null;
-
-  const mostStudyLabel = mostCommonStudy(study.studyDistribution)
-    ? STUDY_LABELS[mostCommonStudy(study.studyDistribution)]
-    : null;
-
   let observation = null;
   if (study.sleepEnergyRelation) {
     const rel = study.sleepEnergyRelation;
@@ -230,8 +189,6 @@ export default function StatisticsScreen({ navigation }) {
   }
 
   return (
-
-    <SwipeableTabScreen active="Statistics" navigation={navigation}>
 
     <NightBackground moon={false}>
 
@@ -297,7 +254,7 @@ export default function StatisticsScreen({ navigation }) {
 
                 <>
 
-                  {/* Sueño de esta semana */}
+                  {/* Héroe: semana + headline (promedio y meta dentro del gráfico) */}
 
                   <SectionHeader
                     icon="night"
@@ -308,97 +265,118 @@ export default function StatisticsScreen({ navigation }) {
                     data={weeklyData}
                     goalHours={goalHours}
                     goalLabel={t.goal}
+                    variant="glass"
+                    headline={`${averageSleep} h`}
+                    headlineSub={`${t.ofSleep} · ${t.goal}: ${goalHours}h`}
                   />
 
-                  {/* Despertares de la última noche */}
+                  {/* Anoche: despertares + fases en una sola card */}
 
                   {
-                    latestSessionHasChart && (
+                    (latestSessionHasChart || (latestSession?.smartWindows?.length > 0)) && (
                       <View>
 
                         <SectionHeader
                           icon="night"
-                          title={t.nightWakeups}
+                          title={t.lastNight}
                         />
 
-                        <NightChart
-                          startMs={latestSession.startMs}
-                          endMs={latestSession.endMs}
-                          unlockTimes={latestSession.unlockTimes || []}
-                          countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
-                          emptyLabel={t.noWakeups}
-                        />
+                        <View style={styles.lastNightCard}>
+
+                          {
+                            latestSessionHasChart && (
+                              <NightChart
+                                startMs={latestSession.startMs}
+                                endMs={latestSession.endMs}
+                                unlockTimes={latestSession.unlockTimes || []}
+                                countLabel={`${latestSession.unlockCount || 0} ${t.phoneUnlocks}`}
+                                emptyLabel={t.noWakeups}
+                                bare
+                              />
+                            )
+                          }
+
+                          {
+                            latestSessionHasChart && latestSession?.smartWindows?.length > 0 && (
+                              <View style={styles.lastNightDivider} />
+                            )
+                          }
+
+                          {
+                            latestSession?.smartWindows?.length > 0 && (
+                              <View>
+                                <View style={styles.hipnoBars}>
+                                  {latestSession.smartWindows.slice(-48).map((w, idx) => {
+                                    const stage = w.stage ?? "LIGHT";
+                                    const h = stage === "DEEP" ? 18 : stage === "LIGHT" ? 36 : 60;
+                                    const col = stage === "DEEP" ? "#8FA3FF" : stage === "LIGHT" ? "#FFD166" : "#FF8FAB";
+                                    return <View key={idx} style={[styles.hipnoBar, { height: h, backgroundColor: col }]} />;
+                                  })}
+                                </View>
+                                <View style={styles.hipnoLegend}>
+                                  <AppText style={[styles.hipnoLegendText, { color: "#FF8FAB" }]}>{t.smartSleepWakePlain}</AppText>
+                                  <AppText style={[styles.hipnoLegendText, { color: "#FFD166" }]}>{t.phaseLight}</AppText>
+                                  <AppText style={[styles.hipnoLegendText, { color: "#8FA3FF" }]}>{t.phaseDeep}</AppText>
+                                </View>
+                                <AppText style={styles.hipnoDisclaimer}>
+                                  {t.smartSleepDisclaimerSmall ?? "*Estimación por reglas movimiento+audio, no diagnóstico médico"}
+                                </AppText>
+                              </View>
+                            )
+                          }
+
+                        </View>
 
                       </View>
                     )
                   }
 
-                  {/* Grid de estadísticas */}
+                  {/* Fases estimadas: 1 card con 3 filas */}
+
+                  {
+                    smartSessions.length > 0 && (
+                      <View>
+
+                        <SectionHeader
+                          icon="movement"
+                          title={t.smartSleepPhases}
+                          small
+                        />
+
+                        <View style={styles.phasesCard}>
+                          <View style={styles.phaseRow}>
+                            <View style={[styles.phaseDot, { backgroundColor: "#8FA3FF" }]} />
+                            <AppText style={styles.phaseLabel}>{t.smartSleepDeep}</AppText>
+                            <AppText style={styles.phaseValue}>{`${avgDeep} min`}</AppText>
+                          </View>
+                          <View style={styles.phaseRow}>
+                            <View style={[styles.phaseDot, { backgroundColor: "#FFD166" }]} />
+                            <AppText style={styles.phaseLabel}>{t.smartSleepLight}</AppText>
+                            <AppText style={styles.phaseValue}>{`${avgLight} min`}</AppText>
+                          </View>
+                          <View style={[styles.phaseRow, styles.phaseRowLast]}>
+                            <View style={[styles.phaseDot, { backgroundColor: "#FF8FAB" }]} />
+                            <AppText style={styles.phaseLabel}>{t.smartSleepWake}</AppText>
+                            <AppText style={styles.phaseValue}>{`${avgWake} min`}</AppText>
+                          </View>
+                          <AppText style={styles.phasesSub}>{t.smartSleepAvgSub ?? "*estimado"}</AppText>
+                        </View>
+
+                      </View>
+                    )
+                  }
+
+                  {/* Grid curado: score, pulso y noches perfectas */}
 
                   <View style={styles.grid}>
 
                     <StatCard
-                      icon="sleep"
-                      iconColor="#7C6FD0"
-                      label={t.average}
-                      value={`${averageSleep} h`}
-                      sub={t.ofSleep}
-                    />
-
-                    <StatCard
-                      icon="night"
-                      iconColor={NIGHT.yellow}
-                      label={t.best}
-                      value={`${maxHours} h`}
-                      sub={t.ofSleep}
-                    />
-
-                    <StatCard
-                      icon="coins"
-                      iconColor="#F59E0B"
-                      label={t.coins}
-                      value={coins}
-                      sub={t.totalSub}
-                    />
-
-                    <StatCard
-                      icon="calendar"
-                      iconColor="#5E60CE"
-                      label={t.nights}
-                      value={nights}
-                      sub={t.registered}
-                    />
-
-                    <StatCard
                       icon="score"
-                      iconColor="#5E60CE"
+                      iconColor="#FFD166"
                       label={t.averageScore}
                       value={averageScore}
                       sub={t.ofSleep}
-                    />
-
-                    <StatCard
-                      icon="trophy"
-                      iconColor="#FFB703"
-                      label={t.bestScore}
-                      value={best}
-                      sub={t.ofSleep}
-                    />
-
-                    <StatCard
-                      icon="level"
-                      iconColor={NIGHT.yellow}
-                      label={t.totalXP}
-                      value={xp}
-                      sub={t.earnedSub}
-                    />
-
-                    <StatCard
-                      icon="sparkles"
-                      iconColor={NIGHT.pink}
-                      label={t.perfect}
-                      value={perfect}
-                      sub={t.withoutWakeups}
+                      variant="glass"
                     />
 
                     {
@@ -409,70 +387,21 @@ export default function StatisticsScreen({ navigation }) {
                           label={t.statsAvgBpm}
                           value={avgBpm}
                           sub={t.statsAvgBpmSub}
+                          variant="glass"
                         />
                       )
                     }
 
-                    {/* Movimiento nocturno legacy oculto (Fase D): lo reemplazan profundo/ligero/despierto* + hipnograma */}
-
-                    {
-                      smartSessions.length > 0 && (
-                        <>
-                          <StatCard
-                            icon="night"
-                            iconColor="#8FA3FF"
-                            label={(t.smartSleepDeep ?? "Sueño profundo*")}
-                            value={`${avgDeep} min`}
-                            sub={(t.smartSleepAvgSub ?? "*estimado")}
-                          />
-                          <StatCard
-                            icon="night"
-                            iconColor="#FFD166"
-                            label={(t.smartSleepLight ?? "Sueño ligero*")}
-                            value={`${avgLight} min`}
-                            sub={(t.smartSleepAvgSub ?? "*estimado")}
-                          />
-                          <StatCard
-                            icon="movement"
-                            iconColor="#FF8FAB"
-                            label={(t.smartSleepWake ?? "Despierto*")}
-                            value={`${avgWake} min`}
-                            sub={(t.smartSleepAvgSub ?? "*estimado")}
-                          />
-                        </>
-                      )
-                    }
+                    <StatCard
+                      icon="sparkles"
+                      iconColor="#FFD166"
+                      label={t.perfect}
+                      value={perfect}
+                      sub={t.withoutWakeups}
+                      variant="glass"
+                    />
 
                   </View>
-
-                  {/* Hipnograma estimado última noche */}
-                  {latestSession?.smartWindows?.length > 0 && (
-                    <View style={{ marginTop: 16 }}>
-                      <SectionHeader icon="night" title={t.smartSleepHipnogram ?? "Hipnograma estimado*"} />
-                      <View style={{ backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 16, padding: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}>
-                        <View style={{ flexDirection: "row", height: 60, alignItems: "flex-end", gap: 2 }}>
-                          {latestSession.smartWindows.slice(-48).map((w, idx) => {
-                            const stage = w.stage ?? "LIGHT";
-                            const h = stage === "DEEP" ? 18 : stage === "LIGHT" ? 36 : 60;
-                            const col = stage === "DEEP" ? "#8FA3FF" : stage === "LIGHT" ? "#FFD166" : "#FF8FAB";
-                            return <View key={idx} style={{ flex: 1, height: h, backgroundColor: col, borderRadius: 2, opacity: 0.85 }} />;
-                          })}
-                        </View>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 6 }}>
-                          <AppText style={{ color: "#FF8FAB", fontSize: 10, fontFamily: "Nunito_600SemiBold" }}>WAKE</AppText>
-                          <AppText style={{ color: "#FFD166", fontSize: 10, fontFamily: "Nunito_600SemiBold" }}>LIGHT</AppText>
-                          <AppText style={{ color: "#8FA3FF", fontSize: 10, fontFamily: "Nunito_600SemiBold" }}>DEEP</AppText>
-                        </View>
-                        <AppText style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, textAlign: "center", marginTop: 4 }}>
-                          {t.smartSleepDisclaimerSmall ?? "*Estimación por reglas movimiento+audio, no diagnóstico médico"}
-                        </AppText>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Motivación */}
-
-                  <MotivationalCard t={t} />
 
                 </>
 
@@ -502,42 +431,6 @@ export default function StatisticsScreen({ navigation }) {
                   </View>
                 ) : (
                   <>
-                    <View style={styles.grid}>
-
-                      <StatCard
-                        icon="check"
-                        iconColor={NIGHT.yellow}
-                        label={t.sleepStudyCheckIns}
-                        value={study.checkInCount}
-                        sub={t.registered}
-                      />
-
-                      <StatCard
-                        icon="flash"
-                        iconColor="#FFB703"
-                        label={t.sleepStudyAvgEnergy}
-                        value={avgEnergyLabel ?? "—"}
-                        sub={t.checkInEnergyLabel}
-                      />
-
-                      <StatCard
-                        icon="night"
-                        iconColor="#8FA3FF"
-                        label={t.sleepStudyAvgHours}
-                        value={study.avgSleepHours != null ? `${study.avgSleepHours.toFixed(1)} h` : "—"}
-                        sub={t.ofSleep}
-                      />
-
-                      <StatCard
-                        icon="calendar"
-                        iconColor="#5E60CE"
-                        label={t.sleepStudyMostStudy}
-                        value={mostStudyLabel ?? "—"}
-                        sub={t.checkInStudyLabel}
-                      />
-
-                    </View>
-
                     <AppText style={styles.sleepStudyTier}>
                       {study.tier === "weekly" ? t.sleepStudyWeekly : t.sleepStudyEarly}
                     </AppText>
@@ -561,24 +454,19 @@ export default function StatisticsScreen({ navigation }) {
 
             </View>
 
+            {/* Motivación al final, después de los datos */}
+
+            <View style={styles.motivationWrap}>
+              <MotivationalCard t={t} />
+            </View>
+
           </Animated.View>
 
         </ScrollView>
 
-        {/* Navegación inferior */}
-
-        <View style={styles.bottomNav}>
-          <BottomNav
-            active="Statistics"
-            navigation={navigation}
-          />
-        </View>
-
       </SafeAreaView>
 
     </NightBackground>
-
-    </SwipeableTabScreen>
 
   );
 

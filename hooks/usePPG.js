@@ -23,7 +23,7 @@ const MAX_BUFFER_SECONDS = 30;
 
 // Fases: idle | waiting | preparing | measuring | confirmed
 
-export default function usePPG({ fps = DEFAULT_FPS } = {}) {
+export default function usePPG({ fps = DEFAULT_FPS, shadowDiagnostics = false, onFirstFrame } = {}) {
   const [phase, setPhaseState] = useState("idle");
   const [bpm, setBpm] = useState(null);
   const [confidence, setConfidence] = useState(0);
@@ -51,6 +51,10 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
   const badStreakRef = useRef(0);
   const goodStreakRef = useRef(0);
   const startTakeRef = useRef(null);
+  // Callback primer frame (sesion nativa viva) — ref para no re-suscribir
+  const onFirstFrameRef = useRef(null);
+  onFirstFrameRef.current = onFirstFrame ?? null;
+  const firstFrameFiredRef = useRef(false);
 
   const setPhaseSafe = useCallback((p) => {
     phaseRef.current = p;
@@ -71,6 +75,7 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
   const resetCounters = useCallback(() => {
     bufferRef.current = [];
     sampleCounterRef.current = 0;
+    firstFrameFiredRef.current = false;
     lastAvgRef.current = null;
     lastSpatialStdRef.current = null;
     tickRef.current = 0;
@@ -189,13 +194,43 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
               (result.spectralDelta != null ? Number(result.spectralDelta).toFixed(1) : "-") +
               " filteredStd = " +
               (result.filteredStd != null ? Number(result.filteredStd).toFixed(2) : "-") +
+              " AC/DC% = " +
+              (result.pulseIndexPercent != null ? Number(result.pulseIndexPercent).toFixed(3) : "-") +
+              " spectralProminence = " +
+              (result.spectralProminence != null ? Number(result.spectralProminence).toFixed(2) : "-") +
               " err = " +
               (result.error ?? "null")
           );
         }
+
+        if (
+          shadowDiagnostics &&
+          tickRef.current % 20 === 0 &&
+          (result.error || result.confidence < MIN_CONFIDENCE_FOR_CONFIRM)
+        ) {
+          const ungated = calculateBPM(tail, fps, { diagnosticOnly: true });
+          const summarize = (estimate) => ({
+            bpm: estimate.bpm,
+            confidence: Number((estimate.confidence ?? 0).toFixed(2)),
+            acDcPct:
+              estimate.pulseIndexPercent != null
+                ? Number(estimate.pulseIndexPercent.toFixed(3))
+                : null,
+            spectralBpm: estimate.spectralBpm,
+            prominence:
+              estimate.spectralProminence != null
+                ? Number(estimate.spectralProminence.toFixed(2))
+                : null,
+            error: estimate.error ?? null,
+          });
+          console.log(
+            "PPG shadow Y " +
+              JSON.stringify({ gated: summarize(result), ungated: summarize(ungated) })
+          );
+        }
       }
     }, 100);
-  }, [fps, finalizeResult]);
+  }, [fps, finalizeResult, shadowDiagnostics]);
 
   // Toma nueva desde cero (dedo ya confirmado)
   const startTake = useCallback(() => {
@@ -224,7 +259,7 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
   }, [resetCounters, setPhaseSafe, stopTimer]);
 
   const addSample = useCallback(
-    (redMean, spatialStd = 0) => {
+    (lumaMean, spatialStd = 0) => {
       const currentPhase = phaseRef.current;
       if (
         currentPhase !== "waiting" &&
@@ -235,16 +270,24 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
       }
 
       sampleCounterRef.current += 1;
-      lastAvgRef.current = redMean;
+      // Primer frame = sesion nativa viva (dispara una vez por toma; vale
+      // en cualquier fase, incluso waiting sin dedo todavia)
+      if (sampleCounterRef.current === 1 && !firstFrameFiredRef.current) {
+        firstFrameFiredRef.current = true;
+        try {
+          onFirstFrameRef.current?.();
+        } catch (_) {}
+      }
+      lastAvgRef.current = lumaMean;
       lastSpatialStdRef.current = spatialStd;
 
       // Gate de seguridad: brillo Y uniformidad intra-frame
-      const ok = redMean >= FINGER_MIN && spatialStd <= SPATIAL_STD_MAX;
+      const ok = lumaMean >= FINGER_MIN && spatialStd <= SPATIAL_STD_MAX;
 
       // Log temporal para calibrar SPATIAL_STD_MAX (ver adb logcat -s ReactNativeJS)
       if (sampleCounterRef.current % 30 === 0) {
         console.log(
-          `PPG frame avg=${redMean.toFixed(1)} spatialStd=${spatialStd.toFixed(1)} ok=${ok} phase=${currentPhase}`
+          `PPG frame avg=${lumaMean.toFixed(1)} spatialStd=${spatialStd.toFixed(1)} ok=${ok} phase=${currentPhase}`
         );
       }
 
@@ -282,7 +325,7 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
 
         case "measuring":
           if (ok) {
-            bufferRef.current.push(redMean);
+            bufferRef.current.push(lumaMean);
             const maxLen = fps * MAX_BUFFER_SECONDS + 10;
             if (bufferRef.current.length > maxLen) {
               bufferRef.current.shift();
@@ -319,9 +362,9 @@ export default function usePPG({ fps = DEFAULT_FPS } = {}) {
     (frame) => {
       "worklet";
       try {
-        // Plano Y del frame YUV: luminancia aprox senal roja bajo flash+dedo
         const buffer = new Uint8Array(frame.toArrayBuffer());
         const wh = frame.width * frame.height;
+        // Plano Y del frame YUV.
         // Muestrear ~4k puntos del plano Y — mismo sampleo para avg y varianza espacial
         const step = Math.max(1, Math.floor(wh / 4096));
         let sum = 0;

@@ -59,7 +59,19 @@ import {
 
 import {
   decayPetHappiness,
+  moodForHappiness,
+  shouldSchedulePetAlert,
+  HAPPINESS_SAD_BELOW,
 } from "../services/PetHappinessService";
+
+import {
+  schedulePetAlertNative,
+  cancelPetAlertNative,
+} from "../services/PetAlertService";
+
+import {
+  toDateKey,
+} from "../utils/dateUtils";
 
 
 export const AppContext = createContext();
@@ -157,7 +169,7 @@ export function AppProvider({ children }) {
   const [sleepHistory, setSleepHistory] = useState([]);
 
   // ===========================
-  // Daily Check-in (energía + experiencia de estudio, 1 por día)
+  // Daily Check-in (energía en Statistics + estudio antes de dormir, 1 por día)
   // ===========================
 
   const [dailyCheckIns, setDailyCheckIns] = useState([]);
@@ -195,9 +207,18 @@ export function AppProvider({ children }) {
 
   const [lastStreakDateKey, setLastStreakDateKey] = useState(null);
 
+  // Cooldown alerta mascota triste (dateKey del último aviso, 1/día)
+  const [lastHappinessAlertKey, setLastHappinessAlertKey] = useState(null);
+
   // Guía inicial vista (adicional; NUNCA decide sola si el usuario es nuevo —
   // ver services/UserDataService.js y REGLA CRÍTICA de onboarding)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  // Términos aceptados (TermsScreen tras Welcome; existentes la ven una vez)
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+
+  // Tutorial de pulso visto (PPGMeasureScreen lo muestra solo la primera vez)
+  const [hasSeenPPGTutorial, setHasSeenPPGTutorial] = useState(false);
 
   // ===========================
   // Cargar datos
@@ -256,7 +277,13 @@ export function AppProvider({ children }) {
 
         setLastStreakDateKey(data.lastStreakDateKey ?? null);
 
+        setLastHappinessAlertKey(data.lastHappinessAlertKey ?? null);
+
         setHasCompletedOnboarding(data.hasCompletedOnboarding ?? false);
+
+        setHasAcceptedTerms(data.hasAcceptedTerms ?? false);
+
+        setHasSeenPPGTutorial(data.hasSeenPPGTutorial ?? false);
 
         setDailyCheckIns(
           Array.isArray(data.dailyCheckIns) ? data.dailyCheckIns : []
@@ -330,7 +357,7 @@ export function AppProvider({ children }) {
       try {
         const smart = await getSmartAlarmSettings();
         if (smart && smart.enabled) {
-          await setSmartAlarmConfig(smart);
+          await setSmartAlarmConfig(smart, data?.language ?? "en");
         }
       } catch (e) {
         console.log("SmartAlarm resync error", e?.message ?? e);
@@ -361,12 +388,46 @@ export function AppProvider({ children }) {
         (decayCap - lastUpdate) / 3600000
       );
 
-      setPetHappiness(
-        decayPetHappiness(
-          data?.petHappiness ?? 100,
-          elapsedHours
+      const decayedHappiness = decayPetHappiness(
+        data?.petHappiness ?? 100,
+        elapsedHours
+      );
+
+      setPetHappiness(decayedHappiness);
+
+      // La felicidad muy baja pisa el mood a triste (aunque la última
+      // noche haya sido buena): el decaimiento por horas despierto manda
+      setPetMood(
+        moodForHappiness(
+          decayedHappiness,
+          data?.petMood ?? "happy"
         )
       );
+
+      // Alerta de mascota triste: si cruza el umbral y no hay sesión
+      // activa, agenda aviso diferido (+4h, 1/día); si se recuperó,
+      // cancela el pendiente para no spamear avisos obsoletos
+      try {
+        const sessionActive = !!(currentSleep && currentSleep.active);
+        const todayKey = toDateKey(new Date());
+        const alertT = getTranslations(data?.language ?? "en");
+        if (
+          shouldSchedulePetAlert({
+            happiness: decayedHappiness,
+            sleepSessionActive: sessionActive,
+            lastAlertDateKey: data?.lastHappinessAlertKey ?? null,
+            todayKey,
+          })
+        ) {
+          schedulePetAlertNative(alertT.petAlertTitle, alertT.petAlertContent).then((ok) => {
+            if (ok) setLastHappinessAlertKey(todayKey);
+          });
+        } else if (typeof decayedHappiness === "number" && decayedHappiness >= HAPPINESS_SAD_BELOW) {
+          cancelPetAlertNative();
+        }
+      } catch (e) {
+        console.log("PetAlert error", e?.message ?? e);
+      }
 
       setLastHappinessUpdate(Date.now());
 
@@ -426,7 +487,13 @@ export function AppProvider({ children }) {
 
       lastStreakDateKey,
 
+      lastHappinessAlertKey,
+
       hasCompletedOnboarding,
+
+      hasAcceptedTerms,
+
+      hasSeenPPGTutorial,
 
       dailyCheckIns,
 
@@ -480,7 +547,13 @@ export function AppProvider({ children }) {
 
       lastStreakDateKey,
 
+      lastHappinessAlertKey,
+
       hasCompletedOnboarding,
+
+      hasAcceptedTerms,
+
+      hasSeenPPGTutorial,
 
       dailyCheckIns,
 
@@ -749,8 +822,17 @@ export function AppProvider({ children }) {
     lastStreakDateKey,
     setLastStreakDateKey,
 
+    lastHappinessAlertKey,
+    setLastHappinessAlertKey,
+
     hasCompletedOnboarding,
     setHasCompletedOnboarding,
+
+    hasAcceptedTerms,
+    setHasAcceptedTerms,
+
+    hasSeenPPGTutorial,
+    setHasSeenPPGTutorial,
 
   };
 

@@ -53,6 +53,7 @@ module.exports = function withSleepPetNative(config) {
 
     application.service = application.service || [];
     application.receiver = application.receiver || [];
+    application.activity = application.activity || [];
 
     if (
       !hasElement(
@@ -139,6 +140,38 @@ module.exports = function withSleepPetNative(config) {
       application.receiver.push({
         $: {
           "android:name": ".SmartAlarmReceiver",
+          "android:exported": "false",
+        },
+      });
+    }
+
+    if (
+      !hasElement(
+        application.activity,
+        ".SmartAlarmDismissActivity"
+      )
+    ) {
+      application.activity.push({
+        $: {
+          "android:name": ".SmartAlarmDismissActivity",
+          "android:exported": "false",
+          "android:screenOrientation": "portrait",
+          "android:showOnLockScreen": "true",
+          "android:turnScreenOn": "true",
+          "android:launchMode": "singleTask",
+        },
+      });
+    }
+
+    if (
+      !hasElement(
+        application.receiver,
+        ".PetCheckReceiver"
+      )
+    ) {
+      application.receiver.push({
+        $: {
+          "android:name": ".PetCheckReceiver",
           "android:exported": "false",
         },
       });

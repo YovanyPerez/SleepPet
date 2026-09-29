@@ -235,6 +235,76 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
   },
+
+  // Mini-tutorial (primera vez + ayuda colapsable)
+  tutCard: {
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    borderRadius: 24,
+    padding: 20,
+    marginTop: 16,
+  },
+
+  tutTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontFamily: "Nunito_800ExtraBold",
+    textAlign: "center",
+    marginBottom: 14,
+  },
+
+  tutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  tutIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  tutText: {
+    flex: 1,
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 14,
+    fontFamily: "Nunito_600SemiBold",
+    lineHeight: 20,
+  },
+
+  tutButton: {
+    backgroundColor: NIGHT.end,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  tutButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 1,
+  },
+
+  tutHelp: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+    textAlign: "center",
+    textDecorationLine: "underline",
+    marginTop: 8,
+    paddingVertical: 6,
+  },
   disclaimer: {
     color: "rgba(255,255,255,0.6)",
     fontSize: 11,

@@ -33,8 +33,6 @@ import { NIGHT } from "../constants/theme";
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
-import BottomNav from "../components/BottomNav";
-import SwipeableTabScreen from "../components/SwipeableTabScreen";
 import NamePetModal from "../components/NamePetModal";
 import styles from "./styles/PetShopScreen.styles";
 
@@ -284,8 +282,6 @@ export default function PetShopScreen({ navigation }) {
 
   return (
 
-    <SwipeableTabScreen active="PetShop" navigation={navigation}>
-
     <NightBackground moon={false}>
 
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -410,15 +406,6 @@ export default function PetShopScreen({ navigation }) {
 
         </Animated.View>
 
-        {/* Navegación inferior */}
-
-        <View style={styles.bottomNav}>
-          <BottomNav
-            active="PetShop"
-            navigation={navigation}
-          />
-        </View>
-
         {/* Nombrar mascota comprada */}
 
         <NamePetModal
@@ -448,8 +435,6 @@ export default function PetShopScreen({ navigation }) {
       </SafeAreaView>
 
     </NightBackground>
-
-    </SwipeableTabScreen>
 
   );
 

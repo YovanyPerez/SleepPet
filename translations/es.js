@@ -48,6 +48,15 @@ export default {
   petDialog: "Necesito dormir bien...",
 
   happiness: "Felicidad",
+  petAlertTitle: "Tu mascota está triste",
+  petAlertContent: "Su felicidad está muy baja. Duerme bien o consiéntela en la tienda.",
+  termsTitle: "Términos y Privacidad",
+  termsP1: "SleepPet es una herramienta de bienestar, no un dispositivo médico: el pulso por cámara, las fases de sueño y las recomendaciones son estimaciones no clínicas con margen de error. No deben usarse para diagnosticar, tratar ni decidir atención de salud; ante cualquier síntoma, consulta a un profesional.",
+  termsP2: "Tus datos (nombre, edad, sueño, pulso, check-ins, mascotas) se guardan solo en tu teléfono y nunca se envían a ningún servidor. Sin cuentas, publicidad ni analíticas. Puedes borrar todo en Ajustes → Reiniciar progreso o desinstalando la app.",
+  termsP3: "Las alarmas y recordatorios dependen del sistema Android y pueden perderse tras reiniciar el teléfono. No los uses como única alarma para compromisos críticos.",
+  termsP4: "Si eres menor de edad, usa la app con la supervisión de un adulto.",
+  termsAccept: "Leí y acepto los Términos y la Privacidad",
+  termsContinue: "Continuar",
 
   lastNight: "ÚLTIMA NOCHE",
 
@@ -502,6 +511,10 @@ export default {
   smartAlarmDisclaimer: "*Estimación por reglas, no diagnóstico médico. Siempre suena a la hora objetivo si no hay momento favorable — incluso si no iniciaste sesión de sueño.",
   smartAlarmNoWindow: "Sin ventana favorable esta noche",
   smartAlarmFavorable: "Momento favorable detectado",
+  smartAlarmChallenge: "Apagar la alarma",
+  smartAlarmChallengeOff: "Botón Detener",
+  smartAlarmChallengeWord: "Escribir palabra",
+  smartAlarmChallengeDesc: "Con desafío no hay atajo: suena hasta escribir la palabra.",
 
   smartSleepDeep: "Sueño profundo*",
   smartSleepLight: "Sueño ligero*",
@@ -512,6 +525,9 @@ export default {
   smartSleepAvgSub: "*estimado",
   smartSleepHipnogram: "Hipnograma estimado*",
   smartSleepDisclaimerSmall: "*Estimación por reglas movimiento+audio, no diagnóstico médico",
+  smartSleepPhases: "Fases estimadas*",
+  phaseLight: "Ligero",
+  phaseDeep: "Profundo",
 
   // ==========================
   // Despertares nocturnos
@@ -532,7 +548,13 @@ export default {
   ppgSkip: "Omitir",
   ppgStart: "Medir pulso",
   ppgSuccess: "¡Pulso confirmado!",
-  ppgDisclaimer: "Solo bienestar, no es diagnóstico médico.",
+  ppgDisclaimer: "Solo bienestar, no es diagnóstico médico. No uses estos valores para decisiones de salud.",
+  ppgTutTitle: "Cómo medir tu pulso",
+  ppgTut1: "Tapa toda la lente y el flash con tu dedo, sin huecos",
+  ppgTut2: "Presión media: muy fuerte aplasta la señal, muy suave deja entrar luz",
+  ppgTut3: "Quédate quieto y espera el anillo verde, unos 10 segundos",
+  ppgTutStart: "Entendido, medir",
+  ppgTutHelp: "¿Cómo medir?",
   ppgRecLowTitle: "Pulso bajo",
   ppgRecLowMessage: "Tu pulso está bajo. Respira profundo 1 minuto y si sientes mareo consulta a un profesional.",
   ppgRecNormalTitle: "Pulso normal",
@@ -540,7 +562,7 @@ export default {
   ppgRecElevatedTitle: "Pulso elevado",
   ppgRecElevatedMessage: "Activación alta. Prueba respiración 4-7-8 y evita pantallas 10 min antes de dormir.",
   ppgRecHighTitle: "Pulso muy elevado",
-  ppgRecHighMessage: "Pulso alto. Hidrátate, evita cafeína y espera 15 min antes de dormir.",
+  ppgRecHighMessage: "Pulso alto. Hidrátate, evita cafeína y espera 15 min antes de dormir. Si se repite o sientes malestar, consulta a un profesional.",
   ppgPreSleepCardTitle: "¿Medir tu pulso antes de dormir?",
   ppgPreSleepCardDesc: "Tapa la cámara trasera con el dedo y mantenlo hasta confirmar tu pulso (~3s estables).",
   ppgPulseCaptured: "Pulso capturado",
@@ -613,14 +635,14 @@ export default {
   // ==========================
 
   checkInTitle: "Check-in de hoy",
-  checkInPrompt: "¿Cómo te sientes hoy?",
+  checkInBeforeSleepTitle: "Antes de dormir",
+  checkInAtSleepHint: "Se pregunta al iniciar el sueño.",
   checkInEnergyLabel: "Energía",
   checkInStudyLabel: "Estudio",
   checkInEnergyQuestion: "¿Cómo te sientes hoy?",
   checkInStudyQuestion: "¿Cómo fue tu estudio hoy?",
-  checkInCheckIn: "Registrar",
   checkInSave: "Guardar",
-  checkInEdit: "Editar",
+  checkInSkip: "Saltar por ahora",
 
   checkinEnergyTired: "Cansado",
   checkinEnergyLow: "Poca energía",
@@ -641,7 +663,7 @@ export default {
   sleepStudyNotEnough: "Aún no hay suficientes datos.",
   sleepStudyEarly: "Patrón inicial detectado.",
   sleepStudyWeekly: "Patrón semanal disponible.",
-  sleepStudyCheckIns: "Check-ins",
+  sleepStudyCheckIns: "Respuestas de estudio",
   sleepStudyAvgEnergy: "Energía promedio",
   sleepStudyAvgHours: "Sueño promedio",
   sleepStudyMostStudy: "Estudio más común",

@@ -175,10 +175,12 @@ export default function PetCard({
 
     <View style={[styles.card, selected && styles.cardSelected]}>
 
-      <Image
-        source={pet.available ? PET_IMAGES[pet.id].happy : COMING_SOON}
-        style={styles.petImage}
-      />
+      <View style={styles.petFrame}>
+        <Image
+          source={pet.available ? PET_IMAGES[pet.id].happy : COMING_SOON}
+          style={styles.petImage}
+        />
+      </View>
 
       <View style={styles.info}>
 
@@ -225,11 +227,25 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.12)",
   },
 
+  // Marco oscuro: los PNG traen viñeta ahumada horneada; enmarcada se ve
+  // retrato intencional en vez de recorte flotando sobre el glass
+  petFrame: {
+    width: 100,
+    height: 100,
+    borderRadius: 22,
+    overflow: "hidden",
+    backgroundColor: "rgba(27,27,75,0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+
   petImage: {
     width: 100,
     height: 100,
     resizeMode: "contain",
-    marginRight: 14,
   },
 
   info: {

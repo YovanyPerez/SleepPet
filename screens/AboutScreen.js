@@ -113,6 +113,20 @@ export default function AboutScreen({ navigation }) {
 
           </View>
 
+          <TouchableOpacity
+            style={[styles.glassCard, styles.termsCard]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("Terms", { readOnly: true })}
+          >
+
+            <AppText style={styles.termsText}>
+              {t.termsTitle}
+            </AppText>
+
+            <AppIcon name="chevron" size={18} color="rgba(255,255,255,0.5)" />
+
+          </TouchableOpacity>
+
         </Animated.View>
 
       </SafeAreaView>

@@ -11,40 +11,33 @@ import { getTranslations } from "../services/TranslationService";
 import { hasExistingUserData } from "../services/UserDataService";
 import LoadingScreen from "../components/LoadingScreen";
 
-import HomeScreen from "../screens/HomeScreen";
 import SleepModeScreen from "../screens/SleepModeScreen";
 import ResultsScreen from "../screens/ResultsScreen";
 import HistoryScreen from "../screens/HistoryScreen";
-import StatisticsScreen from "../screens/StatisticsScreen";
-import SettingsScreen from "../screens/SettingsScreen";
 import MenuScreen from "../screens/MenuScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
+import TermsScreen from "../screens/TermsScreen";
 import CreateProfileScreen from "../screens/CreateProfileScreen";
-import PetShopScreen from "../screens/PetShopScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
-import AchievementsScreen from "../screens/AchievementsScreen";
 import AchievementPopup from "../components/AchievementPopup";
 import AboutScreen from "../screens/AboutScreen";
 import PPGMeasureScreen from "../screens/PPGMeasureScreen";
 import SleepSetupScreen from "../screens/SleepSetupScreen";
+import TabsNavigator from "./TabsNavigator";
 
 const Stack = createNativeStackNavigator();
 
 const SCREENS = {
   Welcome: WelcomeScreen,
+  Terms: TermsScreen,
   CreateProfile: CreateProfileScreen,
-  Home: HomeScreen,
   SleepMode: SleepModeScreen,
   Results: ResultsScreen,
   Menu: MenuScreen,
   History: HistoryScreen,
-  Statistics: StatisticsScreen,
-  Settings: SettingsScreen,
-  PetShop: PetShopScreen,
   Profile: ProfileScreen,
   EditProfile: EditProfileScreen,
-  Achievements: AchievementsScreen,
   About: AboutScreen,
   PPGMeasure: PPGMeasureScreen,
   SleepSetup: SleepSetupScreen,
@@ -71,6 +64,11 @@ export default function AppNavigator() {
   // REGLA CRÍTICA: usuario nuevo = sin datos reales persistidos (nunca un solo flag)
   const existingUser = hasExistingUserData(ctx);
 
+  // Términos: existentes de antes de esta pantalla la ven una vez
+  const initialRoute = existingUser
+    ? (ctx.hasAcceptedTerms ? "Tabs" : "Terms")
+    : "Welcome";
+
   return (
 
     <>
@@ -78,13 +76,13 @@ export default function AppNavigator() {
       <NavigationContainer>
 
         <Stack.Navigator
-          initialRouteName={
-            existingUser ? "Home" : "Welcome"
-          }
+          initialRouteName={initialRoute}
           screenOptions={{
             headerShown: false,
           }}
         >
+
+          <Stack.Screen name="Tabs" component={TabsNavigator} />
 
           {Object.entries(SCREENS).map(([name, component]) => (
             <Stack.Screen

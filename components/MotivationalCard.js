@@ -4,7 +4,6 @@ import { View, StyleSheet, Image } from "react-native";
 import { AppContext } from "../context/AppContext";
 import { PET_IMAGES } from "../constants/PetImages";
 import AppText from "./AppText";
-import { COLORS } from "../constants/theme";
 
 export default function MotivationalCard({ t }) {
 
@@ -41,15 +40,12 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EDEBFF",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
     borderRadius: 26,
     padding: 18,
     marginBottom: 18,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
 
   pet: {
@@ -66,13 +62,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "Nunito_800ExtraBold",
-    color: COLORS.text,
+    color: "#FFFFFF",
   },
 
   message: {
     fontSize: 14,
     fontFamily: "Nunito_400Regular",
-    color: COLORS.textSecondary,
+    color: "rgba(255,255,255,0.7)",
     marginTop: 4,
   },
 });

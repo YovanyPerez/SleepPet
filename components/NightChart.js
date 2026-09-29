@@ -42,6 +42,7 @@ export default function NightChart({
   unlockTimes,
   countLabel,
   emptyLabel,
+  bare = false,
 }) {
 
   const start = new Date(startMs);
@@ -78,11 +79,11 @@ export default function NightChart({
     });
 
   return (
-    <View style={styles.container}>
+    <View style={bare ? styles.bare : styles.container}>
 
       <View style={styles.track}>
 
-        <View style={styles.line} />
+        <View style={[styles.line, bare && styles.lineBare]} />
 
         {positions.map((position, index) => (
           <View
@@ -100,17 +101,17 @@ export default function NightChart({
 
       <View style={styles.labelsRow}>
 
-        <Text style={styles.timeLabel}>
+        <Text style={[styles.timeLabel, bare && styles.timeLabelBare]}>
           {formatHM(startMs)}
         </Text>
 
-        <Text style={styles.countLabel}>
+        <Text style={[styles.countLabel, bare && styles.countLabelBare]}>
           {positions.length > 0
             ? countLabel
             : emptyLabel}
         </Text>
 
-        <Text style={styles.timeLabel}>
+        <Text style={[styles.timeLabel, bare && styles.timeLabelBare]}>
           {formatHM(endMs)}
         </Text>
 
@@ -174,6 +175,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.text,
     fontWeight: "bold",
+  },
+
+  bare: {
+    paddingVertical: 4,
+  },
+
+  lineBare: {
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+
+  timeLabelBare: {
+    color: "rgba(255,255,255,0.7)",
+  },
+
+  countLabelBare: {
+    color: "#FFFFFF",
   },
 
 });

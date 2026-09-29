@@ -46,6 +46,8 @@ const ICONS = {
   bell: { family: "io", name: "notifications" },
   clock: { family: "io", name: "time" },
   shield: { family: "mci", name: "shield" },
+  finger: { family: "io", name: "finger-print" },
+  meditation: { family: "mci", name: "meditation" },
 };
 
 export default function AppIcon({

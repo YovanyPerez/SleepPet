@@ -61,6 +61,19 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
   },
 
+  termsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+  },
+
+  termsText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontFamily: "Nunito_700Bold",
+  },
+
 });
 
 export default styles;

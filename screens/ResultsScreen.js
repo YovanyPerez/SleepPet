@@ -11,6 +11,12 @@ import {
   Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ReanimatedAnimated, {
+  Easing,
+  FadeIn,
+  Keyframe,
+  useReducedMotion,
+} from "react-native-reanimated";
 
 import { AppContext } from "../context/AppContext";
 import { NIGHT } from "../constants/theme";
@@ -23,6 +29,8 @@ import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
 import styles from "./styles/ResultsScreen.styles";
+
+const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
 
 export default function ResultsScreen({ navigation }) {
 
@@ -38,12 +46,25 @@ export default function ResultsScreen({ navigation }) {
 
   const t = getTranslations(language);
 
+  const reducedMotion = useReducedMotion();
+
+  // Entrada escalonada de las tarjetas (opacity + 8px). Cap de 4 pasos (160ms).
+  const cardEnter = (index) => {
+    if (reducedMotion) return FadeIn.duration(150);
+    return new Keyframe({
+      from: { opacity: 0, transform: [{ translateY: 8 }] },
+      to: { opacity: 1, transform: [{ translateY: 0 }], easing: EASE_OUT },
+    })
+      .duration(220)
+      .delay(Math.min(index, 4) * 40);
+  };
+
   const appear = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(appear, {
       toValue: 1,
-      duration: 600,
+      duration: 250,
       useNativeDriver: true,
     }).start();
   }, [appear]);
@@ -173,7 +194,7 @@ export default function ResultsScreen({ navigation }) {
 
             {/* Métricas */}
 
-            <View style={styles.metricCard}>
+            <ReanimatedAnimated.View entering={cardEnter(0)} style={styles.metricCard}>
 
               <View style={styles.metricIcon}>
                 <AppIcon name="night" size={20} color={NIGHT.yellow} />
@@ -187,9 +208,9 @@ export default function ResultsScreen({ navigation }) {
                 {lastSleepSession.hours} {t.hours}
               </AppText>
 
-            </View>
+            </ReanimatedAnimated.View>
 
-            <View style={styles.metricCard}>
+            <ReanimatedAnimated.View entering={cardEnter(1)} style={styles.metricCard}>
 
               <View style={styles.metricIcon}>
                 <AppIcon name="sleep" size={20} color="#8FA3FF" />
@@ -203,9 +224,9 @@ export default function ResultsScreen({ navigation }) {
                 {qualityText()}
               </AppText>
 
-            </View>
+            </ReanimatedAnimated.View>
 
-            <View style={styles.metricCard}>
+            <ReanimatedAnimated.View entering={cardEnter(2)} style={styles.metricCard}>
 
               <View style={styles.metricIcon}>
                 <AppIcon name="score" size={20} color="#C9B8E8" />
@@ -219,9 +240,9 @@ export default function ResultsScreen({ navigation }) {
                 {lastSleepSession.score}/100
               </AppText>
 
-            </View>
+            </ReanimatedAnimated.View>
 
-            <View style={styles.metricCard}>
+            <ReanimatedAnimated.View entering={cardEnter(3)} style={styles.metricCard}>
 
               <View style={styles.metricIcon}>
                 <AppIcon name="unlocks" size={20} color="#8FA3FF" />
@@ -235,11 +256,11 @@ export default function ResultsScreen({ navigation }) {
                 {lastSleepSession.unlockCount}
               </AppText>
 
-            </View>
+            </ReanimatedAnimated.View>
 
             {/* Movimiento nocturno legacy oculto (Fase D): lo reemplaza Sueño estimado* con WAKE/LIGHT/DEEP */}
 
-            <View style={styles.metricCard}>
+            <ReanimatedAnimated.View entering={cardEnter(4)} style={styles.metricCard}>
 
               <View style={styles.metricIcon}>
                 <AppIcon name="warning" size={20} color={NIGHT.pink} />
@@ -255,9 +276,9 @@ export default function ResultsScreen({ navigation }) {
                   : t.none}
               </AppText>
 
-            </View>
+            </ReanimatedAnimated.View>
 
-            <View style={styles.metricCard}>
+            <ReanimatedAnimated.View entering={cardEnter(5)} style={styles.metricCard}>
 
               <View style={styles.metricIcon}>
                 <AppIcon name="heartPulse" size={20} color="#FF8FAB" />
@@ -271,20 +292,22 @@ export default function ResultsScreen({ navigation }) {
                 {lastSleepSession.preSleepBpm ? `${lastSleepSession.preSleepBpm} ${t.ppgBpmUnit}` : t.ppgNoBpm}
               </AppText>
 
-            </View>
+            </ReanimatedAnimated.View>
 
             {lastSleepSession.estimatedStages && (
-              <View style={styles.metricCard}>
+              <ReanimatedAnimated.View entering={cardEnter(6)} style={styles.metricCard}>
                 <View style={styles.metricIcon}>
                   <AppIcon name="night" size={20} color="#8FA3FF" />
                 </View>
-                <AppText style={styles.metricLabel}>
-                  {(t.smartSleepHipnogram ?? "Sueño estimado*")}
-                </AppText>
-                <AppText style={styles.metricValue}>
-                  {`${lastSleepSession.estimatedStages.deep ?? 0}m ${t.smartSleepDeep ?? "prof."} · ${lastSleepSession.estimatedStages.light ?? 0}m ${t.smartSleepLight ?? "lig."} · ${lastSleepSession.estimatedStages.wake ?? 0}m ${t.smartSleepWake ?? "desp."}`}
-                </AppText>
-              </View>
+                <View style={styles.metricStack}>
+                  <AppText style={styles.metricStackLabel}>
+                    {(t.smartSleepHipnogram ?? "Sueño estimado*")}
+                  </AppText>
+                  <AppText style={styles.metricStackValue}>
+                    {`${lastSleepSession.estimatedStages.deep ?? 0}m ${t.smartSleepDeep ?? "prof."} · ${lastSleepSession.estimatedStages.light ?? 0}m ${t.smartSleepLight ?? "lig."} · ${lastSleepSession.estimatedStages.wake ?? 0}m ${t.smartSleepWake ?? "desp."}`}
+                  </AppText>
+                </View>
+              </ReanimatedAnimated.View>
             )}
             {lastSleepSession.estimatedStages && (
               <AppText style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, textAlign: "center", marginTop: -8, marginBottom: 8 }}>
@@ -294,7 +317,7 @@ export default function ResultsScreen({ navigation }) {
 
             {/* Recompensas */}
 
-            <View style={styles.rewardRow}>
+            <ReanimatedAnimated.View entering={cardEnter(7)} style={styles.rewardRow}>
 
               <View style={styles.rewardCard}>
 
@@ -324,7 +347,7 @@ export default function ResultsScreen({ navigation }) {
 
               </View>
 
-            </View>
+            </ReanimatedAnimated.View>
 
             {/* Nivel subido */}
 
@@ -356,7 +379,7 @@ export default function ResultsScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.button}
-              onPress={() => navigation.navigate("Home")}
+              onPress={() => navigation.navigate("Tabs", { screen: "Home" })}
             >
 
               <AppText style={styles.buttonText}>
