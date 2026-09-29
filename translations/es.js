@@ -57,6 +57,15 @@ export default {
   termsP4: "Si eres menor de edad, usa la app con la supervisión de un adulto.",
   termsAccept: "Leí y acepto los Términos y la Privacidad",
   termsContinue: "Continuar",
+  petAlertTitle: "Tu mascota está triste",
+  petAlertContent: "Su felicidad está muy baja. Duerme bien o consiéntela en la tienda.",
+  termsTitle: "Términos y Privacidad",
+  termsP1: "SleepPet es una herramienta de bienestar, no un dispositivo médico: el pulso por cámara, las fases de sueño y las recomendaciones son estimaciones no clínicas con margen de error. No deben usarse para diagnosticar, tratar ni decidir atención de salud; ante cualquier síntoma, consulta a un profesional.",
+  termsP2: "Tus datos (nombre, edad, sueño, pulso, check-ins, mascotas) se guardan solo en tu teléfono y nunca se envían a ningún servidor. Sin cuentas, publicidad ni analíticas. Puedes borrar todo en Ajustes → Reiniciar progreso o desinstalando la app.",
+  termsP3: "Las alarmas y recordatorios dependen del sistema Android y pueden perderse tras reiniciar el teléfono. No los uses como única alarma para compromisos críticos.",
+  termsP4: "Si eres menor de edad, usa la app con la supervisión de un adulto.",
+  termsAccept: "Leí y acepto los Términos y la Privacidad",
+  termsContinue: "Continuar",
 
   lastNight: "ÚLTIMA NOCHE",
 
@@ -110,7 +119,7 @@ export default {
 
   sleepTrackingActive: "Seguimiento de sueño activo",
 
-  keepPhoneDown: "Mantén el teléfono alejado 😴",
+  keepPhoneDown: "Mantén el teléfono alejado",
 
   greatJob: "¡Buen trabajo!",
 
@@ -493,6 +502,9 @@ export default {
   sleepBetterMessage: "Un buen descanso mejora tu energía, tu ánimo y tu salud.",
 
   resetDesc: "Esto borrará tu progreso actual y comenzará desde cero.",
+  resetConfirmWord: "CONFIRMAR",
+  resetTypeHint: "Escribe CONFIRMAR para borrar tu progreso",
+  resetDelete: "Borrar todo",
   reminderOn: "Activo",
   reminderOff: "Apagado",
   reminderHour: "Hora",
@@ -515,6 +527,10 @@ export default {
   smartAlarmChallengeOff: "Botón Detener",
   smartAlarmChallengeWord: "Escribir palabra",
   smartAlarmChallengeDesc: "Con desafío no hay atajo: suena hasta escribir la palabra.",
+  smartAlarmChallenge: "Apagar la alarma",
+  smartAlarmChallengeOff: "Botón Detener",
+  smartAlarmChallengeWord: "Escribir palabra",
+  smartAlarmChallengeDesc: "Con desafío no hay atajo: suena hasta escribir la palabra.",
 
   smartSleepDeep: "Sueño profundo*",
   smartSleepLight: "Sueño ligero*",
@@ -525,6 +541,9 @@ export default {
   smartSleepAvgSub: "*estimado",
   smartSleepHipnogram: "Hipnograma estimado*",
   smartSleepDisclaimerSmall: "*Estimación por reglas movimiento+audio, no diagnóstico médico",
+  smartSleepPhases: "Fases estimadas*",
+  phaseLight: "Ligero",
+  phaseDeep: "Profundo",
   smartSleepPhases: "Fases estimadas*",
   phaseLight: "Ligero",
   phaseDeep: "Profundo",
@@ -549,6 +568,13 @@ export default {
   ppgStart: "Medir pulso",
   ppgSuccess: "¡Pulso confirmado!",
   ppgDisclaimer: "Solo bienestar, no es diagnóstico médico. No uses estos valores para decisiones de salud.",
+  ppgTutTitle: "Cómo medir tu pulso",
+  ppgTut1: "Tapa toda la lente y el flash con tu dedo, sin huecos",
+  ppgTut2: "Presión media: muy fuerte aplasta la señal, muy suave deja entrar luz",
+  ppgTut3: "Quédate quieto y espera el anillo verde, unos 10 segundos",
+  ppgTut4: "Sostén el teléfono en el aire, sin apoyarlo en ninguna superficie",
+  ppgTutStart: "Entendido, medir",
+  ppgTutHelp: "¿Cómo medir?",
   ppgTutTitle: "Cómo medir tu pulso",
   ppgTut1: "Tapa toda la lente y el flash con tu dedo, sin huecos",
   ppgTut2: "Presión media: muy fuerte aplasta la señal, muy suave deja entrar luz",

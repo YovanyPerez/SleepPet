@@ -161,7 +161,11 @@ class SmartAlarmReceiver : BroadcastReceiver() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra("fromSmartAlarm", true)
             }
-            val pending = PendingIntent.getActivity(context, 4001, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            // launchIntent puede ser null en teoría (NPE latente): fallback al
+            // desafío (siempre existe) o sin tap si tampoco hay desafío
+            val pending = launchIntent?.let {
+                PendingIntent.getActivity(context, 4001, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            }
             // Modo desafío (escribir palabra): sin atajo Detener — el tap abre
             // la pantalla del desafío, única vía para silenciar (ACTION_STOP).
             val challenge = p.getString("dismissMode", "off") == "word"

@@ -204,6 +204,115 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  resetOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "rgba(8, 9, 36, 0.78)",
+  },
+
+  resetCard: {
+    width: "100%",
+    maxWidth: 380,
+    alignItems: "center",
+    padding: 22,
+    borderRadius: 24,
+    backgroundColor: "#29295C",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+
+  resetIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,143,171,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(255,143,171,0.35)",
+    ...NIGHT_STYLES.center,
+    marginBottom: 14,
+  },
+
+  resetTitle: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontFamily: "Nunito_800ExtraBold",
+    textAlign: "center",
+  },
+
+  resetDesc: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+    marginTop: 8,
+  },
+
+  resetHint: {
+    color: "#FFD166",
+    fontSize: 14,
+    fontFamily: "Nunito_700Bold",
+    textAlign: "center",
+    marginTop: 14,
+  },
+
+  resetInput: {
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(150,130,255,0.35)",
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    fontSize: 18,
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#FFFFFF",
+    textAlign: "center",
+    letterSpacing: 2,
+    marginTop: 10,
+  },
+
+  resetButtons: {
+    flexDirection: "row",
+    width: "100%",
+    marginTop: 16,
+    gap: 10,
+  },
+
+  resetButton: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+
+  resetCancel: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+
+  resetCancelText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontFamily: "Nunito_700Bold",
+  },
+
+  resetDelete: {
+    backgroundColor: "#EF476F",
+  },
+
+  resetDisabled: {
+    opacity: 0.4,
+  },
+
+  resetDeleteText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontFamily: "Nunito_800ExtraBold",
+  },
+
 });
 
 export default styles;

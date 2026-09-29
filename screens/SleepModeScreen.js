@@ -1120,16 +1120,18 @@ export default function SleepModeScreen({ navigation }) {
 
           </Animated.View>
 
-          {/* Acceso secundario a logs */}
+          {/* Acceso secundario a logs (solo debug) */}
 
-          <TouchableOpacity
-            style={styles.logsLink}
-            onPress={showLog}
-          >
-            <AppText style={styles.logsText}>
-              {t.viewLogs}
-            </AppText>
-          </TouchableOpacity>
+          {__DEV__ && (
+            <TouchableOpacity
+              style={styles.logsLink}
+              onPress={showLog}
+            >
+              <AppText style={styles.logsText}>
+                {t.viewLogs}
+              </AppText>
+            </TouchableOpacity>
+          )}
 
         </ScrollView>
 

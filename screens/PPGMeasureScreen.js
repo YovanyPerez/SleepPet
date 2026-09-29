@@ -266,6 +266,7 @@ export default function PPGMeasureScreen({ navigation }) {
     { icon: "flash", color: NIGHT.yellow, text: t.ppgTut1 },
     { icon: "finger", color: "#8FA3FF", text: t.ppgTut2 },
     { icon: "meditation", color: "#FF8FAB", text: t.ppgTut3 },
+    { icon: "movement", color: "#4ADE80", text: t.ppgTut4 },
   ];
 
   function handleStartTutorial() {

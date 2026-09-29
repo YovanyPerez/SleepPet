@@ -11,6 +11,8 @@ import {
   ScrollView,
   Switch,
   Animated,
+  Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -128,6 +130,10 @@ export default function SettingsScreen({ navigation }) {
   });
 
   const [exactAlarmOk, setExactAlarmOk] = useState(true);
+
+  // Ventana de confirmación de borrado (escribir palabra localizada)
+  const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [resetText, setResetText] = useState("");
 
   const reminderRef = useRef({
     enabled: false,
@@ -258,28 +264,19 @@ export default function SettingsScreen({ navigation }) {
     setSmartAlarmConfig(next, language).catch(() => {});
   }
 
+  // La palabra cambia según idioma (CONFIRMAR/CONFIRM); match insensible
+  // a mayúsculas y espacios para no castigar el teclado
+  const resetConfirmOk =
+    resetText.trim().toUpperCase() === (t.resetConfirmWord ?? "CONFIRMAR");
+
   function resetProgress() {
+    setResetText("");
+    setResetModalVisible(true);
+  }
 
-    Alert.alert(
-
-      t.resetProgress,
-
-      t.resetConfirmation,
-
-      [
-
-        {
-          text: t.cancel,
-          style: "cancel",
-        },
-
-        {
-
-          text: t.resetProgress,
-
-          style: "destructive",
-
-          onPress: async () => {
+  async function confirmResetProgress() {
+    if (!resetConfirmOk) return;
+    setResetModalVisible(false);
 
             // Borra todo el almacenamiento
             await clearAppData();
@@ -367,14 +364,6 @@ export default function SettingsScreen({ navigation }) {
               ]
 
             );
-
-          },
-
-        },
-
-      ]
-
-    );
 
   }
 
@@ -780,6 +769,72 @@ export default function SettingsScreen({ navigation }) {
           </Animated.View>
 
         </ScrollView>
+
+        {/* Confirmación de borrado: escribir palabra localizada */}
+
+        <Modal
+          visible={resetModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setResetModalVisible(false)}
+        >
+          <View style={styles.resetOverlay}>
+            <View style={styles.resetCard}>
+
+              <View style={styles.resetIconCircle}>
+                <AppIcon name="warning" size={24} color="#FF8FAB" />
+              </View>
+
+              <AppText style={styles.resetTitle}>
+                {t.resetProgress}
+              </AppText>
+
+              <AppText style={styles.resetDesc}>
+                {t.resetDesc}
+              </AppText>
+
+              <AppText style={styles.resetHint}>
+                {t.resetTypeHint ?? "Escribe CONFIRMAR para borrar tu progreso"}
+              </AppText>
+
+              <TextInput
+                style={styles.resetInput}
+                value={resetText}
+                onChangeText={setResetText}
+                placeholder={t.resetConfirmWord ?? "CONFIRMAR"}
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                autoCapitalize="characters"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
+
+              <View style={styles.resetButtons}>
+                <TouchableOpacity
+                  style={[styles.resetButton, styles.resetCancel]}
+                  onPress={() => setResetModalVisible(false)}
+                >
+                  <AppText style={styles.resetCancelText}>
+                    {t.cancel}
+                  </AppText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.resetButton,
+                    styles.resetDelete,
+                    !resetConfirmOk && styles.resetDisabled,
+                  ]}
+                  activeOpacity={resetConfirmOk ? 0.7 : 1}
+                  onPress={confirmResetProgress}
+                >
+                  <AppText style={styles.resetDeleteText}>
+                    {t.resetDelete ?? "Borrar todo"}
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+
+            </View>
+          </View>
+        </Modal>
 
       </SafeAreaView>
 

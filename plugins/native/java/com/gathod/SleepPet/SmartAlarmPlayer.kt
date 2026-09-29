@@ -39,7 +39,9 @@ object SmartAlarmPlayer {
             )
             mp.setDataSource(context, uri)
             mp.setVolume(vol, vol)
-            mp.isLooping = false
+            // Nivel 2 repite hasta resolver/detener (0-1 suenan una vez:
+            // despertar amable primero, insistencia al final)
+            mp.isLooping = currentLevel == 2
             mp.setOnCompletionListener { stop() }
             mp.setOnErrorListener { _, _, _ -> stop(); true }
             mp.prepare()
