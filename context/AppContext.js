@@ -73,6 +73,10 @@ import {
   toDateKey,
 } from "../utils/dateUtils";
 
+import {
+  settleStreakOnLoad,
+} from "../services/StreakService";
+
 
 export const AppContext = createContext();
 
@@ -403,6 +407,24 @@ export function AppProvider({ children }) {
           data?.petMood ?? "happy"
         )
       );
+
+      // ===========================
+      // Racha por tiempo: sin una sesión nueva nada evaluaba el hueco,
+      // así que la racha y el escudo quedaban congelados por siempre.
+      // Si los días perdidos no caben en los escudos, la racha ya está
+      // muerta: se liquida a 0 al abrir (el escudo se cobra en finishSleep).
+      // ===========================
+      const settledStreak = settleStreakOnLoad({
+        streak: data?.streak ?? 0,
+        lastStreakDateKey: data?.lastStreakDateKey ?? null,
+        shields: data?.streakShields ?? 0,
+        todayKey: toDateKey(new Date()),
+      });
+
+      if (settledStreak.changed) {
+        setStreak(settledStreak.streak);
+        setStreakShields(settledStreak.shields);
+      }
 
       // Alerta de mascota triste: si cruza el umbral y no hay sesión
       // activa, agenda aviso diferido (+4h, 1/día); si se recuperó,
