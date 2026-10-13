@@ -3,7 +3,7 @@ import { Modal, Pressable, StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { NIGHT } from "../constants/theme";
-import { ENERGY_LEVELS, STUDY_LEVELS } from "../services/CheckInService";
+import { ENERGY_LEVELS, STUDY_LEVELS, WAKE_LEVELS } from "../services/CheckInService";
 import AppIcon from "./AppIcon";
 import AppText from "./AppText";
 
@@ -22,23 +22,35 @@ const STUDY_KEYS = {
   productive: "checkinStudyProductive",
 };
 
+const WAKE_KEYS = {
+  groggy: "checkinWakeGroggy",
+  okay: "checkinWakeOkay",
+  rested: "checkinWakeRested",
+  fresh: "checkinWakeFresh",
+};
+
 export default function PreSleepCheckInModal({
   visible,
   t,
   initialEnergy,
   initialStudy,
+  initialWake,
+  mode,
   onSave,
   onSkip,
 }) {
+  const wakeOnly = mode === "wake";
   const [energy, setEnergy] = useState(initialEnergy ?? null);
   const [study, setStudy] = useState(initialStudy ?? null);
+  const [wake, setWake] = useState(initialWake ?? null);
 
   useEffect(() => {
     if (visible) {
       setEnergy(initialEnergy ?? null);
       setStudy(initialStudy ?? null);
+      setWake(initialWake ?? null);
     }
-  }, [visible, initialEnergy, initialStudy]);
+  }, [visible, initialEnergy, initialStudy, initialWake]);
 
   function renderPills(levels, keys, selected, onSelect) {
     return (
@@ -65,7 +77,53 @@ export default function PreSleepCheckInModal({
     );
   }
 
-  const canSave = !!energy && !!study;
+  const canSave = wakeOnly ? !!wake : !!energy && !!study;
+
+  if (wakeOnly) {
+    return (
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={onSkip}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.card}>
+            <View style={styles.iconCircle}>
+              <AppIcon name="sparkles" size={22} color={NIGHT.yellow} />
+            </View>
+            <AppText style={styles.title}>{t.checkInWakeTitle}</AppText>
+
+            <AppText style={styles.question}>{t.checkInWakeQuestion}</AppText>
+            {renderPills(WAKE_LEVELS, WAKE_KEYS, wake, setWake)}
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={!canSave}
+              onPress={() => onSave(wake)}
+              style={({ pressed }) => [
+                styles.save,
+                !canSave && styles.saveDisabled,
+                pressed && canSave && styles.savePressed,
+              ]}
+            >
+              <AppIcon name="save" size={18} color="#FFFFFF" />
+              <AppText style={styles.saveText}>{t.checkInSave}</AppText>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={onSkip}
+              style={({ pressed }) => [styles.skip, pressed && styles.skipPressed]}
+            >
+              <AppText style={styles.skipText}>{t.checkInSkip}</AppText>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

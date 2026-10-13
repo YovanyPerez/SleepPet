@@ -33,7 +33,14 @@ export default function CheckInCard() {
     productive: t.checkinStudyProductive,
   };
 
-  const missing = !existing?.energy || !existing?.studyExperience;
+  const WAKE_LABELS = {
+    groggy: t.checkinWakeGroggy ?? "Pesado",
+    okay: t.checkinWakeOkay ?? "Normal",
+    rested: t.checkinWakeRested ?? "Descansado",
+    fresh: t.checkinWakeFresh ?? "Fresco",
+  };
+
+  const missing = !existing?.energy || !existing?.studyExperience || !existing?.wake;
 
   return (
     <View style={styles.card}>
@@ -58,6 +65,15 @@ export default function CheckInCard() {
           <AppText style={styles.summaryLabel}>{t.checkInStudyLabel}</AppText>
           <AppText style={styles.summaryValue}>
             {STUDY_LABELS[existing.studyExperience]}
+          </AppText>
+        </View>
+      )}
+
+      {existing?.wake && (
+        <View style={styles.summaryRow}>
+          <AppText style={styles.summaryLabel}>{t.checkInWakeLabel ?? "Despertar"}</AppText>
+          <AppText style={styles.summaryValue}>
+            {WAKE_LABELS[existing.wake]}
           </AppText>
         </View>
       )}

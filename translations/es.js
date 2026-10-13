@@ -540,7 +540,7 @@ export default {
   smartSleepWakePlain: "Despierto",
   smartSleepAvgSub: "*estimado",
   smartSleepHipnogram: "Hipnograma estimado*",
-  smartSleepDisclaimerSmall: "*Estimación por reglas movimiento+audio, no diagnóstico médico",
+  smartSleepDisclaimerSmall: "*Estimación por reglas movimiento+audio, no diagnóstico médico · últimos 24 min",
   smartSleepPhases: "Fases estimadas*",
   phaseLight: "Ligero",
   phaseDeep: "Profundo",
@@ -681,6 +681,14 @@ export default {
   checkinStudyGood: "Bien",
   checkinStudyProductive: "Muy productivo",
 
+  checkInWakeTitle: "Al despertar",
+  checkInWakeQuestion: "¿Cómo te sientes al despertar?",
+  checkInWakeLabel: "Despertar",
+  checkinWakeGroggy: "Pesado",
+  checkinWakeOkay: "Normal",
+  checkinWakeRested: "Descansado",
+  checkinWakeFresh: "Fresco",
+
   // ==========================
   // Sleep & Study
   // ==========================
@@ -696,6 +704,9 @@ export default {
   sleepStudyObsBetterEnergy: "Sueles reportar más energía después de noches más largas.",
   sleepStudyObsConsistent: "Tu horario de sueño fue más consistente esta semana.",
   sleepStudyObsEnergeticConsistent: "Tus días con más energía siguieron a un sueño más consistente.",
+  sleepStudyObsHeavyMornings: "La mayoría de tus despertares fueron pesados esta semana.",
+  sleepStudyObsStudyConsistent: "Tus estudios más productivos coincidieron con un horario consistente.",
+  sleepStudyObsBelowGoal: "Tu promedio {{avg}}h quedó bajo tu meta {{goal}}h.",
   sleepStudyDisclaimer: "Patrones observados en tus propios registros. No es una medición médica ni académica.",
 
 };

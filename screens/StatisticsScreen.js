@@ -28,6 +28,7 @@ import CheckInCard from "../components/CheckInCard";
 import { NIGHT } from "../constants/theme";
 import {
   analyzeSleepStudy,
+  buildSleepStudyObservation,
 } from "../services/CheckInService";
 import styles from "./styles/StatisticsScreen.styles";
 import {
@@ -171,21 +172,22 @@ export default function StatisticsScreen({ navigation }) {
     checkIns: dailyCheckIns,
   });
 
+  const OBS_TEXT = {
+    energeticConsistent: t.sleepStudyObsEnergeticConsistent,
+    betterEnergy: t.sleepStudyObsBetterEnergy,
+    heavyMornings: t.sleepStudyObsHeavyMornings,
+    studyConsistent: t.sleepStudyObsStudyConsistent,
+    consistent: t.sleepStudyObsConsistent,
+  };
+
   let observation = null;
-  if (study.sleepEnergyRelation) {
-    const rel = study.sleepEnergyRelation;
-    if (
-      study.consistency != null &&
-      study.consistency < 1 &&
-      rel.highEnergyAvgHours > rel.lowEnergyAvgHours + 0.5
-    ) {
-      observation = t.sleepStudyObsEnergeticConsistent;
-    } else if (rel.highEnergyAvgHours > rel.lowEnergyAvgHours + 0.5) {
-      observation = t.sleepStudyObsBetterEnergy;
-    }
-  }
-  if (!observation && study.consistency != null && study.consistency < 1) {
-    observation = t.sleepStudyObsConsistent;
+  const obsKey = buildSleepStudyObservation(study, goalHours);
+  if (obsKey === "belowGoal" && study.avgSleepHours != null) {
+    observation = (t.sleepStudyObsBelowGoal ?? "Tu promedio {{avg}}h quedó bajo tu meta {{goal}}h.")
+      .replace("{{avg}}", study.avgSleepHours.toFixed(1))
+      .replace("{{goal}}", String(goalHours));
+  } else if (obsKey) {
+    observation = OBS_TEXT[obsKey] ?? null;
   }
 
   return (

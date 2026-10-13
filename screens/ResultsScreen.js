@@ -2,6 +2,7 @@ import React, {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import {
   View,
@@ -24,10 +25,13 @@ import { PET_IMAGES } from "../constants/PetImages";
 import {
   getTranslations,
 } from "../services/TranslationService";
+import { getCheckInByDate, upsertCheckIn } from "../services/CheckInService";
+import { toDateKey } from "../utils/dateUtils";
 
 import NightBackground from "../components/NightBackground";
 import AppText from "../components/AppText";
 import AppIcon from "../components/AppIcon";
+import PreSleepCheckInModal from "../components/PreSleepCheckInModal";
 import styles from "./styles/ResultsScreen.styles";
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
@@ -42,9 +46,35 @@ export default function ResultsScreen({ navigation }) {
 
     language,
 
+    dailyCheckIns,
+
+    setDailyCheckIns,
+
   } = useContext(AppContext);
 
   const t = getTranslations(language);
+
+  // Pregunta al despertar (solo noches completas, opcional, 1 vez por mañana).
+  const [wakeDismissed, setWakeDismissed] = useState(false);
+  const wakeDateKey =
+    lastSleepSession?.dateKey ?? toDateKey(new Date());
+  const wakeExisting = getCheckInByDate(dailyCheckIns ?? [], wakeDateKey);
+  const needsWake =
+    !!lastSleepSession &&
+    !lastSleepSession.isNap &&
+    !wakeExisting?.wake &&
+    !wakeDismissed;
+
+  function saveWakeCheckIn(wake) {
+    setDailyCheckIns(
+      upsertCheckIn(dailyCheckIns ?? [], {
+        dateKey: wakeDateKey,
+        wake,
+        updatedAt: Date.now(),
+      })
+    );
+    setWakeDismissed(true);
+  }
 
   const reducedMotion = useReducedMotion();
 
@@ -393,6 +423,15 @@ export default function ResultsScreen({ navigation }) {
         </ScrollView>
 
       </SafeAreaView>
+
+      <PreSleepCheckInModal
+        visible={needsWake}
+        t={t}
+        mode="wake"
+        initialWake={null}
+        onSave={saveWakeCheckIn}
+        onSkip={() => setWakeDismissed(true)}
+      />
 
     </NightBackground>
 

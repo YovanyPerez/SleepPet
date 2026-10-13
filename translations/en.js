@@ -539,7 +539,7 @@ export default {
   smartSleepWakePlain: "Awake",
   smartSleepAvgSub: "*estimated",
   smartSleepHipnogram: "Estimated hypnogram*",
-  smartSleepDisclaimerSmall: "*Rule-based estimation movement+audio, not medical diagnosis",
+  smartSleepDisclaimerSmall: "*Rule-based estimation movement+audio, not medical diagnosis · last 24 min",
   smartSleepPhases: "Estimated stages*",
   phaseLight: "Light",
   phaseDeep: "Deep",
@@ -680,6 +680,14 @@ export default {
   checkinStudyGood: "Good",
   checkinStudyProductive: "Very productive",
 
+  checkInWakeTitle: "On waking",
+  checkInWakeQuestion: "How do you feel on waking?",
+  checkInWakeLabel: "Waking",
+  checkinWakeGroggy: "Groggy",
+  checkinWakeOkay: "Okay",
+  checkinWakeRested: "Rested",
+  checkinWakeFresh: "Fresh",
+
   // ==========================
   // Sleep & Study
   // ==========================
@@ -695,6 +703,9 @@ export default {
   sleepStudyObsBetterEnergy: "You usually report better energy after longer nights.",
   sleepStudyObsConsistent: "Your sleep schedule was more consistent this week.",
   sleepStudyObsEnergeticConsistent: "Your most energetic days followed more consistent sleep.",
+  sleepStudyObsHeavyMornings: "Most of your mornings felt heavy this week.",
+  sleepStudyObsStudyConsistent: "Your most productive study coincided with a consistent schedule.",
+  sleepStudyObsBelowGoal: "Your {{avg}}h average stayed below your {{goal}}h goal.",
   sleepStudyDisclaimer: "Patterns observed in your own records. Not a medical or academic measurement.",
 
 };
