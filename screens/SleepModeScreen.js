@@ -50,7 +50,11 @@ import { NIGHT } from "../constants/theme";
 import { calculateSleepRewards } from "../services/RewardService";
 import { calculatePetHappiness, moodForHappiness, shouldSchedulePetAlert, HAPPINESS_SAD_BELOW } from "../services/PetHappinessService";
 import { schedulePetAlertNative, cancelPetAlertNative } from "../services/PetAlertService";
-import { computeStreakUpdate, STREAK_MIN_HOURS } from "../services/StreakService";
+import {
+  computeStreakUpdate,
+  sumSleepDayHours,
+  STREAK_MIN_HOURS,
+} from "../services/StreakService";
 import useSleepSession from "../hooks/useSleepSession";
 import { toDateKey } from "../utils/dateUtils";
 
@@ -750,13 +754,14 @@ export default function SleepModeScreen({ navigation }) {
       }
     }
 
-    // Racha diaria (regla B): >=3h cuenta 1x/dia, siestas neutras,
-    // saltarse un dia completo rompe la cadena
+    // Racha diaria (regla B): el dia de sueno va de 12:00 a 12:00 y cuenta si
+    // entre sus sesiones suma >=3h (una noche, o siesta + noche). Saltarse un
+    // dia completo rompe la cadena; cada dia perdido cuesta un escudo.
     const streakUpdate = computeStreakUpdate({
       currentStreak: streak,
       lastStreakDateKey,
       sessionEnd: result.end,
-      hoursSlept: session.hours,
+      dayHours: sumSleepDayHours(sleepHistory, session),
       shields: streakShields,
     });
 

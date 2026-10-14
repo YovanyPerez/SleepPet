@@ -71,11 +71,6 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     marginRight: 12,
-    borderRadius: 28,
-    overflow: "hidden",
-    backgroundColor: "rgba(27,27,75,0.55)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
   },
 
   petImageLayer: {

@@ -418,7 +418,7 @@ export function AppProvider({ children }) {
         streak: data?.streak ?? 0,
         lastStreakDateKey: data?.lastStreakDateKey ?? null,
         shields: data?.streakShields ?? 0,
-        todayKey: toDateKey(new Date()),
+        now: new Date(),
       });
 
       if (settledStreak.changed) {

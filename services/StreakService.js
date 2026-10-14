@@ -1,25 +1,44 @@
-import { toDateKey } from "../utils/dateUtils.js";
+import { toDateKey, toSleepDayKey } from "../utils/dateUtils.js";
 
-// Regla B: sesiones >= 3h cuentan 1 vez por dia;
-// siestas cortas son neutras; saltarse un dia completo rompe la racha.
+// Regla B: el dia de sueno (12:00 -> 12:00) cuenta si entre sus sesiones se
+// acumulan >= 3h, haya sido una sola noche o una siesta mas la noche.
+// Saltarse un dia completo rompe la racha; cada dia perdido cuesta un escudo.
 export const STREAK_MIN_HOURS = 3;
 
-function getYesterdayKey(date) {
-  const d = new Date(date);
+// Dia de sueno anterior a una clave de dia de sueno.
+// OJO: se resta a la clave, no al Date de fin: con el corte a mediodia, restar
+// al Date compararia contra el dia equivocado.
+function previousDayKey(key) {
+  const d = new Date(`${key}T00:00:00`);
   d.setDate(d.getDate() - 1);
   return toDateKey(d);
 }
 
-// Dias completos perdidos entre el ultimo sello y hoy.
+// Dias completos perdidos entre el ultimo sello y hoy (ambos dias de sueno).
 // 0 = hoy o ayer (racha intacta), 1 = se salto ayer, n = lleva n dias sin dormir.
-// ponytail: parseo manual del yyyy-mm-dd; suficiente porque las claves siempre
-// son locales a medianoche (toDateKey) y ambos lados se construyen igual.
 export function daysMissedBetween(lastStreakDateKey, todayKey) {
   if (!lastStreakDateKey || !todayKey) return 0;
   const a = Date.parse(`${lastStreakDateKey}T00:00:00`);
   const b = Date.parse(`${todayKey}T00:00:00`);
   if (Number.isNaN(a) || Number.isNaN(b)) return 0;
   return Math.max(0, Math.round((b - a) / 86400000) - 1);
+}
+
+// Horas acumuladas del dia de sueno que termina en `current`: las sesiones ya
+// guardadas que caen en ese mismo dia mas la sesion en curso (aun no esta en
+// el historial cuando finishSleep consulta la racha).
+// ponytail: cada sesion pertenece a un unico dia de sueno (el de su fin), asi
+// que no hay doble conteo; se ignoran las entradas viejas sin endMs.
+export function sumSleepDayHours(sessions, current) {
+  const key = toSleepDayKey(new Date(current.endMs));
+  let total = Number(current.hours) || 0;
+  for (const s of sessions ?? []) {
+    if (!s?.endMs || !s?.hours) continue;
+    if (toSleepDayKey(new Date(s.endMs)) === key) {
+      total += Number(s.hours) || 0;
+    }
+  }
+  return Math.round(total * 100) / 100;
 }
 
 // Liquidacion por tiempo al abrir la app: sin sesion nueva nada evaluaba el
@@ -31,9 +50,9 @@ export function settleStreakOnLoad({
   streak,
   lastStreakDateKey,
   shields = 0,
-  todayKey,
+  now = new Date(),
 }) {
-  const missed = daysMissedBetween(lastStreakDateKey, todayKey);
+  const missed = daysMissedBetween(lastStreakDateKey, toSleepDayKey(now));
   if (missed <= 0 || missed <= shields) {
     return { streak, shields, changed: false };
   }
@@ -50,13 +69,13 @@ export function computeStreakUpdate({
   currentStreak,
   lastStreakDateKey,
   sessionEnd,
-  hoursSlept,
+  dayHours,
   shields = 0,
 }) {
-  const todayKey = toDateKey(sessionEnd);
+  const todayKey = toSleepDayKey(new Date(sessionEnd));
 
-  // Siesta corta: no suma ni rompe
-  if (!hoursSlept || hoursSlept < STREAK_MIN_HOURS) {
+  // Dia de sueno corto: no suma ni rompe
+  if (!dayHours || dayHours < STREAK_MIN_HOURS) {
     return { streak: currentStreak, lastStreakDateKey, shields };
   }
 
@@ -75,7 +94,7 @@ export function computeStreakUpdate({
   }
 
   // Dia consecutivo
-  if (lastStreakDateKey === getYesterdayKey(sessionEnd)) {
+  if (lastStreakDateKey === previousDayKey(todayKey)) {
     return { streak: currentStreak + 1, lastStreakDateKey: todayKey, shields };
   }
 

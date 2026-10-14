@@ -14,6 +14,22 @@ export function toDateKey(date) {
 
 }
 
+// El dia de sueno va de 12:00 a 12:00: la noche del 4 al 5 cuenta como dia 4.
+// Asi una siesta de tarde y la noche siguiente son el MISMO dia de sueno, y
+// acostarse a las 22:00 o a las 00:30 no cambia nada.
+export const SLEEP_DAY_OFFSET_HOURS = 12;
+
+// ponytail: restar 12h cruza el cambio de hora dos veces al ano; una sesion que
+// termine en la franja de 1h alrededor del mediodio local puede atribuirse al
+// dia anterior. Ventana de 1h, dos veces al ano: se acepta.
+export function toSleepDayKey(date) {
+
+  return toDateKey(
+    new Date(date.getTime() - SLEEP_DAY_OFFSET_HOURS * 3600000)
+  );
+
+}
+
 export function getWeekDates(reference = new Date()) {
 
   const day = reference.getDay();

@@ -619,7 +619,7 @@ export default {
   onboardingPetTitle: "Your pet",
   onboardingPetBody: "Your rest shows on your pet. Sleeping well keeps it happy and full of energy.",
   onboardingStreakTitle: "Streak",
-  onboardingStreakBody: "Sleeping your goal hours each night keeps your streak alive. One day counts once.",
+  onboardingStreakBody: "Sleeping your goal hours each night keeps your streak alive. One day counts once, and runs from noon to noon.",
   onboardingLevelTitle: "Level, XP and coins",
   onboardingLevelBody: "Every quality night earns you XP and coins. Level up and get new pets in the shop.",
   onboardingSleepTitle: "Sleep mode",

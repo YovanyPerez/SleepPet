@@ -620,7 +620,7 @@ export default {
   onboardingPetTitle: "Tu mascota",
   onboardingPetBody: "Tu descanso se refleja en tu mascota. Dormir bien la mantiene feliz y llena de energía.",
   onboardingStreakTitle: "Racha",
-  onboardingStreakBody: "Dormir tus horas meta cada noche mantiene viva tu racha. Un día cuenta una vez.",
+  onboardingStreakBody: "Dormir tus horas meta cada noche mantiene viva tu racha. Un día cuenta una vez y va de mediodía a mediodía.",
   onboardingLevelTitle: "Nivel, XP y monedas",
   onboardingLevelBody: "Cada noche de calidad te da XP y monedas. Sube de nivel y consigue nuevas mascotas en la tienda.",
   onboardingSleepTitle: "Modo sueño",
